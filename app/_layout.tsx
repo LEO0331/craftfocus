@@ -32,6 +32,12 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  useEffect(() => {
+    if (typeof document !== 'undefined' && !document.title) {
+      document.title = 'CraftFocus';
+    }
+  }, []);
+
   if (!loaded) {
     return null;
   }
