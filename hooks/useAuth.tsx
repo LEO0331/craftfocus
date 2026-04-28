@@ -1,7 +1,9 @@
 import type { Session, User } from '@supabase/supabase-js';
 import { Redirect, useSegments } from 'expo-router';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { theme } from '@/constants/theme';
 import { signInWithEmail, signOut, signUpWithEmail } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
@@ -91,7 +93,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const inAuthGroup = segments[0] === 'auth';
 
   if (isLoading) {
-    return null;
+    return (
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
   }
 
   if (!session && !inAuthGroup) {
@@ -104,3 +110,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
+const styles = StyleSheet.create({
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background,
+  },
+});
