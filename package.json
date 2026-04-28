@@ -12,7 +12,7 @@
     "e2e:build": "expo export --platform web",
     "e2e:serve": "npm run e2e:build && node tools/e2e/static-server.mjs",
     "test:e2e": "playwright test",
-    "lighthouse:web": "sh -c 'npm run e2e:build && python3 -m http.server 4174 --directory dist & SERVER_PID=$!; trap \"kill $SERVER_PID\" EXIT; sleep 2; npx lighthouse http://127.0.0.1:4174 --only-categories=performance,accessibility,best-practices,seo --chrome-flags=\"--headless --no-sandbox\" --output=json --output=html --output-path=./lighthouse-report'"
+    "lighthouse:web": "sh -c 'npm run e2e:build && rm -rf .lighthouse-site && mkdir -p .lighthouse-site/craftfocus && cp -R dist/. .lighthouse-site/craftfocus/ && python3 -m http.server 4174 --directory .lighthouse-site & SERVER_PID=$!; trap \"kill $SERVER_PID\" EXIT; sleep 2; npx lighthouse http://127.0.0.1:4174/craftfocus/ --only-categories=performance,accessibility,best-practices,seo --chrome-flags=\"--headless --no-sandbox\" --output=json --output=html --output-path=./lighthouse-report'"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

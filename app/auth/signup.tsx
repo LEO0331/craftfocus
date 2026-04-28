@@ -13,15 +13,19 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSignup = async () => {
     try {
       setSubmitting(true);
+      setAuthError(null);
       await signUp(validateEmail(email), validatePassword(password));
       Alert.alert('Check your email', 'Confirm your email, then log in.');
       router.replace('/auth/login');
     } catch (error) {
-      Alert.alert('Signup failed', error instanceof Error ? error.message : 'Please try again.');
+      const message = error instanceof Error ? error.message : 'Please try again.';
+      setAuthError(message);
+      Alert.alert('Signup failed', message);
     } finally {
       setSubmitting(false);
     }
@@ -61,6 +65,11 @@ export default function SignupScreen() {
           />
 
           <Button label="Sign Up" onPress={handleSignup} disabled={submitting || isLoading} />
+          {authError ? (
+            <Text accessibilityRole="alert" style={styles.errorText}>
+              {authError}
+            </Text>
+          ) : null}
 
           <Text style={styles.footnote}>
             Already registered? <Link href="/auth/login">Log in</Link>
@@ -99,5 +108,9 @@ const styles = StyleSheet.create({
   },
   footnote: {
     color: theme.colors.muted,
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontWeight: '600',
   },
 });

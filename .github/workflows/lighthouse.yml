@@ -29,15 +29,21 @@ jobs:
       - name: Build static web
         run: npx expo export --platform web
 
+      - name: Prepare subpath for GitHub Pages parity
+        run: |
+          rm -rf .lighthouse-site
+          mkdir -p .lighthouse-site/craftfocus
+          cp -R dist/. .lighthouse-site/craftfocus/
+
       - name: Serve static site
         run: |
-          python3 -m http.server 4174 --directory dist &
+          python3 -m http.server 4174 --directory .lighthouse-site &
           echo $! > server.pid
           sleep 2
 
       - name: Run Lighthouse
         run: |
-          npx lighthouse http://127.0.0.1:4174 \
+          npx lighthouse http://127.0.0.1:4174/craftfocus/ \
             --only-categories=performance,accessibility,best-practices,seo \
             --chrome-flags="--headless --no-sandbox" \
             --output=json --output=html \
