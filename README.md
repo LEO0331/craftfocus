@@ -1,6 +1,6 @@
 # CraftFocus
 
-[![Build](https://github.com/LEO0331/craftfocus/actions/workflows/pr-preview.yml/badge.svg)](https://github.com/LEO0331/craftfocus/actions/workflows/pr-preview.yml)
+[![Deploy Web](https://github.com/LEO0331/craftfocus/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/LEO0331/craftfocus/actions/workflows/deploy-pages.yml)
 [![Lighthouse CI](https://github.com/LEO0331/craftfocus/actions/workflows/lighthouse.yml/badge.svg)](https://github.com/LEO0331/craftfocus/actions/workflows/lighthouse.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](./coverage)
 
