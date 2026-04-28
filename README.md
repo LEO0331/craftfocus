@@ -11,6 +11,8 @@ Built with Expo + React Native + TypeScript + Expo Router, it runs from one code
 - Android
 - Web
 
+![CraftFocus How It Works](./assets/images/how-it-works.svg)
+
 ## Why CraftFocus
 
 - Turn focused time into visible progress
@@ -27,6 +29,33 @@ Built with Expo + React Native + TypeScript + Expo Router, it runs from one code
 - Optional pixel-style image preview generation
 - Likes, comments, friendships, and exchange requests
 - Profile editing with avatar upload
+
+## How To Play
+
+1. Create account and log in.
+2. Start a focus session:
+   - Choose `25 / 45 / 60` minutes
+   - Pick a category and build target
+3. Complete session to gain:
+   - Focus coins
+   - Item progress (unlocks room furniture)
+4. Open **Room** tab:
+   - Select an unlocked inventory item
+   - Tap a cell to select it
+   - Tap **Place Selected Item In Selected Cell**
+5. Upload your real craft work in **Crafts**:
+   - Optional pixel preview generation
+   - Post to feed and optionally open for exchange
+6. Add friends, visit their rooms, and manage exchange requests.
+
+## Pixel Item Styles
+
+The room uses handcrafted pixel sprites with different visual identities (materials, shading, accents), including:
+- Leather wallet
+- Sewing kit + fabric roll
+- Dumbbell + yoga mat
+- Study/work desk variants
+- Bookshelf, lamp, plant
 
 ## Tech Stack
 

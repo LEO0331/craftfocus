@@ -14,7 +14,7 @@ export default function RoomScreen() {
   const { roomGridItems, inventory, unlockedInventory, placeItem, clearCell } = useRoom();
 
   const [selectedUserItemId, setSelectedUserItemId] = useState<string | null>(unlockedInventory[0]?.id ?? null);
-  const [selectedCell, setSelectedCell] = useState<{ x: number; y: number; roomItemId?: string } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ x: number; y: number } | null>(null);
 
   const selectedItemInfo = useMemo(
     () => unlockedInventory.find((item) => item.id === selectedUserItemId) ?? null,
@@ -27,28 +27,36 @@ export default function RoomScreen() {
     }
   }, [selectedUserItemId, unlockedInventory]);
 
-  const handleCellPress = async (cell: { x: number; y: number; item?: { id: string } }) => {
-    setSelectedCell({ x: cell.x, y: cell.y, roomItemId: cell.item?.id });
+  const selectedRoomItem = useMemo(() => {
+    if (!selectedCell) {
+      return null;
+    }
+    return roomGridItems.find((entry) => entry.x === selectedCell.x && entry.y === selectedCell.y) ?? null;
+  }, [roomGridItems, selectedCell]);
 
-    if (!selectedUserItemId || !selectedItemInfo) {
+  const handleCellPress = (cell: { x: number; y: number }) => {
+    setSelectedCell({ x: cell.x, y: cell.y });
+  };
+
+  const handlePlace = async () => {
+    if (!selectedCell || !selectedUserItemId || !selectedItemInfo) {
       return;
     }
 
     try {
-      await placeItem({ userItemId: selectedUserItemId, x: cell.x, y: cell.y });
+      await placeItem({ userItemId: selectedUserItemId, x: selectedCell.x, y: selectedCell.y });
     } catch (error) {
       Alert.alert('Place item failed', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
   const handleClear = async () => {
-    if (!selectedCell?.roomItemId) {
+    if (!selectedRoomItem?.id) {
       return;
     }
 
     try {
-      await clearCell(selectedCell.roomItemId);
-      setSelectedCell(null);
+      await clearCell(selectedRoomItem.id);
     } catch (error) {
       Alert.alert('Remove item failed', error instanceof Error ? error.message : 'Unknown error');
     }
@@ -59,14 +67,28 @@ export default function RoomScreen() {
       <Text style={styles.heading}>My Focus Room</Text>
 
       <Card>
-        <Text style={styles.label}>Room Layout (tap a cell to place selected item)</Text>
+        <Text style={styles.label}>Room Layout (tap a cell to select it)</Text>
         <RoomGrid
           items={roomGridItems}
           selectedCell={selectedCell ? { x: selectedCell.x, y: selectedCell.y } : null}
           onCellPress={handleCellPress}
         />
 
-        <Button label="Remove Item At Selected Cell" onPress={handleClear} variant="danger" />
+        <Text style={styles.text}>
+          Selected cell: {selectedCell ? `(${selectedCell.x}, ${selectedCell.y})` : 'none'}
+          {selectedRoomItem ? ` · contains ${selectedRoomItem.item_name}` : ' · empty'}
+        </Text>
+        <Button
+          label="Place Selected Item In Selected Cell"
+          onPress={handlePlace}
+          disabled={!selectedCell || !selectedUserItemId || !selectedItemInfo}
+        />
+        <Button
+          label="Remove Item At Selected Cell"
+          onPress={handleClear}
+          variant="danger"
+          disabled={!selectedRoomItem}
+        />
       </Card>
 
       <Card>

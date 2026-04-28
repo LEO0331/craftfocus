@@ -1,0 +1,46 @@
+<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="620" fill="#F4ECDE"/>
+  <text x="60" y="78" fill="#2A1E17" font-size="42" font-family="Arial, sans-serif" font-weight="700">CraftFocus - How It Works</text>
+  <text x="60" y="114" fill="#5B4A3E" font-size="20" font-family="Arial, sans-serif">Focus sessions become room progress, social posts, and exchanges.</text>
+
+  <g>
+    <rect x="60" y="168" width="220" height="136" rx="18" fill="#FFF9EF" stroke="#DFC9AF" stroke-width="2"/>
+    <text x="84" y="214" fill="#2A1E17" font-size="24" font-family="Arial, sans-serif" font-weight="700">1. Focus</text>
+    <text x="84" y="246" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">Pick 25/45/60 min</text>
+    <text x="84" y="272" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">category + target</text>
+  </g>
+
+  <g>
+    <rect x="330" y="168" width="220" height="136" rx="18" fill="#FFF9EF" stroke="#DFC9AF" stroke-width="2"/>
+    <text x="354" y="214" fill="#2A1E17" font-size="24" font-family="Arial, sans-serif" font-weight="700">2. Rewards</text>
+    <text x="354" y="246" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">Coins + item</text>
+    <text x="354" y="272" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">progress unlocks</text>
+  </g>
+
+  <g>
+    <rect x="600" y="168" width="220" height="136" rx="18" fill="#FFF9EF" stroke="#DFC9AF" stroke-width="2"/>
+    <text x="624" y="214" fill="#2A1E17" font-size="24" font-family="Arial, sans-serif" font-weight="700">3. Room</text>
+    <text x="624" y="246" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">Place pixel items</text>
+    <text x="624" y="272" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">on your grid</text>
+  </g>
+
+  <g>
+    <rect x="870" y="168" width="270" height="136" rx="18" fill="#FFF9EF" stroke="#DFC9AF" stroke-width="2"/>
+    <text x="894" y="214" fill="#2A1E17" font-size="24" font-family="Arial, sans-serif" font-weight="700">4. Share + Exchange</text>
+    <text x="894" y="246" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">Upload craft posts,</text>
+    <text x="894" y="272" fill="#5B4A3E" font-size="18" font-family="Arial, sans-serif">friends like/request</text>
+  </g>
+
+  <path d="M286 236H324" stroke="#B14C2F" stroke-width="4" stroke-linecap="round"/>
+  <path d="M556 236H594" stroke="#B14C2F" stroke-width="4" stroke-linecap="round"/>
+  <path d="M826 236H864" stroke="#B14C2F" stroke-width="4" stroke-linecap="round"/>
+
+  <g>
+    <rect x="60" y="350" width="1080" height="214" rx="22" fill="#FFF9EF" stroke="#DFC9AF" stroke-width="2"/>
+    <text x="88" y="394" fill="#2A1E17" font-size="26" font-family="Arial, sans-serif" font-weight="700">MVP Loop</text>
+    <text x="88" y="430" fill="#5B4A3E" font-size="19" font-family="Arial, sans-serif">• Complete sessions -> unlock furniture -> improve room aesthetics</text>
+    <text x="88" y="462" fill="#5B4A3E" font-size="19" font-family="Arial, sans-serif">• Post real craft work -> optional pixel preview -> social engagement</text>
+    <text x="88" y="494" fill="#5B4A3E" font-size="19" font-family="Arial, sans-serif">• Visit friend rooms -> exchange requests for open-to-exchange posts</text>
+    <text x="88" y="526" fill="#5B4A3E" font-size="19" font-family="Arial, sans-serif">• Everything runs on Supabase Free + Expo Web/iOS/Android in one codebase</text>
+  </g>
+</svg>
