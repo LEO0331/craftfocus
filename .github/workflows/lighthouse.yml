@@ -1,0 +1,54 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build static web
+        run: npx expo export --platform web
+
+      - name: Serve static site
+        run: |
+          python3 -m http.server 4174 --directory dist &
+          echo $! > server.pid
+          sleep 2
+
+      - name: Run Lighthouse
+        run: |
+          npx lighthouse http://127.0.0.1:4174 \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="--headless --no-sandbox" \
+            --output=json --output=html \
+            --output-path=./lighthouse-report
+
+      - name: Upload Lighthouse artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: |
+            lighthouse-report.report.json
+            lighthouse-report.report.html
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
