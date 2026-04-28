@@ -11,6 +11,7 @@ import { useFocusSession } from '@/hooks/useFocusSession';
 import type { BuildTargetId, FocusCategory } from '@/types/models';
 
 const TARGET_IDS = BUILD_TARGETS.map((target) => target.id);
+const TARGET_LABELS = new Map(BUILD_TARGETS.map((target) => [target.id, target.label] as const));
 
 export default function FocusScreen() {
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
@@ -64,6 +65,7 @@ export default function FocusScreen() {
             options={TARGET_IDS}
             selected={buildTarget}
             onSelect={setBuildTarget}
+            renderLabel={(option) => TARGET_LABELS.get(option as BuildTargetId) ?? option}
           />
 
           <Button label="Start Focus" onPress={() => setIsRunning(true)} disabled={isSaving} />

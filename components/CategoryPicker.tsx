@@ -8,9 +8,16 @@ interface CategoryPickerProps<T extends string> {
   options: T[];
   selected: T;
   onSelect: (next: T) => void;
+  renderLabel?: (option: T) => string;
 }
 
-export function CategoryPicker<T extends string>({ label, options, selected, onSelect }: CategoryPickerProps<T>) {
+export function CategoryPicker<T extends string>({
+  label,
+  options,
+  selected,
+  onSelect,
+  renderLabel,
+}: CategoryPickerProps<T>) {
   return (
     <>
       <Text style={styles.label}>{label}</Text>
@@ -23,7 +30,9 @@ export function CategoryPicker<T extends string>({ label, options, selected, onS
               onPress={() => onSelect(option)}
               style={[styles.chip, active ? styles.chipActive : null]}
             >
-              <Text style={[styles.chipLabel, active ? styles.chipLabelActive : null]}>{option}</Text>
+              <Text style={[styles.chipLabel, active ? styles.chipLabelActive : null]}>
+                {renderLabel ? renderLabel(option) : option}
+              </Text>
             </Pressable>
           );
         })}

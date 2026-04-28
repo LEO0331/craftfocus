@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    width: 6 * 42 + 5 * 6,
+    alignSelf: 'flex-start',
   },
   cell: {
     width: 42,

@@ -32,6 +32,7 @@ export default function UserRoomScreen() {
       <Card>
         <Text style={styles.label}>User ID: {userId}</Text>
         <RoomGrid
+          size={10}
           items={items.map((item) => ({
             id: item.id,
             x: item.x,

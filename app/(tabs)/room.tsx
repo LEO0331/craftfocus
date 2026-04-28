@@ -70,6 +70,7 @@ export default function RoomScreen() {
         <Text style={styles.label}>Room Layout (tap a cell to select it)</Text>
         <RoomGrid
           items={roomGridItems}
+          size={10}
           selectedCell={selectedCell ? { x: selectedCell.x, y: selectedCell.y } : null}
           onCellPress={handleCellPress}
         />

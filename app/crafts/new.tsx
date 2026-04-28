@@ -81,9 +81,7 @@ export default function NewCraftPostScreen() {
       });
 
       let pixelImageUrl: string | null = null;
-      if (pixelPreviewUri?.startsWith('data:image')) {
-        pixelImageUrl = pixelPreviewUri;
-      } else if (pixelPreviewUri) {
+      if (pixelPreviewUri) {
         const pixelPath = `${user.id}/${timestamp}-pixel.png`;
         pixelImageUrl = await storageAdapter.uploadImage({
           bucket: STORAGE_BUCKET,
@@ -145,7 +143,7 @@ export default function NewCraftPostScreen() {
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel="Selected craft image preview" /> : null}
 
         <Button
-          label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (Experimental)'}
+          label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (No AI, deterministic)'}
           onPress={handlePixelize}
           disabled={!imageUri || isPixelizing}
           variant="secondary"
