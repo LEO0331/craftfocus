@@ -85,6 +85,17 @@ npx expo start --android
 4. Enable email/password auth provider.
 5. Create public storage bucket: `craft-images`.
 
+### Storage Policy
+
+- Bucket: `craft-images` (public read enabled)
+- Uploads are limited to authenticated users
+- Users may only write files under their own prefix:
+  - `<auth.uid()>/...`
+  - Example: `8f2c.../avatars/1714300000.jpg`
+- File upload limits:
+  - Max size: 10MB
+  - Allowed types: `image/jpeg`, `image/png`, `image/webp`
+
 ## Testing
 
 ### Unit
