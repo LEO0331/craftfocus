@@ -9,9 +9,19 @@ interface ButtonProps {
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'danger';
   style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export function Button({ label, onPress, disabled, variant = 'primary', style }: ButtonProps) {
+export function Button({
+  label,
+  onPress,
+  disabled,
+  variant = 'primary',
+  style,
+  accessibilityLabel,
+  accessibilityHint,
+}: ButtonProps) {
   const backgroundColor =
     variant === 'primary'
       ? theme.colors.primary
@@ -25,6 +35,10 @@ export function Button({ label, onPress, disabled, variant = 'primary', style }:
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: Boolean(disabled) }}
       style={({ pressed }) => [
         styles.base,
         {

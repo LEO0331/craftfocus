@@ -134,6 +134,9 @@ export default function FriendsScreen() {
               <Pressable
                 key={option}
                 onPress={() => setFilter(option)}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter friendships by ${option}`}
+                accessibilityState={{ selected: active }}
                 style={[styles.filterChip, active ? styles.filterChipActive : null]}
               >
                 <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{option}</Text>

@@ -33,11 +33,11 @@ export function CraftPostCard({
 }: CraftPostCardProps) {
   const content = (
     <Card>
-      {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} /> : null}
+      {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} accessibilityLabel="Craft post image" /> : null}
       {pixelImageUrl ? (
         <View style={styles.pixelWrap}>
           <Text style={styles.pixelLabel}>Pixel Preview</Text>
-          <Image source={{ uri: pixelImageUrl }} style={styles.image} />
+          <Image source={{ uri: pixelImageUrl }} style={styles.image} accessibilityLabel="Pixel-art preview of craft post" />
         </View>
       ) : null}
       <Text style={styles.title}>{title}</Text>
@@ -59,8 +59,17 @@ export function CraftPostCard({
     return content;
   }
 
-  return <Pressable onPress={onPress}>{content}</Pressable>;
-}
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Open craft post: ${title}`}
+        accessibilityHint="Opens the craft post detail page"
+      >
+        {content}
+      </Pressable>
+    );
+  }
 
 const styles = StyleSheet.create({
   pixelWrap: {

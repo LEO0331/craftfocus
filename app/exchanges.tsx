@@ -126,6 +126,9 @@ function FilterRow({ value, onChange }: { value: ExchangeFilter; onChange: (next
           <Pressable
             key={option}
             onPress={() => onChange(option)}
+            accessibilityRole="button"
+            accessibilityLabel={`Filter requests by ${option}`}
+            accessibilityState={{ selected: active }}
             style={[styles.filterChip, active ? styles.filterChipActive : null]}
           >
             <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{option}</Text>

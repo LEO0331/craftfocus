@@ -120,20 +120,29 @@ export default function NewCraftPostScreen() {
       <Text style={styles.heading}>Upload Craft Work</Text>
 
       <Card>
-        <TextInput placeholder="Title" value={title} onChangeText={setTitle} style={styles.input} />
+        <TextInput
+          placeholder="Title"
+          value={title}
+          onChangeText={setTitle}
+          style={styles.input}
+          accessibilityLabel="Post title"
+          accessibilityHint="Enter a short title for your craft work"
+        />
         <TextInput
           placeholder="Description"
           value={description}
           onChangeText={setDescription}
           style={[styles.input, styles.textarea]}
           multiline
+          accessibilityLabel="Post description"
+          accessibilityHint="Describe your craft work"
         />
 
         <CategoryPicker label="Category" options={[...CATEGORIES]} selected={category} onSelect={setCategory} />
 
         <Button label={imageUri ? 'Change Image' : 'Pick Image'} onPress={pickImage} />
 
-        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} /> : null}
+        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel="Selected craft image preview" /> : null}
 
         <Button
           label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (Experimental)'}
@@ -142,10 +151,17 @@ export default function NewCraftPostScreen() {
           variant="secondary"
         />
 
-        {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} /> : null}
+        {pixelPreviewUri ? (
+          <Image source={{ uri: pixelPreviewUri }} style={styles.preview} accessibilityLabel="Pixelized craft image preview" />
+        ) : null}
 
         <Text style={styles.label}>Open to exchange</Text>
-        <Switch value={openToExchange} onValueChange={setOpenToExchange} />
+        <Switch
+          value={openToExchange}
+          onValueChange={setOpenToExchange}
+          accessibilityLabel="Open to exchange"
+          accessibilityHint="Turn on to allow others to request an exchange"
+        />
 
         <Button label={isSaving ? 'Saving...' : 'Publish Craft Post'} onPress={handleSave} disabled={isSaving} />
       </Card>

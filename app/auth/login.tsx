@@ -43,6 +43,10 @@ export default function LoginScreen() {
             autoCapitalize="none"
             onChangeText={setEmail}
             style={styles.input}
+            accessibilityLabel="Email address"
+            accessibilityHint="Enter your account email"
+            textContentType="emailAddress"
+            autoComplete="email"
           />
           <TextInput
             placeholder="Password"
@@ -50,6 +54,10 @@ export default function LoginScreen() {
             secureTextEntry
             onChangeText={setPassword}
             style={styles.input}
+            accessibilityLabel="Password"
+            accessibilityHint="Enter your account password"
+            textContentType="password"
+            autoComplete="password"
           />
 
           <Button label="Log In" onPress={handleLogin} disabled={submitting || isLoading} />

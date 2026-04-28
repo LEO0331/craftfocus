@@ -43,6 +43,10 @@ export default function SignupScreen() {
             autoCapitalize="none"
             onChangeText={setEmail}
             style={styles.input}
+            accessibilityLabel="Email address"
+            accessibilityHint="Enter your email for signup"
+            textContentType="emailAddress"
+            autoComplete="email"
           />
           <TextInput
             placeholder="Password"
@@ -50,6 +54,10 @@ export default function SignupScreen() {
             secureTextEntry
             onChangeText={setPassword}
             style={styles.input}
+            accessibilityLabel="Password"
+            accessibilityHint="Enter a password for your new account"
+            textContentType="newPassword"
+            autoComplete="new-password"
           />
 
           <Button label="Sign Up" onPress={handleSignup} disabled={submitting || isLoading} />
