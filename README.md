@@ -85,6 +85,17 @@ npx expo start --android
 4. Enable email/password auth provider.
 5. Create public storage bucket: `craft-images`.
 
+### Seed Demo Data For One Existing User
+
+After migrations are applied, you can seed test data for any existing auth user:
+
+```sql
+select public.seed_demo_data_for_user('YOUR_USER_UUID'::uuid);
+```
+
+Find the UUID in Supabase:
+- `Authentication` -> `Users` -> copy `User UID`
+
 ### Storage Policy
 
 - Bucket: `craft-images` (public read enabled)

@@ -47,13 +47,8 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes pageReveal {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   #root {
-    animation: pageReveal 320ms ease-out;
+    transform: translateY(0);
   }
 }
 `;
