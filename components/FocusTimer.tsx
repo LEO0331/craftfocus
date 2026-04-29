@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -11,36 +11,50 @@ interface FocusTimerProps {
   totalSeconds: number;
   onCompleted: () => void;
   onStop: () => void;
-  animationSpriteId?: any;
+  animationSpriteId?: string;
   mode: FocusMode;
 }
 
 export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteId, mode }: FocusTimerProps) {
   const [remaining, setRemaining] = useState(totalSeconds);
+  const [hourglassFrame, setHourglassFrame] = useState(0);
+  const onCompletedRef = useRef(onCompleted);
+
+  useEffect(() => {
+    onCompletedRef.current = onCompleted;
+  }, [onCompleted]);
 
   useEffect(() => {
     setRemaining(totalSeconds);
+    setHourglassFrame(0);
   }, [totalSeconds]);
 
   useEffect(() => {
-    if (remaining <= 0) {
+    if (totalSeconds <= 0) {
       return;
     }
 
+    const endAt = Date.now() + totalSeconds * 1000;
     const timer = setInterval(() => {
-      setRemaining((current) => {
-        const next = current - 1;
-        if (next <= 0) {
-          clearInterval(timer);
-          onCompleted();
-          return 0;
-        }
-        return next;
-      });
-    }, 1000);
+      const next = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setRemaining(next);
+      if (next <= 0) {
+        clearInterval(timer);
+        onCompletedRef.current();
+      }
+    }, 250);
 
     return () => clearInterval(timer);
-  }, [onCompleted, remaining]);
+  }, [totalSeconds]);
+
+  useEffect(() => {
+    const spinner = setInterval(() => {
+      setHourglassFrame((prev) => (prev + 1) % 2);
+    }, 450);
+    return () => clearInterval(spinner);
+  }, []);
+
+  const hourglassGlyph = useMemo(() => (hourglassFrame === 0 ? '⌛' : '⏳'), [hourglassFrame]);
 
   const clockLabel = useMemo(() => {
     const mins = Math.floor(remaining / 60)
@@ -50,17 +64,21 @@ export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteI
     return `${mins}:${secs}`;
   }, [remaining]);
 
+  const resolvedSpriteId = animationSpriteId && animationSpriteId.length > 0 ? animationSpriteId : 'cat_general_0';
+
   return (
     <Card>
       <Text style={styles.title}>Focus In Progress</Text>
-      <Text style={styles.sub}>Don\'t interrupt me</Text>
+      <Text style={styles.sub}>Do not interrupt me</Text>
 
       <View style={styles.timerBox}>
-        <Text style={styles.timerText}>⌛ {clockLabel}</Text>
+        <Text style={styles.timerText}>
+          {hourglassGlyph} {clockLabel}
+        </Text>
       </View>
 
       <View style={styles.animationPanel}>
-        {animationSpriteId ? <PixelSprite spriteId={animationSpriteId} size={88} /> : null}
+        <PixelSprite spriteId={resolvedSpriteId} size={88} />
         <Text style={styles.modeLabel}>{mode.toUpperCase()} MODE</Text>
       </View>
 

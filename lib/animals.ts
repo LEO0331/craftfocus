@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { ANIMAL_SPRITES } from '@/constants/animalSprites';
 import type { FocusMode } from '@/types/models';
 
 export interface UserAnimal {
@@ -37,5 +38,15 @@ export async function setActiveAnimal(animalId: string) {
 
 export function resolveAnimalVariant(spriteKey: string, mode: FocusMode, frameIndex: number) {
   const frame = frameIndex % 2;
-  return `${spriteKey}_${mode}_${frame}`;
+  const primary = `${spriteKey}_${mode}_${frame}`;
+  if (ANIMAL_SPRITES[primary]) {
+    return primary;
+  }
+
+  const fallback = `cat_${mode}_${frame}`;
+  if (ANIMAL_SPRITES[fallback]) {
+    return fallback;
+  }
+
+  return 'cat_general_0';
 }
