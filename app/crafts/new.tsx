@@ -155,7 +155,7 @@ export default function NewCraftPostScreen() {
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel="Selected craft image preview" /> : null}
 
         <Button
-          label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (No AI, deterministic)'}
+          label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (deterministic)'}
           onPress={handlePixelize}
           disabled={!imageUri || isPixelizing}
           variant="secondary"

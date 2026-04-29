@@ -1,6 +1,6 @@
-import path from 'node:path';
-import fs from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const EMAIL = process.env.E2E_EMAIL ?? 'codex@test.com';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'codexcodex';
@@ -57,7 +57,7 @@ test('core user flow works on web', async ({ page }) => {
   const chooser = await fileChooser;
   await chooser.setFiles(path.join(process.cwd(), 'assets', 'images', 'icon.png'));
 
-  await page.getByRole('button', { name: 'Generate Pixel Preview (No AI, deterministic)' }).click();
+  await page.getByRole('button', { name: 'Generate Pixel Preview (deterministic)' }).click();
   await page.getByRole('button', { name: 'Publish Craft Post' }).click();
   await expect(page.getByRole('heading', { name: 'Craft Detail' })).toBeVisible({ timeout: 20_000 });
   await snap(page, '05-craft-detail.png');
