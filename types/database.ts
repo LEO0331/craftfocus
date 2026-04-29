@@ -165,6 +165,8 @@ export type Database = {
           category: string;
           image_url: string | null;
           pixel_image_url: string | null;
+          pixel_palette: Json | null;
+          pixel_grid: string[] | null;
           open_to_exchange: boolean;
           listing_category: string | null;
           seed_cost: number;
@@ -181,6 +183,8 @@ export type Database = {
           category: string;
           image_url?: string | null;
           pixel_image_url?: string | null;
+          pixel_palette?: Json | null;
+          pixel_grid?: string[] | null;
           open_to_exchange?: boolean;
           listing_category?: string | null;
           seed_cost?: number;
@@ -197,6 +201,8 @@ export type Database = {
           category?: string;
           image_url?: string | null;
           pixel_image_url?: string | null;
+          pixel_palette?: Json | null;
+          pixel_grid?: string[] | null;
           open_to_exchange?: boolean;
           listing_category?: string | null;
           seed_cost?: number;

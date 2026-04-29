@@ -1,5 +1,12 @@
 import { Platform } from 'react-native';
 
+export type PixelPalette = Record<string, string>;
+
+export interface PixelGridSpriteData {
+  palette: PixelPalette;
+  grid: string[];
+}
+
 /**
  * Experimental pixelize service. Returns a data URL on web.
  * Native currently falls back to the original URI for MVP.
@@ -52,6 +59,126 @@ export async function pixelizeImage(inputUri: string): Promise<string> {
       }
     };
     img.onerror = () => reject(new Error('Failed to load image for pixelization'));
+    img.src = inputUri;
+  });
+}
+
+const PIXEL_TOKENS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+function toHex(value: number) {
+  return value.toString(16).padStart(2, '0');
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function quantize(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value / 51) * 51));
+}
+
+function pickPaletteBuckets(imageData: Uint8ClampedArray, maxColors: number) {
+  const buckets = new Map<string, { count: number; r: number; g: number; b: number }>();
+  for (let i = 0; i < imageData.length; i += 4) {
+    const alpha = imageData[i + 3];
+    if (alpha < 40) continue;
+    const r = quantize(imageData[i]);
+    const g = quantize(imageData[i + 1]);
+    const b = quantize(imageData[i + 2]);
+    const key = `${r}-${g}-${b}`;
+    const existing = buckets.get(key);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+    buckets.set(key, { count: 1, r, g, b });
+  }
+
+  return Array.from(buckets.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, maxColors);
+}
+
+function nearestPaletteToken(r: number, g: number, b: number, colors: Array<{ token: string; r: number; g: number; b: number }>) {
+  let bestToken = colors[0]?.token ?? '.';
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const color of colors) {
+    const dr = r - color.r;
+    const dg = g - color.g;
+    const db = b - color.b;
+    const distance = dr * dr + dg * dg + db * db;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestToken = color.token;
+    }
+  }
+
+  return bestToken;
+}
+
+/**
+ * Converts an image to a compact 8x8 palette+grid sprite payload.
+ * Used as persistent fallback when image URLs are unavailable.
+ */
+export async function convertImageToPixelSprite(inputUri: string): Promise<PixelGridSpriteData | null> {
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const size = 8;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+
+        ctx.clearRect(0, 0, size, size);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, size, size);
+
+        const raw = ctx.getImageData(0, 0, size, size);
+        const buckets = pickPaletteBuckets(raw.data, PIXEL_TOKENS.length);
+        if (!buckets.length) {
+          resolve(null);
+          return;
+        }
+
+        const colors = buckets.map((bucket, index) => ({ token: PIXEL_TOKENS[index], r: bucket.r, g: bucket.g, b: bucket.b }));
+        const palette: PixelPalette = { '.': '#00000000' };
+        colors.forEach((color) => {
+          palette[color.token] = rgbToHex(color.r, color.g, color.b);
+        });
+
+        const grid: string[] = [];
+        for (let y = 0; y < size; y += 1) {
+          let row = '';
+          for (let x = 0; x < size; x += 1) {
+            const offset = (y * size + x) * 4;
+            const alpha = raw.data[offset + 3];
+            if (alpha < 40) {
+              row += '.';
+              continue;
+            }
+            row += nearestPaletteToken(raw.data[offset], raw.data[offset + 1], raw.data[offset + 2], colors);
+          }
+          grid.push(row);
+        }
+
+        resolve({ palette, grid });
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
     img.src = inputUri;
   });
 }

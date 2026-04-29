@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { theme } from '@/constants/theme';
 import type { CustomGalleryPlacement, GalleryItem } from '@/types/models';
 
@@ -62,6 +63,10 @@ export function CollectibleGalleryBoard({
                     style={styles.thumb}
                     accessibilityLabel={i18n?.imageLabel(collectible?.title ?? 'Collectible image') ?? collectible?.title ?? 'Collectible image'}
                   />
+                ) : collectible?.pixelPalette && collectible.pixelGrid ? (
+                  <View style={styles.spriteWrap}>
+                    <PixelGridSprite palette={collectible.pixelPalette} grid={collectible.pixelGrid} size={40} />
+                  </View>
                 ) : (
                   <Text style={styles.dot}>·</Text>
                 )}
@@ -103,6 +108,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  spriteWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F4E8D4',
   },
   dot: {
     color: theme.colors.muted,

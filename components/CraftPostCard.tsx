@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AsciiPet } from '@/components/AsciiPet';
 import { Card } from '@/components/Card';
+import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
 import { theme } from '@/constants/theme';
 import { useI18n } from '@/hooks/useI18n';
@@ -14,6 +15,8 @@ interface CraftPostCardProps {
   description?: string;
   imageUrl?: string;
   pixelImageUrl?: string;
+  pixelPalette?: Record<string, string> | null;
+  pixelGrid?: string[] | null;
   likes?: number;
   comments?: number;
   seedCost?: number;
@@ -30,6 +33,8 @@ export function CraftPostCard({
   description,
   imageUrl,
   pixelImageUrl,
+  pixelPalette,
+  pixelGrid,
   likes = 0,
   comments = 0,
   seedCost = 0,
@@ -48,6 +53,10 @@ export function CraftPostCard({
         <View style={styles.compactHead}>
           {displayImageUrl ? (
             <Image source={{ uri: displayImageUrl }} style={styles.thumb} accessibilityLabel={t('craft.card.image')} />
+          ) : pixelPalette && pixelGrid ? (
+            <View style={styles.thumbSprite} accessibilityLabel={t('craft.card.imageFallback')}>
+              <PixelGridSprite palette={pixelPalette} grid={pixelGrid} size={30} />
+            </View>
           ) : (
             <View style={styles.thumbFallback} accessibilityLabel={t('craft.card.imageFallback')}>
               <Text style={styles.thumbFallbackText}>PXL</Text>
@@ -58,6 +67,11 @@ export function CraftPostCard({
       ) : (
         <>
           {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.image} accessibilityLabel={t('craft.card.image')} /> : null}
+          {!displayImageUrl && pixelPalette && pixelGrid ? (
+            <View style={styles.imageSpriteWrap} accessibilityLabel={t('craft.card.imageFallback')}>
+              <PixelGridSprite palette={pixelPalette} grid={pixelGrid} size={96} />
+            </View>
+          ) : null}
           <Text style={styles.title}>{title}</Text>
         </>
       )}
@@ -120,6 +134,26 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 8,
+    backgroundColor: '#EADCC6',
+    borderWidth: 1,
+    borderColor: '#CDBB9D',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbSprite: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#EADCC6',
+    borderWidth: 1,
+    borderColor: '#CDBB9D',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageSpriteWrap: {
+    width: '100%',
+    aspectRatio: 1.4,
+    borderRadius: theme.radius.md,
     backgroundColor: '#EADCC6',
     borderWidth: 1,
     borderColor: '#CDBB9D',

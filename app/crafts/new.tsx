@@ -9,7 +9,7 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { createCraftPost } from '@/lib/crafts';
-import { generateSurprisePixelArt, pixelizeImage } from '@/lib/pixelize';
+import { convertImageToPixelSprite, generateSurprisePixelArt, pixelizeImage, type PixelGridSpriteData } from '@/lib/pixelize';
 import { ensureProfileRow } from '@/lib/profiles';
 import { storageAdapter } from '@/lib/storage';
 import { sanitizeText } from '@/lib/validation';
@@ -27,19 +27,23 @@ export default function NewCraftPostScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPixelizing, setIsPixelizing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [pixelSpriteData, setPixelSpriteData] = useState<PixelGridSpriteData | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
     if (result.canceled || !result.assets?.length) return;
     setImageUri(result.assets[0].uri);
     setPixelPreviewUri(null);
+    setPixelSpriteData(null);
   };
 
   const handlePixelize = async () => {
     if (!imageUri) return;
     setIsPixelizing(true);
     try {
-      setPixelPreviewUri(await pixelizeImage(imageUri));
+      const nextPixelPreviewUri = await pixelizeImage(imageUri);
+      setPixelPreviewUri(nextPixelPreviewUri);
+      setPixelSpriteData(await convertImageToPixelSprite(nextPixelPreviewUri));
     } catch (error) {
       Alert.alert(t('craft.new.genPixel'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
@@ -50,7 +54,9 @@ export default function NewCraftPostScreen() {
   const handleSurprisePixel = async () => {
     setIsPixelizing(true);
     try {
-      setPixelPreviewUri(await generateSurprisePixelArt());
+      const nextPixelPreviewUri = await generateSurprisePixelArt();
+      setPixelPreviewUri(nextPixelPreviewUri);
+      setPixelSpriteData(await convertImageToPixelSprite(nextPixelPreviewUri));
     } catch (error) {
       Alert.alert(t('craft.new.surprise'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
@@ -76,9 +82,15 @@ export default function NewCraftPostScreen() {
 
       let pixelImageUrl: string | null = null;
       if (pixelPreviewUri) {
-        const pixelPath = `${user.id}/${timestamp}-pixel.png`;
-        pixelImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: pixelPath, uri: pixelPreviewUri });
+        try {
+          const pixelPath = `${user.id}/${timestamp}-pixel.png`;
+          pixelImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: pixelPath, uri: pixelPreviewUri });
+        } catch {
+          pixelImageUrl = null;
+        }
       }
+
+      const spriteData = pixelSpriteData ?? (await convertImageToPixelSprite(pixelPreviewUri ?? imageUri));
 
       const id = await createCraftPost({
         userId: user.id,
@@ -87,6 +99,8 @@ export default function NewCraftPostScreen() {
         category: 'craft',
         imageUrl: uploadedImageUrl,
         pixelImageUrl,
+        pixelPalette: spriteData?.palette ?? null,
+        pixelGrid: spriteData?.grid ?? null,
         listingCategory: 'custom',
         seedCost: Math.max(1, Number(seedCost) || 1),
         listingType: 'custom',

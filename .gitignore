@@ -56,3 +56,4 @@ test-results/
 .omx/
 supabase/.temp/
 /docs
+/supabase

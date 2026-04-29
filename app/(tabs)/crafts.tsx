@@ -197,6 +197,8 @@ export default function CraftsScreen() {
                 description={post.description ?? undefined}
                 imageUrl={post.image_url ?? undefined}
                 pixelImageUrl={post.pixel_image_url ?? undefined}
+                pixelPalette={(post.pixel_palette as Record<string, string> | null | undefined) ?? null}
+                pixelGrid={post.pixel_grid ?? null}
                 likes={post.likes_count}
                 comments={post.comments_count}
                 likedByMe={post.liked_by_me}

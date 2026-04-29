@@ -10,4 +10,10 @@ describe('pixelizeImage (native fallback)', () => {
     const input = 'file:///tmp/example.jpg';
     await expect(pixelizeImage(input)).resolves.toBe(input);
   });
+
+  it('returns null sprite data on non-web platform', async () => {
+    const { convertImageToPixelSprite } = await import('@/lib/pixelize');
+    const input = 'file:///tmp/example.jpg';
+    await expect(convertImageToPixelSprite(input)).resolves.toBeNull();
+  });
 });

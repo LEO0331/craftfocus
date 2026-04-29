@@ -26,19 +26,60 @@ begin
   set quantity = excluded.quantity,
       updated_at = now();
 
-  insert into public.craft_posts (
-    user_id, title, description, category, listing_category, seed_cost, listing_type, reward_item_id, image_url, pixel_image_url, is_active
+  with inserted as (
+    insert into public.craft_posts (
+      user_id,
+      title,
+      description,
+      category,
+      listing_category,
+      seed_cost,
+      listing_type,
+      reward_item_id,
+      image_url,
+      pixel_image_url,
+      pixel_palette,
+      pixel_grid,
+      is_active
+    )
+    values
+      (
+        demo_user_id,
+        'Patchwork Cat Badge',
+        'A small cat-themed patch badge.',
+        'craft',
+        'custom',
+        25,
+        'custom',
+        null,
+        null,
+        null,
+        '{".":"#00000000","a":"#6A4C93","b":"#F6D55C","c":"#FF7F50"}'::jsonb,
+        array['........','..aaaa..','.abccba.','.acccca.','.acccca.','.abccba.','..aaaa..','........'],
+        true
+      ),
+      (
+        demo_user_id,
+        'Blue Thread Cardholder',
+        'Hand-stitched cardholder sample.',
+        'craft',
+        'custom',
+        30,
+        'custom',
+        null,
+        null,
+        null,
+        '{".":"#00000000","a":"#3A86FF","b":"#8ECAE6","c":"#023047"}'::jsonb,
+        array['........','.aaaaaa.','.abbbba.','.abccba.','.abccba.','.abbbba.','.aaaaaa.','........'],
+        true
+      )
+    returning id, title
   )
-  values
-    (demo_user_id, 'Patchwork Cat Badge', 'A small cat-themed patch badge.', 'craft', 'custom', 25, 'custom', null, null, null, true),
-    (demo_user_id, 'Blue Thread Cardholder', 'Hand-stitched cardholder sample.', 'craft', 'custom', 30, 'custom', null, null, null, true)
-  returning id into listing_a;
-
-  select id into listing_b
-  from public.craft_posts
-  where user_id = demo_user_id
-  order by created_at desc
-  limit 1 offset 1;
+  select
+    min(id) filter (where title = 'Patchwork Cat Badge'),
+    min(id) filter (where title = 'Blue Thread Cardholder')
+  into listing_a, listing_b
+  from inserted;
 
   insert into public.custom_collectibles (user_id, listing_id, image_url, pixel_image_url)
   values

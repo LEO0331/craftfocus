@@ -67,6 +67,7 @@ CraftFocus V2 uses these canonical gameplay tables:
 - `listing_claims` (claimed listings)
 - `custom_collectibles` (claimed custom works)
 - `custom_gallery_placements` (5×5 collectible gallery placements)
+- `craft_posts.pixel_palette` + `craft_posts.pixel_grid` (V2.3 render fallback payload)
 
 Legacy tables like `user_items`, `room_items`, and `exchange_requests` are retained for backward compatibility but no longer drive core V2 UI flows.
 

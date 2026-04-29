@@ -109,6 +109,8 @@ export async function createCraftPost(input: {
   category: string;
   imageUrl: string;
   pixelImageUrl?: string | null;
+  pixelPalette?: Record<string, string> | null;
+  pixelGrid?: string[] | null;
   listingCategory: string;
   seedCost: number;
   listingType: 'catalog' | 'custom';
@@ -126,6 +128,8 @@ export async function createCraftPost(input: {
       category: input.category,
       image_url: input.imageUrl,
       pixel_image_url: input.pixelImageUrl ?? null,
+      pixel_palette: input.pixelPalette ?? null,
+      pixel_grid: input.pixelGrid ?? null,
       listing_category: input.listingCategory,
       seed_cost: input.seedCost,
       listing_type: input.listingType,

@@ -41,12 +41,17 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
 
   const { data: posts, error: postsError } = await supabase
     .from('craft_posts')
-    .select('id,title,image_url,pixel_image_url,listing_type')
+    .select('id,title,image_url,pixel_image_url,pixel_palette,pixel_grid,listing_type')
     .in('id', listingIds);
   if (postsError) throw postsError;
 
   const postMap = new Map(
-    (posts ?? []).map((post: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url' | 'listing_type'>) => [post.id, post])
+    (
+      posts ?? []
+    ).map((post: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid' | 'listing_type'>) => [
+      post.id,
+      post,
+    ])
   );
   const collectibleMap = new Map(
     (collectibles ?? []).map((entry: Pick<CustomCollectibleRow, 'listing_id' | 'image_url' | 'pixel_image_url'>) => [entry.listing_id, entry])
@@ -62,6 +67,8 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
         title: post.title ?? 'Unknown listing',
         imageUrl: existing?.image_url ?? post.image_url ?? null,
         pixelImageUrl: existing?.pixel_image_url ?? post.pixel_image_url ?? null,
+        pixelPalette: (post.pixel_palette as Record<string, string> | null) ?? null,
+        pixelGrid: post.pixel_grid ?? null,
       } satisfies GalleryItem;
     })
     .filter((entry): entry is GalleryItem => Boolean(entry));
@@ -88,15 +95,17 @@ export async function listPublicGalleryItems(userId: string): Promise<GalleryIte
 
   const { data, error } = await supabase
     .from('craft_posts')
-    .select('id,title,image_url,pixel_image_url')
+    .select('id,title,image_url,pixel_image_url,pixel_palette,pixel_grid')
     .in('id', listingIds);
   if (error) throw error;
 
-  return (data ?? []).map((entry: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url'>) => ({
+  return (data ?? []).map((entry: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid'>) => ({
     listingId: entry.id,
     title: entry.title,
     imageUrl: entry.image_url,
     pixelImageUrl: entry.pixel_image_url,
+    pixelPalette: (entry.pixel_palette as Record<string, string> | null) ?? null,
+    pixelGrid: entry.pixel_grid ?? null,
   }));
 }
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollectibleGalleryBoard } from '@/components/CollectibleGalleryBoard';
 import { IsometricRoom } from '@/components/IsometricRoom';
+import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { PixelSprite } from '@/components/PixelSprite';
 import { ROOM_SPRITES } from '@/constants/roomSprites';
 import { resolveSpriteId } from '@/constants/spriteUtils';
@@ -208,6 +209,11 @@ export default function RoomScreen() {
 
       <Card>
         <Text style={styles.label}>{t('room.collectibles')}</Text>
+        <Button
+          label={selectedCollectibleId ? t('room.clearSelection') : t('room.noSelection')}
+          onPress={() => setSelectedCollectibleId(null)}
+          variant="secondary"
+        />
         <TextInput
           value={collectibleSearch}
           onChangeText={(value) => {
@@ -228,12 +234,17 @@ export default function RoomScreen() {
               <View key={collectible.listingId} style={[styles.collectibleCard, isActive ? styles.collectibleCardActive : null]}>
                 <View style={styles.collectibleHead}>
                   {previewUri ? <Image source={{ uri: previewUri }} style={styles.collectibleThumb} accessibilityLabel={t('room.collectibleImage', { title: collectible.title })} /> : null}
+                  {!previewUri && collectible.pixelPalette && collectible.pixelGrid ? (
+                    <View style={styles.collectibleThumbSprite}>
+                      <PixelGridSprite palette={collectible.pixelPalette} grid={collectible.pixelGrid} size={30} />
+                    </View>
+                  ) : null}
                   <Text style={styles.collectibleTitle}>{collectible.title}</Text>
                 </View>
                 <Text style={styles.collectibleMeta}>{isPlaced ? t('room.galleryPlaced') : t('room.galleryUnplaced')}</Text>
                 <Button
                   label={isActive ? t('room.selected') : t('room.select')}
-                  onPress={() => setSelectedCollectibleId(collectible.listingId)}
+                  onPress={() => setSelectedCollectibleId((prev) => (prev === collectible.listingId ? null : collectible.listingId))}
                   variant={isActive ? 'primary' : 'secondary'}
                 />
               </View>
@@ -254,7 +265,7 @@ export default function RoomScreen() {
           label={selectedCollectible ? t('room.galleryRemoveSelected', { title: selectedCollectible.title }) : t('room.galleryRemoveAny')}
           onPress={handleRemoveFromGallery}
           variant="danger"
-          disabled={!selectedCollectiblePlacement}
+          disabled={!selectedCollectibleId || !selectedCollectiblePlacement}
         />
       </Card>
     </ScrollView>
@@ -343,6 +354,16 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 8,
     backgroundColor: '#E5DFD1',
+  },
+  collectibleThumbSprite: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4E8D4',
   },
   searchInput: {
     borderWidth: 1,
