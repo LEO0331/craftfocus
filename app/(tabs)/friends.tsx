@@ -7,6 +7,7 @@ import { Card } from '@/components/Card';
 import { FRIEND_FILTER_OPTIONS, type FriendFilter } from '@/constants/filterOptions';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import {
   type FriendSearchResult,
   listFriendships,
@@ -19,6 +20,7 @@ import { validateSearchQuery } from '@/lib/validation';
 
 export default function FriendsScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<FriendSearchResult[]>([]);
   const [friendships, setFriendships] = useState<FriendListItem[]>([]);
@@ -63,7 +65,7 @@ export default function FriendsScreen() {
       const data = await searchProfilesByUsername(validateSearchQuery(query), user.id);
       setSearchResults(data);
     } catch (error) {
-      Alert.alert('Search failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('friends.searchUsers'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +77,10 @@ export default function FriendsScreen() {
     }
     try {
       await sendFriendRequest(user.id, profileId);
-      Alert.alert('Done', 'Friend request sent.');
+      Alert.alert(t('friends.added'), t('friends.requestSent'));
       await loadFriendships();
     } catch (error) {
-      Alert.alert('Add friend failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('friends.add'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -90,31 +92,31 @@ export default function FriendsScreen() {
       await respondToFriendRequest(friendshipId, next, user.id);
       await loadFriendships();
     } catch (error) {
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('friends.title'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Friends</Text>
+      <Text style={styles.heading}>{t('friends.title')}</Text>
 
       <Card>
-        <Text style={styles.title}>Notifications</Text>
-        <Text style={styles.text}>Incoming pending: {incomingPending}</Text>
-        <Text style={styles.text}>Sent pending: {sentPending}</Text>
-        <Button label="Open Exchanges" onPress={() => router.push('/exchanges')} variant="secondary" />
+        <Text style={styles.title}>{t('friends.notifications')}</Text>
+        <Text style={styles.text}>{t('friends.incomingPending', { count: incomingPending })}</Text>
+        <Text style={styles.text}>{t('friends.sentPending', { count: sentPending })}</Text>
+        <Button label={t('friends.openExchanges')} onPress={() => router.push('/exchanges')} variant="secondary" />
       </Card>
 
       <Card>
-        <Text style={styles.title}>Search Users</Text>
+        <Text style={styles.title}>{t('friends.searchUsers')}</Text>
         <TextInput
-          placeholder="Search by username"
+          placeholder={t('friends.searchByUsername')}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
           style={styles.input}
         />
-        <Button label={isLoading ? 'Searching...' : 'Search'} onPress={handleSearch} disabled={isLoading} />
+        <Button label={isLoading ? t('common.searching') : t('friends.search')} onPress={handleSearch} disabled={isLoading} />
 
         {searchResults.map((profile) => (
           <View key={profile.id} style={styles.row}>
@@ -122,47 +124,47 @@ export default function FriendsScreen() {
               <Text style={styles.text}>@{profile.username}</Text>
               {profile.display_name ? <Text style={styles.meta}>Display: {profile.display_name}</Text> : null}
             </View>
-            <Button label="Add" onPress={() => handleAddFriend(profile.id)} />
+            <Button label={t('friends.add')} onPress={() => handleAddFriend(profile.id)} />
           </View>
         ))}
       </Card>
 
       <Card>
-        <Text style={styles.title}>My Friendships</Text>
+        <Text style={styles.title}>{t('friends.myFriendships')}</Text>
 
         <View style={styles.filterRow}>
           {FRIEND_FILTER_OPTIONS.map((option) => {
-            const active = option === filter;
+            const active = option.value === filter;
             return (
               <Pressable
-                key={option}
-                onPress={() => setFilter(option)}
+                key={option.value}
+                onPress={() => setFilter(option.value)}
                 accessibilityRole="button"
-                accessibilityLabel={`Filter friendships by ${option}`}
+                accessibilityLabel={t('friends.filterByStatus', { status: t(option.labelKey) })}
                 accessibilityState={{ selected: active }}
                 style={[styles.filterChip, active ? styles.filterChipActive : null]}
               >
-                <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{option}</Text>
+                <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{t(option.labelKey)}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        {!filteredFriendships.length ? <Text style={styles.text}>No friendships for this filter.</Text> : null}
+        {!filteredFriendships.length ? <Text style={styles.text}>{t('friends.noFilterItems')}</Text> : null}
 
         {filteredFriendships.map((entry) => (
           <View key={entry.friendship_id} style={styles.friendCard}>
             <Text style={styles.friendName}>{entry.display_name || entry.username}</Text>
-            <Text style={styles.text}>status: {entry.status}</Text>
+            <Text style={styles.text}>{t('friends.status', { status: entry.status })}</Text>
 
             {entry.status === 'accepted' ? (
-              <Button label="Visit Room" onPress={() => router.push(`/users/${entry.profile_id}/room`)} variant="secondary" />
+              <Button label={t('friends.visitRoom')} onPress={() => router.push(`/users/${entry.profile_id}/room`)} variant="secondary" />
             ) : null}
 
             {entry.status === 'pending' && entry.role === 'addressee' ? (
               <View style={styles.actions}>
-                <Button label="Accept" onPress={() => handleRespond(entry.friendship_id, 'accepted')} />
-                <Button label="Reject" onPress={() => handleRespond(entry.friendship_id, 'rejected')} variant="danger" />
+                <Button label={t('friends.accept')} onPress={() => handleRespond(entry.friendship_id, 'accepted')} />
+                <Button label={t('friends.reject')} onPress={() => handleRespond(entry.friendship_id, 'rejected')} variant="danger" />
               </View>
             ) : null}
           </View>

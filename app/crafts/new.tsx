@@ -9,6 +9,7 @@ import { CategoryPicker } from '@/components/CategoryPicker';
 import { BUILD_TARGETS } from '@/constants/categories';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import { createCraftPost } from '@/lib/crafts';
 import { generateSurprisePixelArt, pixelizeImage } from '@/lib/pixelize';
 import { storageAdapter } from '@/lib/storage';
@@ -20,6 +21,7 @@ const STORAGE_BUCKET = 'craft-images';
 
 export default function NewCraftPostScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('craft');
@@ -44,7 +46,7 @@ export default function NewCraftPostScreen() {
     try {
       setPixelPreviewUri(await pixelizeImage(imageUri));
     } catch (error) {
-      Alert.alert('Pixel preview failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.new.genPixel'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsPixelizing(false);
     }
@@ -55,15 +57,15 @@ export default function NewCraftPostScreen() {
     try {
       setPixelPreviewUri(await generateSurprisePixelArt());
     } catch (error) {
-      Alert.alert('Surprise pixel failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.new.surprise'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsPixelizing(false);
     }
   };
 
   const handleSave = async () => {
-    if (!user?.id) return Alert.alert('Not signed in', 'Please sign in again.');
-    if (!imageUri) return Alert.alert('Missing image', 'Please pick an image before posting.');
+    if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
+    if (!imageUri) return Alert.alert(t('craft.new.missingImage'), t('craft.new.pickImageFirst'));
 
     setIsSaving(true);
     try {
@@ -94,7 +96,7 @@ export default function NewCraftPostScreen() {
 
       router.replace(`/crafts/${id}`);
     } catch (error) {
-      Alert.alert('Failed to create listing', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.new.publish'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsSaving(false);
     }
@@ -102,17 +104,17 @@ export default function NewCraftPostScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Publish Listing</Text>
+      <Text style={styles.heading}>{t('craft.new.title')}</Text>
       <Card>
-        <TextInput placeholder="Title" value={title} onChangeText={setTitle} style={styles.input} />
-        <TextInput placeholder="Description" value={description} onChangeText={setDescription} style={[styles.input, styles.textarea]} multiline />
+        <TextInput placeholder={t('craft.new.fieldTitle')} value={title} onChangeText={setTitle} style={styles.input} />
+        <TextInput placeholder={t('craft.new.fieldDescription')} value={description} onChangeText={setDescription} style={[styles.input, styles.textarea]} multiline />
 
-        <CategoryPicker label="Category" options={[...CATEGORIES]} selected={category} onSelect={setCategory} />
-        <CategoryPicker label="Listing Type" options={[...LISTING_TYPES]} selected={listingType} onSelect={(value) => setListingType(value as 'catalog' | 'custom')} />
+        <CategoryPicker label={t('craft.new.category')} options={[...CATEGORIES]} selected={category} onSelect={setCategory} />
+        <CategoryPicker label={t('craft.new.listingType')} options={[...LISTING_TYPES]} selected={listingType} onSelect={(value) => setListingType(value as 'catalog' | 'custom')} />
 
         {listingType === 'catalog' ? (
           <CategoryPicker
-            label="Reward Item"
+            label={t('craft.new.rewardItem')}
             options={BUILD_TARGETS.map((item) => item.id)}
             selected={rewardItemId}
             onSelect={(value) => setRewardItemId(value)}
@@ -120,17 +122,17 @@ export default function NewCraftPostScreen() {
           />
         ) : null}
 
-        <TextInput placeholder="Seed cost" keyboardType="number-pad" value={seedCost} onChangeText={setSeedCost} style={styles.input} />
+        <TextInput placeholder={t('craft.new.seedCost')} keyboardType="number-pad" value={seedCost} onChangeText={setSeedCost} style={styles.input} />
 
-        <Button label={imageUri ? 'Change Image' : 'Pick Image'} onPress={pickImage} />
+        <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} />
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} /> : null}
 
-        <Button label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview'} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
-        <Button label={isPixelizing ? 'Generating Surprise...' : 'Surprise Pixel (Web)'} onPress={handleSurprisePixel} disabled={isPixelizing} variant="secondary" />
+        <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
+        <Button label={isPixelizing ? t('craft.new.surprising') : t('craft.new.surprise')} onPress={handleSurprisePixel} disabled={isPixelizing} variant="secondary" />
 
         {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} /> : null}
 
-        <Button label={isSaving ? 'Saving...' : 'Publish Listing'} onPress={handleSave} disabled={isSaving} />
+        <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
       </Card>
     </ScrollView>
   );

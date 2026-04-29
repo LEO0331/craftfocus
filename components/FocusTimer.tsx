@@ -13,9 +13,23 @@ interface FocusTimerProps {
   onStop: () => void;
   animationSpriteId?: string;
   mode: FocusMode;
+  title: string;
+  subtitle: string;
+  stopLabel: string;
+  devCompleteLabel: string;
 }
 
-export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteId, mode }: FocusTimerProps) {
+export function FocusTimer({
+  totalSeconds,
+  onCompleted,
+  onStop,
+  animationSpriteId,
+  mode,
+  title,
+  subtitle,
+  stopLabel,
+  devCompleteLabel,
+}: FocusTimerProps) {
   const [remaining, setRemaining] = useState(totalSeconds);
   const [hourglassFrame, setHourglassFrame] = useState(0);
   const onCompletedRef = useRef(onCompleted);
@@ -68,8 +82,8 @@ export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteI
 
   return (
     <Card>
-      <Text style={styles.title}>Focus In Progress</Text>
-      <Text style={styles.sub}>Do not interrupt me</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.sub}>{subtitle}</Text>
 
       <View style={styles.timerBox}>
         <Text style={styles.timerText}>
@@ -83,10 +97,10 @@ export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteI
       </View>
 
       <View style={styles.row}>
-        <Button label="Stop Focus" onPress={onStop} variant="danger" />
+        <Button label={stopLabel} onPress={onStop} variant="danger" />
       </View>
 
-      <Button label="Dev: Complete Now" onPress={onCompleted} />
+      <Button label={devCompleteLabel} onPress={onCompleted} />
     </Card>
   );
 }

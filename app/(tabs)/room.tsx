@@ -9,12 +9,14 @@ import { ROOM_SPRITES } from '@/constants/roomSprites';
 import { resolveSpriteId } from '@/constants/spriteUtils';
 import { theme } from '@/constants/theme';
 import { useRoom } from '@/hooks/useRoom';
+import { useI18n } from '@/hooks/useI18n';
 import type { BuildTargetId, RoomType } from '@/types/models';
 
 const ROOM_TYPES: RoomType[] = ['bedroom', 'gym'];
 
 export default function RoomScreen() {
   const { roomType, placements, inventory, inventoryByItem, placeAtAnchor, removePlacementAtAnchor, switchRoomType } = useRoom();
+  const { t } = useI18n();
   const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<BuildTargetId>('plant');
 
@@ -32,7 +34,7 @@ export default function RoomScreen() {
     try {
       await placeAtAnchor(selectedItemId, selectedAnchorId);
     } catch (error) {
-      Alert.alert('Placement failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('room.placeFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -43,16 +45,16 @@ export default function RoomScreen() {
     try {
       await removePlacementAtAnchor(selectedAnchorId);
     } catch (error) {
-      Alert.alert('Remove failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('room.removeFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>My Focus Room</Text>
+      <Text style={styles.heading}>{t('room.title')}</Text>
 
       <Card>
-        <Text style={styles.label}>Room Type</Text>
+        <Text style={styles.label}>{t('room.roomType')}</Text>
         <View style={styles.switchRow}>
           {ROOM_TYPES.map((entry) => (
             <Button
@@ -66,15 +68,18 @@ export default function RoomScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.label}>Isometric Room</Text>
+        <Text style={styles.label}>{t('room.isometric')}</Text>
         <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={selectedAnchorId} onSelectAnchor={setSelectedAnchorId} />
         <Text style={styles.text}>
-          Selected anchor: {selectedAnchorId ?? 'none'} {selectedPlacement ? `· has ${selectedPlacement.item_id}` : '· empty'}
+          {t('room.selectedAnchor', {
+            anchor: selectedAnchorId ?? 'none',
+            state: selectedPlacement ? t('room.hasItem', { item: selectedPlacement.item_id }) : t('room.empty'),
+          })}
         </Text>
       </Card>
 
       <Card>
-        <Text style={styles.label}>Inventory</Text>
+        <Text style={styles.label}>{t('room.inventory')}</Text>
         <View style={styles.inventoryWrap}>
           {inventory.map((item) => {
             const spriteId = resolveSpriteId(item.item_id);
@@ -83,7 +88,7 @@ export default function RoomScreen() {
               <View key={item.item_id} style={[styles.inventoryCard, active ? styles.inventoryCardActive : null]}>
                 <PixelSprite spriteId={spriteId} size={34} />
                 <Text style={styles.inventoryName}>{ROOM_SPRITES[spriteId].name}</Text>
-                <Text style={styles.inventoryMeta}>Owned: {item.quantity}</Text>
+                <Text style={styles.inventoryMeta}>{t('room.owned', { count: item.quantity })}</Text>
                 <Button
                   label={active ? 'Selected' : 'Select'}
                   onPress={() => setSelectedItemId(item.item_id as BuildTargetId)}
@@ -94,7 +99,7 @@ export default function RoomScreen() {
           })}
         </View>
         <Button
-          label={`Place Selected Item (owned: ${quantity})`}
+          label={t('room.place', { count: quantity })}
           onPress={handlePlace}
           disabled={!selectedAnchorId || quantity <= 0}
         />

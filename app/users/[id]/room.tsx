@@ -5,11 +5,13 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Card } from '@/components/Card';
 import { IsometricRoom } from '@/components/IsometricRoom';
 import { theme } from '@/constants/theme';
+import { useI18n } from '@/hooks/useI18n';
 import { listPublicRoomLayout, type RoomPlacement } from '@/lib/rooms';
 import type { RoomType } from '@/types/models';
 
 export default function UserRoomScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
+  const { t } = useI18n();
   const userId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
   const [roomType, setRoomType] = useState<RoomType>('bedroom');
   const [placements, setPlacements] = useState<RoomPlacement[]>([]);
@@ -29,9 +31,9 @@ export default function UserRoomScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Friend Room</Text>
+      <Text style={styles.heading}>{t('userRoom.title')}</Text>
       <Card>
-        <Text style={styles.label}>Theme: {roomType}</Text>
+        <Text style={styles.label}>{t('userRoom.theme', { theme: roomType })}</Text>
         <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={null} onSelectAnchor={() => {}} />
       </Card>
     </ScrollView>

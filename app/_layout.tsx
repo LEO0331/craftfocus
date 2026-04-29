@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { theme } from '@/constants/theme';
 import { AuthProvider, RequireAuth } from '@/hooks/useAuth';
+import { I18nProvider, useI18n } from '@/hooks/useI18n';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 export { ErrorBoundary } from 'expo-router';
@@ -43,31 +44,39 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <View style={styles.container}>
-        {!isSupabaseConfigured ? (
-          <View style={styles.banner} accessibilityRole="alert">
-            <Text style={styles.bannerText}>
-              Configuration error: missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY.
-            </Text>
-          </View>
-        ) : null}
-        <View style={styles.content}>
-          <RequireAuth>
-            <Stack screenOptions={{ headerTitleAlign: 'center' }}>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen name="auth/login" options={{ title: 'Log In' }} />
-              <Stack.Screen name="auth/signup" options={{ title: 'Sign Up' }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="crafts/new" options={{ title: 'New Craft Post' }} />
-              <Stack.Screen name="crafts/[id]" options={{ title: 'Craft Detail' }} />
-              <Stack.Screen name="users/[id]/room" options={{ title: 'Friend Room' }} />
-              <Stack.Screen name="exchanges" options={{ title: 'Exchange Requests' }} />
-            </Stack>
-          </RequireAuth>
+    <I18nProvider>
+      <AuthProvider>
+        <RootNav />
+      </AuthProvider>
+    </I18nProvider>
+  );
+}
+
+function RootNav() {
+  const { t } = useI18n();
+
+  return (
+    <View style={styles.container}>
+      {!isSupabaseConfigured ? (
+        <View style={styles.banner} accessibilityRole="alert">
+          <Text style={styles.bannerText}>{t('root.configError')}</Text>
         </View>
+      ) : null}
+      <View style={styles.content} accessibilityLabel="Main application content">
+        <RequireAuth>
+          <Stack screenOptions={{ headerTitleAlign: 'center' }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/login" options={{ title: t('stack.login') }} />
+            <Stack.Screen name="auth/signup" options={{ title: t('stack.signup') }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="crafts/new" options={{ title: t('stack.newCraft') }} />
+            <Stack.Screen name="crafts/[id]" options={{ title: t('stack.craftDetail') }} />
+            <Stack.Screen name="users/[id]/room" options={{ title: t('stack.friendRoom') }} />
+            <Stack.Screen name="exchanges" options={{ title: t('stack.exchanges') }} />
+          </Stack>
+        </RequireAuth>
       </View>
-    </AuthProvider>
+    </View>
   );
 }
 

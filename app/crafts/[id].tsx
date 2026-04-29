@@ -7,6 +7,7 @@ import { Card } from '@/components/Card';
 import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import { addComment, claimListingWithSeeds, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
 import { sanitizeText } from '@/lib/validation';
 
@@ -14,6 +15,7 @@ export default function CraftDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const postId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
   const { user } = useAuth();
+  const { t } = useI18n();
 
   const [post, setPost] = useState<CraftPostDetail | null>(null);
   const [comment, setComment] = useState('');
@@ -40,7 +42,7 @@ export default function CraftDetailScreen() {
       await toggleLike(postId, user.id);
       await loadPost();
     } catch (error) {
-      Alert.alert('Like failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.detail.like'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -48,10 +50,10 @@ export default function CraftDetailScreen() {
     if (!user?.id || !postId || !post) return;
     try {
       await claimListingWithSeeds(postId);
-      Alert.alert('Claimed', 'Listing claimed successfully.');
+      Alert.alert(t('craft.detail.claimed'), t('craft.detail.claimed'));
       await loadPost();
     } catch (error) {
-      Alert.alert('Claim failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.detail.claim'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -62,23 +64,23 @@ export default function CraftDetailScreen() {
       setComment('');
       await loadPost();
     } catch (error) {
-      Alert.alert('Comment failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('craft.detail.comments'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
   const handleDeletePost = () => {
     if (!user?.id || !postId) return;
     Alert.alert('Delete Listing', 'Are you sure you want to archive this listing?', [
-      { text: 'Cancel', style: 'cancel' },
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             await deleteCraftPost(postId, user.id);
             router.replace('/(tabs)/crafts');
           } catch (error) {
-            Alert.alert('Delete failed', error instanceof Error ? error.message : 'Unknown error');
+            Alert.alert(t('craft.detail.deleteListing'), error instanceof Error ? error.message : t('common.unknownError'));
           }
         },
       },
@@ -88,14 +90,14 @@ export default function CraftDetailScreen() {
   if (!postId) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>Invalid listing id.</Text>
+        <Text style={styles.text}>{t('craft.detail.invalidId')}</Text>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Listing Detail</Text>
+      <Text style={styles.heading}>{t('craft.detail.title')}</Text>
 
       {post ? (
         <CraftPostCard
@@ -114,26 +116,26 @@ export default function CraftDetailScreen() {
         />
       ) : (
         <Card>
-          <Text style={styles.text}>{isLoading ? 'Loading...' : 'Listing not found.'}</Text>
+          <Text style={styles.text}>{isLoading ? t('common.loading') : t('craft.detail.notFound')}</Text>
         </Card>
       )}
 
       {post ? (
         <Card>
-          <Button label={post.liked_by_me ? 'Unlike' : 'Like'} onPress={handleToggleLike} />
+          <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
           {post.user_id !== user?.id ? (
-            <Button label={post.claimed_by_me ? 'Already Claimed' : `Claim (${post.seed_cost ?? 0} seeds)`} onPress={handleClaim} disabled={post.claimed_by_me} />
+            <Button label={post.claimed_by_me ? t('craft.detail.claimed') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={post.claimed_by_me} />
           ) : null}
-          <Button label="Visit Creator Room" onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
-          {post.user_id === user?.id ? <Button label="Delete This Listing" onPress={handleDeletePost} variant="danger" /> : null}
+          <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
+          {post.user_id === user?.id ? <Button label={t('craft.detail.deleteListing')} onPress={handleDeletePost} variant="danger" /> : null}
         </Card>
       ) : null}
 
       {post ? (
         <Card>
-          <Text style={styles.label}>Comments</Text>
-          <TextInput placeholder="Write a comment" value={comment} onChangeText={setComment} style={styles.input} multiline />
-          <Button label="Post Comment" onPress={handleAddComment} />
+          <Text style={styles.label}>{t('craft.detail.comments')}</Text>
+          <TextInput placeholder={t('craft.detail.commentPlaceholder')} value={comment} onChangeText={setComment} style={styles.input} multiline />
+          <Button label={t('craft.detail.postComment')} onPress={handleAddComment} />
           {post.comments.map((entry) => (
             <View key={entry.id} style={styles.commentRow}>
               <Text style={styles.commentAuthor}>{entry.author_name}</Text>

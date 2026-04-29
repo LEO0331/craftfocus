@@ -3,12 +3,15 @@ import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 
 import { theme } from '@/constants/theme';
+import { useI18n } from '@/hooks/useI18n';
 
 function TabBarIcon(props: { name: ComponentProps<typeof FontAwesome>['name']; color: string }) {
   return <FontAwesome size={20} style={{ marginBottom: -2 }} {...props} />;
 }
 
 export default function TabLayout() {
+  const { t } = useI18n();
+
   return (
     <Tabs
       initialRouteName="home"
@@ -21,27 +24,27 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ title: 'Home', tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} /> }}
+        options={{ title: t('tabs.home'), tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} /> }}
       />
       <Tabs.Screen
         name="focus"
-        options={{ title: 'Focus', tabBarIcon: ({ color }) => <TabBarIcon name="clock-o" color={color} /> }}
+        options={{ title: t('tabs.focus'), tabBarIcon: ({ color }) => <TabBarIcon name="clock-o" color={color} /> }}
       />
       <Tabs.Screen
         name="room"
-        options={{ title: 'Room', tabBarIcon: ({ color }) => <TabBarIcon name="th-large" color={color} /> }}
+        options={{ title: t('tabs.room'), tabBarIcon: ({ color }) => <TabBarIcon name="th-large" color={color} /> }}
       />
       <Tabs.Screen
         name="crafts"
-        options={{ title: 'Crafts', tabBarIcon: ({ color }) => <TabBarIcon name="camera" color={color} /> }}
+        options={{ title: t('tabs.crafts'), tabBarIcon: ({ color }) => <TabBarIcon name="camera" color={color} /> }}
       />
       <Tabs.Screen
         name="friends"
-        options={{ title: 'Friends', tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} /> }}
+        options={{ title: t('tabs.friends'), tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} /> }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} /> }}
+        options={{ title: t('tabs.profile'), tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} /> }}
       />
     </Tabs>
   );

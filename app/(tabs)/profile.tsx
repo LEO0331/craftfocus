@@ -5,8 +5,10 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-nati
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { CategoryPicker } from '@/components/CategoryPicker';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n, type AppLanguage } from '@/hooks/useI18n';
 import { useProfile } from '@/hooks/useProfile';
 import { deleteMyAccount } from '@/lib/auth';
 import { getWalletBalance } from '@/lib/wallet';
@@ -22,6 +24,7 @@ const STORAGE_BUCKET = 'craft-images';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { language, setLanguage, t } = useI18n();
   const { profile, saveProfile } = useProfile();
 
   const [displayName, setDisplayName] = useState('');
@@ -100,19 +103,19 @@ export default function ProfileScreen() {
       }
 
       await saveProfile({ display_name: safeDisplayName || null, bio: safeBio || null, avatar_url: avatarUrlToSave });
-      Alert.alert('Saved', 'Profile updated.');
+      Alert.alert(t('profile.saved'), t('profile.profileUpdated'));
     } catch (error) {
-      Alert.alert('Save failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('profile.saveFailed'), error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert('Delete Account', 'Are you sure you want to delete your account? This permanently removes your profile and app data.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('profile.deleteTitle'), t('profile.deleteMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -127,6 +130,10 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const handleSetLanguage = async (next: AppLanguage) => {
+    await setLanguage(next);
+  };
+
   const handleSetActive = async (animalId: string) => {
     try {
       await setActiveAnimal(animalId);
@@ -138,8 +145,12 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Profile</Text>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      accessibilityLabel={t('profile.title')}
+    >
+      <Text style={styles.heading}>{t('profile.title')}</Text>
 
       <Card>
         <View style={styles.row}>
@@ -150,28 +161,51 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Button label="Pick Avatar" onPress={pickAvatar} variant="secondary" />
+        <Button label={t('profile.pickAvatar')} onPress={pickAvatar} variant="secondary" />
 
-        <Text style={styles.label}>Username</Text>
-        <TextInput value={profile?.username ?? ''} editable={false} selectTextOnFocus={false} autoCapitalize="none" style={[styles.input, styles.readOnlyInput]} />
+        <Text style={styles.label}>{t('profile.username')}</Text>
+        <TextInput
+          value={profile?.username ?? ''}
+          editable={false}
+          selectTextOnFocus={false}
+          autoCapitalize="none"
+          accessibilityLabel={t('profile.username')}
+          style={[styles.input, styles.readOnlyInput]}
+        />
 
-        <Text style={styles.label}>Display name</Text>
-        <TextInput value={displayName} onChangeText={setDisplayName} style={styles.input} />
+        <Text style={styles.label}>{t('profile.displayName')}</Text>
+        <TextInput value={displayName} onChangeText={setDisplayName} accessibilityLabel={t('profile.displayName')} style={styles.input} />
 
-        <Text style={styles.label}>Bio</Text>
-        <TextInput value={bio} onChangeText={setBio} multiline style={[styles.input, styles.bioInput]} />
+        <Text style={styles.label}>{t('profile.bio')}</Text>
+        <TextInput value={bio} onChangeText={setBio} multiline accessibilityLabel={t('profile.bio')} style={[styles.input, styles.bioInput]} />
 
-        <Button label={isSaving ? 'Saving...' : 'Save Profile'} onPress={handleSave} disabled={isSaving} />
+        <CategoryPicker
+          label={t('profile.language')}
+          options={['en', 'zh-TW']}
+          selected={language}
+          onSelect={(value) => {
+            handleSetLanguage(value as AppLanguage).catch(() => {
+              // noop
+            });
+          }}
+          renderLabel={(value) => (value === 'en' ? t('profile.lang.en') : t('profile.lang.zh-TW'))}
+        />
+
+        <Button label={isSaving ? t('profile.saving') : t('profile.save')} onPress={handleSave} disabled={isSaving} />
       </Card>
 
       <Card>
-        <Text style={styles.name}>Companion & Wallet</Text>
-        <Text style={styles.sub}>Active animal: {activeAnimalName}</Text>
-        <Text style={styles.sub}>Seeds balance: {walletBalance}</Text>
+        <Text style={styles.name}>{t('profile.companionWallet')}</Text>
+        <Text style={styles.sub}>{t('profile.activeAnimal', { name: activeAnimalName })}</Text>
+        <Text style={styles.sub}>{t('profile.seedsBalance', { count: walletBalance })}</Text>
         {animals.map((animal) => (
           <Button
             key={animal.animal_id}
-            label={animal.is_active ? `${animal.name} (Active)` : `Set ${animal.name} Active`}
+            label={
+              animal.is_active
+                ? t('profile.activeLabel', { name: animal.name })
+                : t('profile.setActive', { name: animal.name })
+            }
             onPress={() => handleSetActive(animal.animal_id)}
             variant={animal.is_active ? 'secondary' : 'primary'}
           />
@@ -179,15 +213,15 @@ export default function ProfileScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.name}>Stats</Text>
-        <Text style={styles.sub}>total focus minutes: {stats.totalMinutes}</Text>
-        <Text style={styles.sub}>completed sessions: {stats.completedSessions}</Text>
-        <Text style={styles.sub}>uploaded listings: {stats.uploadedWorks}</Text>
-        <Text style={styles.sub}>inventory quantity: {stats.unlockedItems}</Text>
+        <Text style={styles.name}>{t('profile.stats')}</Text>
+        <Text style={styles.sub}>{t('profile.totalMinutes', { count: stats.totalMinutes })}</Text>
+        <Text style={styles.sub}>{t('profile.completedSessions', { count: stats.completedSessions })}</Text>
+        <Text style={styles.sub}>{t('profile.uploadedListings', { count: stats.uploadedWorks })}</Text>
+        <Text style={styles.sub}>{t('profile.inventoryQty', { count: stats.unlockedItems })}</Text>
       </Card>
 
-      <Button label="Log Out" onPress={() => logout()} variant="secondary" />
-      <Button label="Delete Account" onPress={handleDeleteAccount} variant="danger" />
+      <Button label={t('profile.logout')} onPress={() => logout()} variant="secondary" />
+      <Button label={t('profile.delete')} onPress={handleDeleteAccount} variant="danger" />
     </ScrollView>
   );
 }

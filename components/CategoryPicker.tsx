@@ -24,14 +24,18 @@ export function CategoryPicker<T extends string>({
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {options.map((option) => {
           const active = option === selected;
+          const labelText = renderLabel ? renderLabel(option) : option;
           return (
             <Pressable
               key={option}
               onPress={() => onSelect(option)}
+              accessibilityRole="button"
+              accessibilityLabel={`${label}: ${labelText}`}
+              accessibilityState={{ selected: active }}
               style={[styles.chip, active ? styles.chipActive : null]}
             >
               <Text style={[styles.chipLabel, active ? styles.chipLabelActive : null]}>
-                {renderLabel ? renderLabel(option) : option}
+                {labelText}
               </Text>
             </Pressable>
           );

@@ -6,10 +6,12 @@ import { Card } from '@/components/Card';
 import { EXCHANGE_FILTER_OPTIONS, type ExchangeFilter } from '@/constants/filterOptions';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import { listMyExchangeRequests, updateExchangeStatus, type ExchangeListItem } from '@/lib/exchanges';
 
 export default function ExchangesScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [requests, setRequests] = useState<ExchangeListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [incomingFilter, setIncomingFilter] = useState<ExchangeFilter>('all');
@@ -57,36 +59,36 @@ export default function ExchangesScreen() {
       await updateExchangeStatus(id, next, user.id);
       await loadRequests();
     } catch (error) {
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('ex.title'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Exchange Requests</Text>
+      <Text style={styles.heading}>{t('ex.title')}</Text>
 
       <Card>
-        <Text style={styles.subheading}>Notifications</Text>
-        <Text style={styles.text}>Incoming pending: {incomingPendingCount}</Text>
-        <Text style={styles.text}>Outgoing pending: {outgoingPendingCount}</Text>
+        <Text style={styles.subheading}>{t('ex.notifications')}</Text>
+        <Text style={styles.text}>{t('friends.incomingPending', { count: incomingPendingCount })}</Text>
+        <Text style={styles.text}>{t('friends.sentPending', { count: outgoingPendingCount })}</Text>
       </Card>
 
       <Card>
-        <Text style={styles.subheading}>Incoming</Text>
+        <Text style={styles.subheading}>{t('ex.incoming')}</Text>
         <FilterRow value={incomingFilter} onChange={setIncomingFilter} />
 
-        {!incomingVisible.length ? <Text style={styles.text}>No incoming requests for this filter.</Text> : null}
+        {!incomingVisible.length ? <Text style={styles.text}>{t('ex.noIncoming')}</Text> : null}
         {incomingVisible.map((item) => (
           <View key={item.id} style={styles.requestCard}>
             <Text style={styles.title}>{item.craft_title}</Text>
-            <Text style={styles.text}>from: {item.requester_name}</Text>
-            {item.message ? <Text style={styles.text}>message: {item.message}</Text> : null}
-            <Text style={styles.text}>status: {item.status}</Text>
+            <Text style={styles.text}>{t('ex.from', { name: item.requester_name })}</Text>
+            {item.message ? <Text style={styles.text}>{t('ex.message', { text: item.message })}</Text> : null}
+            <Text style={styles.text}>{t('ex.status', { status: item.status })}</Text>
 
             {item.status === 'pending' ? (
               <View style={styles.actions}>
-                <Button label="Accept" onPress={() => handleUpdate(item.id, 'accepted')} />
-                <Button label="Reject" onPress={() => handleUpdate(item.id, 'rejected')} variant="danger" />
+                <Button label={t('ex.accept')} onPress={() => handleUpdate(item.id, 'accepted')} />
+                <Button label={t('ex.reject')} onPress={() => handleUpdate(item.id, 'rejected')} variant="danger" />
               </View>
             ) : null}
           </View>
@@ -94,44 +96,46 @@ export default function ExchangesScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.subheading}>Outgoing</Text>
+        <Text style={styles.subheading}>{t('ex.outgoing')}</Text>
         <FilterRow value={outgoingFilter} onChange={setOutgoingFilter} />
 
-        {!outgoingVisible.length ? <Text style={styles.text}>No outgoing requests for this filter.</Text> : null}
+        {!outgoingVisible.length ? <Text style={styles.text}>{t('ex.noOutgoing')}</Text> : null}
         {outgoingVisible.map((item) => (
           <View key={item.id} style={styles.requestCard}>
             <Text style={styles.title}>{item.craft_title}</Text>
-            <Text style={styles.text}>to: {item.owner_name}</Text>
-            {item.message ? <Text style={styles.text}>message: {item.message}</Text> : null}
-            <Text style={styles.text}>status: {item.status}</Text>
+            <Text style={styles.text}>{t('ex.to', { name: item.owner_name })}</Text>
+            {item.message ? <Text style={styles.text}>{t('ex.message', { text: item.message })}</Text> : null}
+            <Text style={styles.text}>{t('ex.status', { status: item.status })}</Text>
 
             {item.status === 'pending' ? (
-              <Button label="Cancel" onPress={() => handleUpdate(item.id, 'cancelled')} variant="secondary" />
+              <Button label={t('ex.cancel')} onPress={() => handleUpdate(item.id, 'cancelled')} variant="secondary" />
             ) : null}
           </View>
         ))}
       </Card>
 
-      {isLoading ? <Text style={styles.text}>Refreshing…</Text> : null}
+      {isLoading ? <Text style={styles.text}>{t('ex.refreshing')}</Text> : null}
     </ScrollView>
   );
 }
 
 function FilterRow({ value, onChange }: { value: ExchangeFilter; onChange: (next: ExchangeFilter) => void }) {
+  const { t } = useI18n();
+
   return (
     <View style={styles.filterRow}>
       {EXCHANGE_FILTER_OPTIONS.map((option) => {
-        const active = option === value;
+        const active = option.value === value;
         return (
           <Pressable
-            key={option}
-            onPress={() => onChange(option)}
+            key={option.value}
+            onPress={() => onChange(option.value)}
             accessibilityRole="button"
-            accessibilityLabel={`Filter requests by ${option}`}
+            accessibilityLabel={t('ex.filterByStatus', { status: t(option.labelKey) })}
             accessibilityState={{ selected: active }}
             style={[styles.filterChip, active ? styles.filterChipActive : null]}
           >
-            <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{option}</Text>
+            <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{t(option.labelKey)}</Text>
           </Pressable>
         );
       })}

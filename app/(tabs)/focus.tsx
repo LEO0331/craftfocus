@@ -9,11 +9,13 @@ import { FOCUS_DURATIONS, FOCUS_MODES } from '@/constants/categories';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusSession } from '@/hooks/useFocusSession';
+import { useI18n } from '@/hooks/useI18n';
 import { getActiveAnimal, resolveAnimalVariant } from '@/lib/animals';
 import type { FocusMode } from '@/types/models';
 
 export default function FocusScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
   const [mode, setMode] = useState<FocusMode>('general');
   const [isRunning, setIsRunning] = useState(false);
@@ -55,38 +57,42 @@ export default function FocusScreen() {
 
       setResultText(
         status === 'completed'
-          ? `Great focus. +${reward.coins} seeds. Balance: ${reward.seedsBalance}`
-          : `Focus stopped. +${reward.coins} seeds. Balance: ${reward.seedsBalance}`
+          ? t('focus.result.completed', { coins: reward.coins, balance: reward.seedsBalance })
+          : t('focus.result.stopped', { coins: reward.coins, balance: reward.seedsBalance })
       );
       setIsRunning(false);
     } catch (error) {
-      Alert.alert('Could not save session', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : 'Unknown error');
       setIsRunning(false);
     }
   };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Focus Session</Text>
+      <Text style={styles.heading}>{t('focus.title')}</Text>
 
       {!isRunning ? (
         <Card>
           <CategoryPicker
-            label="Duration"
+            label={t('focus.duration')}
             options={FOCUS_DURATIONS.map((value) => `${value}` as `${number}`)}
             selected={`${duration}`}
             onSelect={(value) => setDuration(Number(value) as (typeof FOCUS_DURATIONS)[number])}
           />
 
-          <CategoryPicker label="Focus Mode" options={FOCUS_MODES} selected={mode} onSelect={(next) => setMode(next as FocusMode)} />
+          <CategoryPicker label={t('focus.mode')} options={FOCUS_MODES} selected={mode} onSelect={(next) => setMode(next as FocusMode)} />
 
-          <Button label="Start Focus" onPress={() => setIsRunning(true)} disabled={isSaving} />
+          <Button label={t('focus.start')} onPress={() => setIsRunning(true)} disabled={isSaving} />
           {resultText ? <Text style={styles.result}>{resultText}</Text> : null}
         </Card>
       ) : (
         <FocusTimer
           totalSeconds={durationSeconds}
           mode={mode}
+          title={t('focus.timer.title')}
+          subtitle={t('focus.timer.subtitle')}
+          stopLabel={t('focus.timer.stop')}
+          devCompleteLabel={t('focus.timer.devComplete')}
           animationSpriteId={activeSprite}
           onCompleted={() => {
             handleFinish('completed');

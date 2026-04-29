@@ -6,10 +6,12 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useI18n } from '@/hooks/useI18n';
 import { validateEmail, validatePassword } from '@/lib/validation';
 
 export default function LoginScreen() {
   const { signIn, isLoading } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -22,49 +24,44 @@ export default function LoginScreen() {
       await signIn(validateEmail(email), validatePassword(password));
       router.replace('/(tabs)/home');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Please try again.';
+      const message = error instanceof Error ? error.message : t('auth.retry');
       setAuthError(message);
-      Alert.alert('Login failed', message);
+      Alert.alert(t('auth.loginFailed'), message);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.select({ ios: 'padding', android: undefined, default: undefined })}
-      style={styles.container}
-    >
+    <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined, default: undefined })} style={styles.container}>
       <View style={styles.content}>
         <Card>
-          <Text style={styles.title}>CraftFocus</Text>
-          <Text style={styles.subtitle}>Focus, build, and share your craft journey.</Text>
+          <Text style={styles.title}>{t('auth.appTitle')}</Text>
+          <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
 
           <TextInput
-            placeholder="Email"
+            placeholder={t('auth.email')}
             value={email}
             keyboardType="email-address"
             autoCapitalize="none"
             onChangeText={setEmail}
             style={styles.input}
-            accessibilityLabel="Email address"
-            accessibilityHint="Enter your account email"
+            accessibilityLabel={t('auth.email')}
             textContentType="emailAddress"
             autoComplete="email"
           />
           <TextInput
-            placeholder="Password"
+            placeholder={t('auth.password')}
             value={password}
             secureTextEntry
             onChangeText={setPassword}
             style={styles.input}
-            accessibilityLabel="Password"
-            accessibilityHint="Enter your account password"
+            accessibilityLabel={t('auth.password')}
             textContentType="password"
             autoComplete="password"
           />
 
-          <Button label="Log In" onPress={handleLogin} disabled={submitting || isLoading} />
+          <Button label={t('auth.login')} onPress={handleLogin} disabled={submitting || isLoading} />
           {authError ? (
             <Text accessibilityRole="alert" style={styles.errorText}>
               {authError}
@@ -72,7 +69,7 @@ export default function LoginScreen() {
           ) : null}
 
           <Text style={styles.footnote}>
-            New here? <Link href="/auth/signup">Create account</Link>
+            {t('auth.newHere')} <Link href="/auth/signup">{t('auth.createAccount')}</Link>
           </Text>
         </Card>
       </View>
@@ -81,27 +78,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-    maxWidth: 520,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: theme.colors.text,
-  },
-  subtitle: {
-    color: theme.colors.muted,
-    marginBottom: 8,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { flex: 1, justifyContent: 'center', padding: theme.spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
+  title: { fontSize: 28, fontWeight: '800', color: theme.colors.text },
+  subtitle: { color: theme.colors.muted, marginBottom: 8 },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -110,11 +90,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#fff',
   },
-  footnote: {
-    color: theme.colors.muted,
-  },
-  errorText: {
-    color: theme.colors.danger,
-    fontWeight: '600',
-  },
+  footnote: { color: theme.colors.muted },
+  errorText: { color: theme.colors.danger, fontWeight: '600' },
 });

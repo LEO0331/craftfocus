@@ -7,9 +7,11 @@ import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { listCraftPosts, type CraftFeedItem } from '@/lib/crafts';
+import { useI18n } from '@/hooks/useI18n';
 
 export default function CraftsScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [posts, setPosts] = useState<CraftFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,12 +35,12 @@ export default function CraftsScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadPosts} />}
     >
-      <Text style={styles.heading}>Craft Feed</Text>
+      <Text style={styles.heading}>{t('crafts.title')}</Text>
       <Button label="Upload New Craft" onPress={() => router.push('/crafts/new')} />
 
       {isLoading && !posts.length ? <ActivityIndicator color={theme.colors.primary} /> : null}
 
-      {!isLoading && !posts.length ? <Text style={styles.empty}>No posts yet. Share your first craft work.</Text> : null}
+      {!isLoading && !posts.length ? <Text style={styles.empty}>{t('crafts.empty')}</Text> : null}
 
       <View style={styles.grid}>
         {posts.map((post) => (
