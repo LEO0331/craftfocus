@@ -46,7 +46,13 @@ export function CraftPostCard({
     <Card>
       {compact ? (
         <View style={styles.compactHead}>
-          {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.thumb} accessibilityLabel={t('craft.card.image')} /> : null}
+          {displayImageUrl ? (
+            <Image source={{ uri: displayImageUrl }} style={styles.thumb} accessibilityLabel={t('craft.card.image')} />
+          ) : (
+            <View style={styles.thumbFallback} accessibilityLabel={t('craft.card.imageFallback')}>
+              <Text style={styles.thumbFallbackText}>PXL</Text>
+            </View>
+          )}
           <Text style={styles.title}>{title}</Text>
         </View>
       ) : (
@@ -109,6 +115,21 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 8,
     backgroundColor: '#E5DFD1',
+  },
+  thumbFallback: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#EADCC6',
+    borderWidth: 1,
+    borderColor: '#CDBB9D',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbFallbackText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#7A5C37',
   },
   title: {
     fontSize: 18,

@@ -22,7 +22,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta property="og:type" content="website" />
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self';"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co https: wss:; font-src 'self' data: https:; base-uri 'self'; form-action 'self';"
         />
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         <ScrollViewStyleReset />

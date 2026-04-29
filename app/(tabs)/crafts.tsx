@@ -205,7 +205,6 @@ export default function CraftsScreen() {
                 onPress={() => router.push(`/crafts/${post.id}`)}
                 layout="compact"
               />
-              <Text style={styles.seedLabel}>{t('crafts.custom.seedLabel', { count: post.seed_cost ?? 0 })}</Text>
               {!post.claimed_by_me && post.user_id !== user?.id ? (
                 <View style={styles.claimBtnWrap}>
                   <Button
@@ -295,13 +294,6 @@ const styles = StyleSheet.create({
   },
   claimBtnWrap: {
     marginTop: 8,
-  },
-  seedLabel: {
-    marginTop: 8,
-    color: theme.colors.primaryDark,
-    fontFamily: theme.typography.body,
-    fontWeight: '700',
-    fontSize: 12,
   },
   paginationRow: {
     flexDirection: 'row',
