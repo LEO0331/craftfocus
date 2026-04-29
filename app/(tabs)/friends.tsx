@@ -108,7 +108,7 @@ export default function FriendsScreen() {
       <Card>
         <Text style={styles.title}>Search Users</Text>
         <TextInput
-          placeholder="Username"
+          placeholder="Search by username"
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -118,7 +118,10 @@ export default function FriendsScreen() {
 
         {searchResults.map((profile) => (
           <View key={profile.id} style={styles.row}>
-            <Text style={styles.text}>{profile.display_name || profile.username}</Text>
+            <View>
+              <Text style={styles.text}>@{profile.username}</Text>
+              {profile.display_name ? <Text style={styles.meta}>Display: {profile.display_name}</Text> : null}
+            </View>
             <Button label="Add" onPress={() => handleAddFriend(profile.id)} />
           </View>
         ))}
@@ -181,6 +184,7 @@ const styles = StyleSheet.create({
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
   title: { fontSize: 16, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },
   text: { color: theme.colors.muted, fontFamily: theme.typography.body },
+  meta: { color: theme.colors.muted, fontSize: 12, fontFamily: theme.typography.body },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,

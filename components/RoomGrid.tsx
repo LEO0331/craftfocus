@@ -32,6 +32,8 @@ export function RoomGrid({ items, size = 6, selectedCell, onCellPress }: RoomGri
           key={`${x}-${y}`}
           style={[styles.cell, selected ? styles.selectedCell : null]}
           onPress={() => onCellPress?.({ x, y, item })}
+          accessibilityRole="button"
+          accessibilityLabel={`Room cell x ${x}, y ${y}`}
         >
           {item ? <PixelSprite spriteId={item.spriteId ?? 'unknown'} size={30} /> : null}
         </Pressable>

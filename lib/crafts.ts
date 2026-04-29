@@ -241,3 +241,10 @@ export async function addComment(postId: string, userId: string, body: string) {
     throw error;
   }
 }
+
+export async function deleteCraftPost(postId: string, userId: string) {
+  const { error } = await supabase.from('craft_posts').delete().eq('id', postId).eq('user_id', userId);
+  if (error) {
+    throw error;
+  }
+}

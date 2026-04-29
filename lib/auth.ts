@@ -11,3 +11,10 @@ export async function signUpWithEmail(email: string, password: string) {
 export async function signOut() {
   return supabase.auth.signOut();
 }
+
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc('delete_my_account');
+  if (error) {
+    throw error;
+  }
+}

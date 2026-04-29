@@ -58,14 +58,15 @@ export function useProfile() {
   }, [loadProfile]);
 
   const saveProfile = useCallback(
-    async (next: { username: string; display_name: string | null; bio: string | null; avatar_url: string | null }) => {
+    async (next: { display_name: string | null; bio: string | null; avatar_url: string | null }) => {
       if (!user?.id) {
         throw new Error('Not authenticated');
       }
 
       const { data, error } = await supabase
         .from('profiles')
-        .upsert({ id: user.id, ...next }, { onConflict: 'id' })
+        .update(next)
+        .eq('id', user.id)
         .select('*')
         .single();
 

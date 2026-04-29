@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { CraftPostCard } from '@/components/CraftPostCard';
@@ -40,22 +40,25 @@ export default function CraftsScreen() {
 
       {!isLoading && !posts.length ? <Text style={styles.empty}>No posts yet. Share your first craft work.</Text> : null}
 
-      {posts.map((post) => (
-        <CraftPostCard
-          key={post.id}
-          authorName={post.author_name}
-          title={post.title}
-          category={post.category}
-          description={post.description ?? undefined}
-          imageUrl={post.image_url ?? undefined}
-          pixelImageUrl={post.pixel_image_url ?? undefined}
-          likes={post.likes_count}
-          comments={post.comments_count}
-          likedByMe={post.liked_by_me}
-          openToExchange={post.open_to_exchange}
-          onPress={() => router.push(`/crafts/${post.id}`)}
-        />
-      ))}
+      <View style={styles.grid}>
+        {posts.map((post) => (
+          <View key={post.id} style={styles.gridItem}>
+            <CraftPostCard
+              authorName={post.author_name}
+              title={post.title}
+              category={post.category}
+              description={post.description ?? undefined}
+              imageUrl={post.image_url ?? undefined}
+              pixelImageUrl={post.pixel_image_url ?? undefined}
+              likes={post.likes_count}
+              comments={post.comments_count}
+              likedByMe={post.liked_by_me}
+              openToExchange={post.open_to_exchange}
+              onPress={() => router.push(`/crafts/${post.id}`)}
+            />
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -71,4 +74,13 @@ const styles = StyleSheet.create({
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
   empty: { color: theme.colors.muted, fontFamily: theme.typography.body },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
+  },
+  gridItem: {
+    flexBasis: Platform.OS === 'web' ? '48%' : '100%',
+    flexGrow: 1,
+  },
 });

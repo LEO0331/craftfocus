@@ -7,7 +7,7 @@ import { Card } from '@/components/Card';
 import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
-import { addComment, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
+import { addComment, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
 import { createExchangeRequest } from '@/lib/exchanges';
 import { sanitizeText } from '@/lib/validation';
 
@@ -84,6 +84,27 @@ export default function CraftDetailScreen() {
     }
   };
 
+  const handleDeletePost = () => {
+    if (!user?.id || !postId) {
+      return;
+    }
+    Alert.alert('Delete Craft Post', 'Are you sure you want to delete this craft post?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteCraftPost(postId, user.id);
+            router.replace('/(tabs)/crafts');
+          } catch (error) {
+            Alert.alert('Delete failed', error instanceof Error ? error.message : 'Unknown error');
+          }
+        },
+      },
+    ]);
+  };
+
   if (!postId) {
     return (
       <View style={styles.center}>
@@ -120,6 +141,9 @@ export default function CraftDetailScreen() {
           <Button label={post.liked_by_me ? 'Unlike' : 'Like'} onPress={handleToggleLike} />
           <Button label="Visit Creator Room" onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
           <Button label="Open Exchanges" onPress={() => router.push('/exchanges')} variant="secondary" />
+          {post.user_id === user?.id ? (
+            <Button label="Delete This Craft Post" onPress={handleDeletePost} variant="danger" />
+          ) : null}
         </Card>
       ) : null}
 

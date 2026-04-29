@@ -8,9 +8,10 @@ import { Card } from '@/components/Card';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { deleteMyAccount } from '@/lib/auth';
 import { storageAdapter } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
-import { sanitizeText, validateUsername } from '@/lib/validation';
+import { sanitizeText } from '@/lib/validation';
 import type { TableRow } from '@/types/database';
 
 type FocusSessionRow = TableRow<'focus_sessions'>;
@@ -21,7 +22,6 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { profile, saveProfile } = useProfile();
 
-  const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -35,7 +35,6 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    setUsername(profile?.username ?? '');
     setDisplayName(profile?.display_name ?? '');
     setBio(profile?.bio ?? '');
     setAvatarUri(profile?.avatar_url ?? null);
@@ -107,7 +106,6 @@ export default function ProfileScreen() {
     }
     setIsSaving(true);
     try {
-      const safeUsername = validateUsername(username);
       const safeDisplayName = displayName ? sanitizeText(displayName, 40) : '';
       const safeBio = bio ? sanitizeText(bio, 280) : '';
       let avatarUrlToSave = profile?.avatar_url ?? null;
@@ -124,7 +122,6 @@ export default function ProfileScreen() {
       }
 
       await saveProfile({
-        username: safeUsername,
         display_name: safeDisplayName || null,
         bio: safeBio || null,
         avatar_url: avatarUrlToSave,
@@ -140,6 +137,29 @@ export default function ProfileScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This permanently removes your profile and app data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMyAccount();
+              await logout();
+              Alert.alert('Account deleted', 'Your account has been permanently deleted.');
+            } catch (error) {
+              Alert.alert('Delete failed', error instanceof Error ? error.message : 'Unknown error');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -158,7 +178,13 @@ export default function ProfileScreen() {
         <Button label="Pick Avatar" onPress={pickAvatar} variant="secondary" />
 
         <Text style={styles.label}>Username</Text>
-        <TextInput value={username} onChangeText={setUsername} autoCapitalize="none" style={styles.input} />
+        <TextInput
+          value={profile?.username ?? ''}
+          editable={false}
+          selectTextOnFocus={false}
+          autoCapitalize="none"
+          style={[styles.input, styles.readOnlyInput]}
+        />
 
         <Text style={styles.label}>Display name</Text>
         <TextInput value={displayName} onChangeText={setDisplayName} style={styles.input} />
@@ -178,6 +204,7 @@ export default function ProfileScreen() {
       </Card>
 
       <Button label="Log Out" onPress={() => logout()} variant="secondary" />
+      <Button label="Delete Account" onPress={handleDeleteAccount} variant="danger" />
     </ScrollView>
   );
 }
@@ -208,5 +235,8 @@ const styles = StyleSheet.create({
   bioInput: {
     minHeight: 88,
     textAlignVertical: 'top',
+  },
+  readOnlyInput: {
+    opacity: 0.7,
   },
 });
