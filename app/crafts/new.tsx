@@ -9,7 +9,7 @@ import { CategoryPicker } from '@/components/CategoryPicker';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { createCraftPost } from '@/lib/crafts';
-import { pixelizeImage } from '@/lib/pixelize';
+import { generateSurprisePixelArt, pixelizeImage } from '@/lib/pixelize';
 import { storageAdapter } from '@/lib/storage';
 import { sanitizeText } from '@/lib/validation';
 
@@ -53,6 +53,18 @@ export default function NewCraftPostScreen() {
       setPixelPreviewUri(pixelUri);
     } catch (error) {
       Alert.alert('Pixel preview failed', error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsPixelizing(false);
+    }
+  };
+
+  const handleSurprisePixel = async () => {
+    setIsPixelizing(true);
+    try {
+      const surprise = await generateSurprisePixelArt();
+      setPixelPreviewUri(surprise);
+    } catch (error) {
+      Alert.alert('Surprise pixel failed', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsPixelizing(false);
     }
@@ -146,6 +158,12 @@ export default function NewCraftPostScreen() {
           label={isPixelizing ? 'Generating Pixel Preview...' : 'Generate Pixel Preview (No AI, deterministic)'}
           onPress={handlePixelize}
           disabled={!imageUri || isPixelizing}
+          variant="secondary"
+        />
+        <Button
+          label={isPixelizing ? 'Generating Surprise...' : 'Surprise Pixel (Web)'}
+          onPress={handleSurprisePixel}
+          disabled={isPixelizing}
           variant="secondary"
         />
 
