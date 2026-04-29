@@ -5,14 +5,13 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { PixelSprite } from '@/components/PixelSprite';
 import { theme } from '@/constants/theme';
-import type { FocusMode } from '@/types/models';
 
 interface FocusTimerProps {
   totalSeconds: number;
   onCompleted: () => void;
   onStop: () => void;
   animationSpriteId?: string;
-  mode: FocusMode;
+  activityLabel: string;
   title: string;
   subtitle: string;
   stopLabel: string;
@@ -24,7 +23,7 @@ export function FocusTimer({
   onCompleted,
   onStop,
   animationSpriteId,
-  mode,
+  activityLabel,
   title,
   subtitle,
   stopLabel,
@@ -93,7 +92,7 @@ export function FocusTimer({
 
       <View style={styles.animationPanel}>
         <PixelSprite spriteId={resolvedSpriteId} size={88} />
-        <Text style={styles.modeLabel}>{mode.toUpperCase()} MODE</Text>
+        <Text style={styles.modeLabel}>{activityLabel}</Text>
       </View>
 
       <View style={styles.row}>

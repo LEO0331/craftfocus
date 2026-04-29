@@ -284,6 +284,10 @@ export type Database = {
         Args: { p_listing_id: string };
         Returns: { seeds_balance: number; granted_item_id: string | null; listing_type: Database['public']['Enums']['listing_type'] }[];
       };
+      claim_official_inventory_item: {
+        Args: { p_item_id: string; p_seed_cost?: number };
+        Returns: { seeds_balance: number; item_id: string; quantity: number }[];
+      };
       place_inventory_at_anchor: {
         Args: { p_room_id: string; p_item_id: string; p_anchor_id: string };
         Returns: undefined;

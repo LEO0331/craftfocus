@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { addComment, claimListingWithSeeds, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
 import { sanitizeText } from '@/lib/validation';
+import { ensureWallet } from '@/lib/wallet';
 
 export default function CraftDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
@@ -49,6 +50,7 @@ export default function CraftDetailScreen() {
   const handleClaim = async () => {
     if (!user?.id || !postId || !post) return;
     try {
+      await ensureWallet(user.id);
       await claimListingWithSeeds(postId);
       Alert.alert(t('craft.detail.claimed'), t('craft.detail.claimed'));
       await loadPost();

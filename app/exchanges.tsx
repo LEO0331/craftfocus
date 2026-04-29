@@ -1,145 +1,168 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { EXCHANGE_FILTER_OPTIONS, type ExchangeFilter } from '@/constants/filterOptions';
+import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
-import { listMyExchangeRequests, updateExchangeStatus, type ExchangeListItem } from '@/lib/exchanges';
+import { supabase } from '@/lib/supabase';
+import type { TableRow } from '@/types/database';
 
-export default function ExchangesScreen() {
+type ListingClaimRow = TableRow<'listing_claims'>;
+type CraftPostRow = TableRow<'craft_posts'>;
+type CustomCollectibleRow = TableRow<'custom_collectibles'>;
+type UserInventoryRow = TableRow<'user_inventory'>;
+
+interface ClaimedListingItem {
+  claimId: string;
+  title: string;
+  listingType: string;
+  seedCost: number;
+  claimedAt: string;
+}
+
+interface CustomClaimItem {
+  id: string;
+  listingId: string;
+  title: string;
+  imageUrl: string | null;
+  pixelImageUrl: string | null;
+  createdAt: string;
+}
+
+interface OfficialInventoryItem {
+  itemId: string;
+  name: string;
+  quantity: number;
+}
+
+export default function ClaimsScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
-  const [requests, setRequests] = useState<ExchangeListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [incomingFilter, setIncomingFilter] = useState<ExchangeFilter>('all');
-  const [outgoingFilter, setOutgoingFilter] = useState<ExchangeFilter>('all');
+  const [claimedListings, setClaimedListings] = useState<ClaimedListingItem[]>([]);
+  const [customClaims, setCustomClaims] = useState<CustomClaimItem[]>([]);
+  const [officialInventory, setOfficialInventory] = useState<OfficialInventoryItem[]>([]);
 
-  const loadRequests = useCallback(async () => {
+  const loadData = useCallback(async () => {
     if (!user?.id) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const data = await listMyExchangeRequests(user.id);
-      setRequests(data);
+      const [claimsResult, customResult, inventoryResult] = await Promise.all([
+        supabase.from('listing_claims').select('id,listing_id,claimed_at').eq('user_id', user.id).order('claimed_at', { ascending: false }),
+        supabase
+          .from('custom_collectibles')
+          .select('id,listing_id,image_url,pixel_image_url,created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase.from('user_inventory').select('item_id,quantity').eq('user_id', user.id).order('updated_at', { ascending: false }),
+      ]);
+
+      if (claimsResult.error) throw claimsResult.error;
+      if (customResult.error) throw customResult.error;
+      if (inventoryResult.error) throw inventoryResult.error;
+
+      const claimRows = (claimsResult.data ?? []) as Pick<ListingClaimRow, 'id' | 'listing_id' | 'claimed_at'>[];
+      const customRows = (customResult.data ?? []) as Pick<
+        CustomCollectibleRow,
+        'id' | 'listing_id' | 'image_url' | 'pixel_image_url' | 'created_at'
+      >[];
+      const inventoryRows = (inventoryResult.data ?? []) as Pick<UserInventoryRow, 'item_id' | 'quantity'>[];
+
+      const listingIds = Array.from(new Set([...claimRows.map((row) => row.listing_id), ...customRows.map((row) => row.listing_id)]));
+
+      let postMap = new Map<string, Pick<CraftPostRow, 'id' | 'title' | 'listing_type' | 'seed_cost'>>();
+      if (listingIds.length) {
+        const postsResult = await supabase.from('craft_posts').select('id,title,listing_type,seed_cost').in('id', listingIds);
+        if (postsResult.error) throw postsResult.error;
+        postMap = new Map((postsResult.data ?? []).map((post) => [post.id, post]));
+      }
+
+      setClaimedListings(
+        claimRows.map((row) => ({
+          claimId: row.id,
+          title: postMap.get(row.listing_id)?.title ?? t('claims.unknownListing'),
+          listingType: String(postMap.get(row.listing_id)?.listing_type ?? 'custom'),
+          seedCost: Number(postMap.get(row.listing_id)?.seed_cost ?? 0),
+          claimedAt: row.claimed_at,
+        }))
+      );
+
+      setCustomClaims(
+        customRows.map((row) => ({
+          id: row.id,
+          listingId: row.listing_id,
+          title: postMap.get(row.listing_id)?.title ?? t('claims.unknownListing'),
+          imageUrl: row.image_url,
+          pixelImageUrl: row.pixel_image_url,
+          createdAt: row.created_at,
+        }))
+      );
+
+      const itemNameMap = new Map<string, string>(ITEM_CATALOG_SEED.map((item) => [item.id, item.name]));
+      setOfficialInventory(
+        inventoryRows
+          .filter((row) => row.quantity > 0)
+          .map((row) => ({
+            itemId: row.item_id,
+            name: itemNameMap.get(row.item_id) ?? row.item_id,
+            quantity: row.quantity,
+          }))
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [t, user?.id]);
 
   useEffect(() => {
-    loadRequests();
-  }, [loadRequests]);
-
-  const incoming = useMemo(() => requests.filter((item) => item.owner_id === user?.id), [requests, user?.id]);
-  const outgoing = useMemo(() => requests.filter((item) => item.requester_id === user?.id), [requests, user?.id]);
-
-  const incomingPendingCount = incoming.filter((item) => item.status === 'pending').length;
-  const outgoingPendingCount = outgoing.filter((item) => item.status === 'pending').length;
-
-  const incomingVisible = useMemo(
-    () => (incomingFilter === 'all' ? incoming : incoming.filter((item) => item.status === incomingFilter)),
-    [incoming, incomingFilter]
-  );
-
-  const outgoingVisible = useMemo(
-    () => (outgoingFilter === 'all' ? outgoing : outgoing.filter((item) => item.status === outgoingFilter)),
-    [outgoing, outgoingFilter]
-  );
-
-  const handleUpdate = async (id: string, next: 'accepted' | 'rejected' | 'cancelled') => {
-    if (!user?.id) {
-      return;
-    }
-    try {
-      await updateExchangeStatus(id, next, user.id);
-      await loadRequests();
-    } catch (error) {
-      Alert.alert(t('ex.title'), error instanceof Error ? error.message : t('common.unknownError'));
-    }
-  };
+    loadData();
+  }, [loadData]);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>{t('ex.title')}</Text>
+      <Text style={styles.heading}>{t('claims.title')}</Text>
 
       <Card>
-        <Text style={styles.subheading}>{t('ex.notifications')}</Text>
-        <Text style={styles.text}>{t('friends.incomingPending', { count: incomingPendingCount })}</Text>
-        <Text style={styles.text}>{t('friends.sentPending', { count: outgoingPendingCount })}</Text>
-      </Card>
-
-      <Card>
-        <Text style={styles.subheading}>{t('ex.incoming')}</Text>
-        <FilterRow value={incomingFilter} onChange={setIncomingFilter} />
-
-        {!incomingVisible.length ? <Text style={styles.text}>{t('ex.noIncoming')}</Text> : null}
-        {incomingVisible.map((item) => (
-          <View key={item.id} style={styles.requestCard}>
-            <Text style={styles.title}>{item.craft_title}</Text>
-            <Text style={styles.text}>{t('ex.from', { name: item.requester_name })}</Text>
-            {item.message ? <Text style={styles.text}>{t('ex.message', { text: item.message })}</Text> : null}
-            <Text style={styles.text}>{t('ex.status', { status: item.status })}</Text>
-
-            {item.status === 'pending' ? (
-              <View style={styles.actions}>
-                <Button label={t('ex.accept')} onPress={() => handleUpdate(item.id, 'accepted')} />
-                <Button label={t('ex.reject')} onPress={() => handleUpdate(item.id, 'rejected')} variant="danger" />
-              </View>
-            ) : null}
+        <Text style={styles.subheading}>{t('claims.claimedListings')}</Text>
+        {!claimedListings.length ? <Text style={styles.text}>{t('claims.emptyListings')}</Text> : null}
+        {claimedListings.map((item) => (
+          <View key={item.claimId} style={styles.itemRow}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.text}>
+              {item.listingType} · {item.seedCost} seeds
+            </Text>
           </View>
         ))}
       </Card>
 
       <Card>
-        <Text style={styles.subheading}>{t('ex.outgoing')}</Text>
-        <FilterRow value={outgoingFilter} onChange={setOutgoingFilter} />
-
-        {!outgoingVisible.length ? <Text style={styles.text}>{t('ex.noOutgoing')}</Text> : null}
-        {outgoingVisible.map((item) => (
-          <View key={item.id} style={styles.requestCard}>
-            <Text style={styles.title}>{item.craft_title}</Text>
-            <Text style={styles.text}>{t('ex.to', { name: item.owner_name })}</Text>
-            {item.message ? <Text style={styles.text}>{t('ex.message', { text: item.message })}</Text> : null}
-            <Text style={styles.text}>{t('ex.status', { status: item.status })}</Text>
-
-            {item.status === 'pending' ? (
-              <Button label={t('ex.cancel')} onPress={() => handleUpdate(item.id, 'cancelled')} variant="secondary" />
-            ) : null}
+        <Text style={styles.subheading}>{t('claims.customCollectibles')}</Text>
+        {!customClaims.length ? <Text style={styles.text}>{t('claims.emptyCustom')}</Text> : null}
+        {customClaims.map((item) => (
+          <View key={item.id} style={styles.itemRow}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.text}>{item.pixelImageUrl ? t('claims.hasPixel') : t('claims.noPixel')}</Text>
           </View>
         ))}
       </Card>
 
-      {isLoading ? <Text style={styles.text}>{t('ex.refreshing')}</Text> : null}
+      <Card>
+        <Text style={styles.subheading}>{t('claims.officialInventory')}</Text>
+        {!officialInventory.length ? <Text style={styles.text}>{t('claims.emptyOfficial')}</Text> : null}
+        {officialInventory.map((item) => (
+          <View key={item.itemId} style={styles.itemRow}>
+            <Text style={styles.title}>{item.name}</Text>
+            <Text style={styles.text}>{t('claims.quantity', { count: item.quantity })}</Text>
+          </View>
+        ))}
+      </Card>
+
+      {isLoading ? <Text style={styles.text}>{t('common.loading')}</Text> : null}
     </ScrollView>
-  );
-}
-
-function FilterRow({ value, onChange }: { value: ExchangeFilter; onChange: (next: ExchangeFilter) => void }) {
-  const { t } = useI18n();
-
-  return (
-    <View style={styles.filterRow}>
-      {EXCHANGE_FILTER_OPTIONS.map((option) => {
-        const active = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            accessibilityRole="button"
-            accessibilityLabel={t('ex.filterByStatus', { status: t(option.labelKey) })}
-            accessibilityState={{ selected: active }}
-            style={[styles.filterChip, active ? styles.filterChipActive : null]}
-          >
-            <Text style={[styles.filterLabel, active ? styles.filterLabelActive : null]}>{t(option.labelKey)}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
   );
 }
 
@@ -156,40 +179,10 @@ const styles = StyleSheet.create({
   subheading: { fontSize: 16, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },
   title: { fontSize: 15, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },
   text: { color: theme.colors.muted, fontFamily: theme.typography.body },
-  requestCard: {
+  itemRow: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     paddingTop: 8,
-    gap: 4,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: '#ECE6D8',
-  },
-  filterChipActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primaryDark,
-  },
-  filterLabel: {
-    color: theme.colors.text,
-    textTransform: 'capitalize',
-    fontWeight: '600',
-    fontFamily: theme.typography.body,
-  },
-  filterLabelActive: {
-    color: '#fff',
+    gap: 2,
   },
 });

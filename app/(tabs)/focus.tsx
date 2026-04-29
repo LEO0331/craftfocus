@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { FocusTimer } from '@/components/FocusTimer';
-import { FOCUS_DURATIONS, FOCUS_MODES } from '@/constants/categories';
+import { FOCUS_DURATIONS } from '@/constants/categories';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusSession } from '@/hooks/useFocusSession';
@@ -17,7 +17,7 @@ export default function FocusScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
-  const [mode, setMode] = useState<FocusMode>('general');
+  const [activityMode, setActivityMode] = useState<FocusMode>('sewing');
   const [isRunning, setIsRunning] = useState(false);
   const [resultText, setResultText] = useState<string | null>(null);
   const [animalSpriteKey, setAnimalSpriteKey] = useState('cat');
@@ -49,11 +49,19 @@ export default function FocusScreen() {
   }, [isRunning]);
 
   const durationSeconds = useMemo(() => duration * 60, [duration]);
-  const activeSprite = useMemo(() => resolveAnimalVariant(animalSpriteKey, mode, animFrame), [animalSpriteKey, mode, animFrame]);
+  const activeSprite = useMemo(
+    () => resolveAnimalVariant(animalSpriteKey, activityMode, animFrame),
+    [animalSpriteKey, activityMode, animFrame]
+  );
+
+  const activityLabel = useMemo(
+    () => (activityMode === 'sewing' ? t('focus.activity.sewing') : t('focus.activity.training')),
+    [activityMode, t]
+  );
 
   const handleFinish = async (status: 'completed' | 'given_up') => {
     try {
-      const reward = await submitFocusSession({ durationMinutes: duration, mode, status });
+      const reward = await submitFocusSession({ durationMinutes: duration, mode: activityMode, status });
 
       setResultText(
         status === 'completed'
@@ -80,15 +88,20 @@ export default function FocusScreen() {
             onSelect={(value) => setDuration(Number(value) as (typeof FOCUS_DURATIONS)[number])}
           />
 
-          <CategoryPicker label={t('focus.mode')} options={FOCUS_MODES} selected={mode} onSelect={(next) => setMode(next as FocusMode)} />
-
-          <Button label={t('focus.start')} onPress={() => setIsRunning(true)} disabled={isSaving} />
+          <Button
+            label={t('focus.start')}
+            onPress={() => {
+              setActivityMode(Math.random() > 0.5 ? 'sewing' : 'crafting');
+              setIsRunning(true);
+            }}
+            disabled={isSaving}
+          />
           {resultText ? <Text style={styles.result}>{resultText}</Text> : null}
         </Card>
       ) : (
         <FocusTimer
           totalSeconds={durationSeconds}
-          mode={mode}
+          activityLabel={activityLabel}
           title={t('focus.timer.title')}
           subtitle={t('focus.timer.subtitle')}
           stopLabel={t('focus.timer.stop')}

@@ -188,6 +188,14 @@ export async function claimListingWithSeeds(listingId: string) {
   if (error) throw error;
 }
 
+export async function claimOfficialInventoryItem(itemId: string, seedCost: number) {
+  const { error } = await supabase.rpc('claim_official_inventory_item', {
+    p_item_id: itemId,
+    p_seed_cost: seedCost,
+  });
+  if (error) throw error;
+}
+
 export async function toggleLike(postId: string, userId: string) {
   const { data: existing, error: existingError } = await supabase
     .from('likes')

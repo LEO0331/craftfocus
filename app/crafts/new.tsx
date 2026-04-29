@@ -5,8 +5,6 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput } from 'react-nat
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { CategoryPicker } from '@/components/CategoryPicker';
-import { BUILD_TARGETS } from '@/constants/categories';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
@@ -15,8 +13,6 @@ import { generateSurprisePixelArt, pixelizeImage } from '@/lib/pixelize';
 import { storageAdapter } from '@/lib/storage';
 import { sanitizeText } from '@/lib/validation';
 
-const CATEGORIES = ['leather', 'sewing', 'craft', 'other'] as const;
-const LISTING_TYPES = ['catalog', 'custom'] as const;
 const STORAGE_BUCKET = 'craft-images';
 
 export default function NewCraftPostScreen() {
@@ -24,9 +20,6 @@ export default function NewCraftPostScreen() {
   const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('craft');
-  const [listingType, setListingType] = useState<(typeof LISTING_TYPES)[number]>('catalog');
-  const [rewardItemId, setRewardItemId] = useState(BUILD_TARGETS[0]?.id ?? 'plant');
   const [seedCost, setSeedCost] = useState('25');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [pixelPreviewUri, setPixelPreviewUri] = useState<string | null>(null);
@@ -66,6 +59,7 @@ export default function NewCraftPostScreen() {
   const handleSave = async () => {
     if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
     if (!imageUri) return Alert.alert(t('craft.new.missingImage'), t('craft.new.pickImageFirst'));
+    if (!title.trim()) return Alert.alert(t('craft.new.fieldTitle'), t('craft.new.titleRequired'));
 
     setIsSaving(true);
     try {
@@ -85,16 +79,19 @@ export default function NewCraftPostScreen() {
         userId: user.id,
         title: safeTitle,
         description: safeDescription,
-        category,
+        category: 'craft',
         imageUrl: uploadedImageUrl,
         pixelImageUrl,
-        listingCategory: category,
+        listingCategory: 'custom',
         seedCost: Math.max(1, Number(seedCost) || 1),
-        listingType,
-        rewardItemId: listingType === 'catalog' ? rewardItemId : null,
+        listingType: 'custom',
+        rewardItemId: null,
       });
 
-      router.replace(`/crafts/${id}`);
+      if (!id) {
+        throw new Error(t('craft.new.publishFailed'));
+      }
+      router.replace('/(tabs)/crafts');
     } catch (error) {
       Alert.alert(t('craft.new.publish'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
@@ -108,20 +105,6 @@ export default function NewCraftPostScreen() {
       <Card>
         <TextInput placeholder={t('craft.new.fieldTitle')} value={title} onChangeText={setTitle} style={styles.input} />
         <TextInput placeholder={t('craft.new.fieldDescription')} value={description} onChangeText={setDescription} style={[styles.input, styles.textarea]} multiline />
-
-        <CategoryPicker label={t('craft.new.category')} options={[...CATEGORIES]} selected={category} onSelect={setCategory} />
-        <CategoryPicker label={t('craft.new.listingType')} options={[...LISTING_TYPES]} selected={listingType} onSelect={(value) => setListingType(value as 'catalog' | 'custom')} />
-
-        {listingType === 'catalog' ? (
-          <CategoryPicker
-            label={t('craft.new.rewardItem')}
-            options={BUILD_TARGETS.map((item) => item.id)}
-            selected={rewardItemId}
-            onSelect={(value) => setRewardItemId(value)}
-            renderLabel={(id) => BUILD_TARGETS.find((target) => target.id === id)?.label ?? id}
-          />
-        ) : null}
-
         <TextInput placeholder={t('craft.new.seedCost')} keyboardType="number-pad" value={seedCost} onChangeText={setSeedCost} style={styles.input} />
 
         <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} />

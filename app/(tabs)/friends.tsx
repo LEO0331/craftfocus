@@ -26,6 +26,8 @@ export default function FriendsScreen() {
   const [friendships, setFriendships] = useState<FriendListItem[]>([]);
   const [filter, setFilter] = useState<FriendFilter>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [addingIds, setAddingIds] = useState<Record<string, boolean>>({});
+  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
 
   const loadFriendships = useCallback(async () => {
     if (!user?.id) {
@@ -56,6 +58,14 @@ export default function FriendsScreen() {
     return friendships.filter((entry) => entry.status === filter);
   }, [filter, friendships]);
 
+  const connectedProfileIds = useMemo(() => {
+    const next: Record<string, boolean> = {};
+    friendships.forEach((entry) => {
+      next[entry.profile_id] = true;
+    });
+    return next;
+  }, [friendships]);
+
   const handleSearch = async () => {
     if (!user?.id) {
       return;
@@ -75,12 +85,15 @@ export default function FriendsScreen() {
     if (!user?.id) {
       return;
     }
+    setAddingIds((prev) => ({ ...prev, [profileId]: true }));
     try {
       await sendFriendRequest(user.id, profileId);
-      Alert.alert(t('friends.added'), t('friends.requestSent'));
+      setAddedIds((prev) => ({ ...prev, [profileId]: true }));
       await loadFriendships();
     } catch (error) {
       Alert.alert(t('friends.add'), error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      setAddingIds((prev) => ({ ...prev, [profileId]: false }));
     }
   };
 
@@ -121,10 +134,14 @@ export default function FriendsScreen() {
         {searchResults.map((profile) => (
           <View key={profile.id} style={styles.row}>
             <View>
-              <Text style={styles.text}>@{profile.username}</Text>
-              {profile.display_name ? <Text style={styles.meta}>Display: {profile.display_name}</Text> : null}
+              <Text style={styles.text}>{profile.display_name || profile.username}</Text>
+              <Text style={styles.meta}>@{profile.username}</Text>
             </View>
-            <Button label={t('friends.add')} onPress={() => handleAddFriend(profile.id)} />
+            <Button
+              label={connectedProfileIds[profile.id] || addedIds[profile.id] ? t('friends.added') : t('friends.add')}
+              onPress={() => handleAddFriend(profile.id)}
+              disabled={Boolean(connectedProfileIds[profile.id] || addedIds[profile.id] || addingIds[profile.id])}
+            />
           </View>
         ))}
       </Card>
@@ -155,6 +172,7 @@ export default function FriendsScreen() {
         {filteredFriendships.map((entry) => (
           <View key={entry.friendship_id} style={styles.friendCard}>
             <Text style={styles.friendName}>{entry.display_name || entry.username}</Text>
+            {entry.display_name ? <Text style={styles.meta}>@{entry.username}</Text> : null}
             <Text style={styles.text}>{t('friends.status', { status: entry.status })}</Text>
 
             {entry.status === 'accepted' ? (
