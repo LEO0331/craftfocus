@@ -8,7 +8,12 @@ export type BuildTargetId =
   | 'bookshelf'
   | 'desk_lamp'
   | 'work_desk'
-  | 'plant';
+  | 'plant'
+  | 'wall_clock'
+  | 'bean_bag'
+  | 'tool_box'
+  | 'floor_rug'
+  | 'wall_frame';
 
 export type FocusStatus = 'completed' | 'given_up';
 export type FocusMode = 'general' | 'crafting' | 'sewing';

@@ -128,6 +128,7 @@ export default function FriendsScreen() {
           onChangeText={setQuery}
           autoCapitalize="none"
           style={styles.input}
+          accessibilityLabel={t('friends.searchByUsername')}
         />
         <Button label={isLoading ? t('common.searching') : t('friends.search')} onPress={handleSearch} disabled={isLoading} />
 

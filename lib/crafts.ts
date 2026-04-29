@@ -199,10 +199,9 @@ export async function claimListingWithSeeds(listingId: string) {
   if (error) throw error;
 }
 
-export async function claimOfficialInventoryItem(itemId: string, seedCost: number) {
+export async function claimOfficialInventoryItem(itemId: string) {
   const { error } = await supabase.rpc('claim_official_inventory_item', {
     p_item_id: itemId,
-    p_seed_cost: seedCost,
   });
   if (error) throw error;
 }

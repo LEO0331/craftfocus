@@ -9,6 +9,11 @@ export type SpriteId =
   | 'desk_lamp'
   | 'work_desk'
   | 'plant'
+  | 'wall_clock'
+  | 'bean_bag'
+  | 'tool_box'
+  | 'floor_rug'
+  | 'wall_frame'
   | 'cat_general_0'
   | 'cat_general_1'
   | 'cat_crafting_0'
@@ -95,6 +100,31 @@ export const ROOM_SPRITES: Record<string, SpriteDefinition> = {
     name: 'Plant',
     palette: { '.': COMMON_BG, g: '#4B995F', l: '#77C189', p: '#A06A3A', d: '#6E4728', f: '#C75454' },
     grid: ['........', '..fggf..', '..gllg..', '.ggllgg.', '...gg...', '..pppp..', '..pddp..', '........'],
+  },
+  wall_clock: {
+    name: 'Wall Clock',
+    palette: { '.': COMMON_BG, w: '#E8E8E8', d: '#6B6B6B', h: '#C45A5A', b: '#6CA0D8' },
+    grid: ['........', '..wwww..', '.wddddw.', '.wdhbdw.', '.wdbhdw.', '.wddddw.', '..wwww..', '........'],
+  },
+  bean_bag: {
+    name: 'Bean Bag',
+    palette: { '.': COMMON_BG, o: '#D98942', s: '#F2BE84', d: '#A86127' },
+    grid: ['........', '..oooo..', '.osssso.', '.osddso.', '.osssso.', '..oddo..', '...oo...', '........'],
+  },
+  tool_box: {
+    name: 'Tool Box',
+    palette: { '.': COMMON_BG, r: '#C95050', d: '#812E2E', m: '#B9B9B9', b: '#F6F0E5' },
+    grid: ['........', '..rrrr..', '.rmmmmr.', '.rbbbbr.', '.rbbbbr.', '.rddddr.', '..rrrr..', '........'],
+  },
+  floor_rug: {
+    name: 'Floor Rug',
+    palette: { '.': COMMON_BG, c: '#5D87C8', l: '#A7C1E8', d: '#3C5E93', w: '#E8F0FF' },
+    grid: ['........', '.cccccc.', '.clwwlc.', '.cwdwdc.', '.clwwlc.', '.cccccc.', '........', '........'],
+  },
+  wall_frame: {
+    name: 'Wall Frame',
+    palette: { '.': COMMON_BG, g: '#D5B789', d: '#8A6C43', b: '#83A8D8', w: '#EEF5FF' },
+    grid: ['........', '..gggg..', '..gddg..', '..gwwg..', '..gbbg..', '..gddg..', '..gggg..', '........'],
   },
   unknown: {
     name: 'Unknown',

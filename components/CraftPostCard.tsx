@@ -69,8 +69,8 @@ export function CraftPostCard({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Open craft post: ${title}`}
-      accessibilityHint="Opens the craft post detail page"
+      accessibilityLabel={t('craft.card.openPost', { title })}
+      accessibilityHint={t('craft.card.openPostHint')}
     >
       {content}
     </Pressable>

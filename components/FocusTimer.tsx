@@ -83,13 +83,18 @@ export function FocusTimer({
       <Text style={styles.sub}>{subtitle}</Text>
 
       <View style={styles.timerBox}>
-        <Text style={styles.timerText}>
+        <Text
+          style={styles.timerText}
+          accessibilityRole="text"
+          accessibilityLabel={`${title}: ${clockLabel}`}
+          accessibilityLiveRegion="polite"
+        >
           {hourglassGlyph} {clockLabel}
         </Text>
       </View>
 
-      <View style={styles.animationPanel}>
-        <AsciiPet art={asciiArt} />
+      <View style={styles.animationPanel} accessibilityLabel={activityLabel}>
+        <AsciiPet art={asciiArt} accessibilityLabel={activityLabel} />
         <Text style={styles.modeLabel}>{activityLabel}</Text>
       </View>
 

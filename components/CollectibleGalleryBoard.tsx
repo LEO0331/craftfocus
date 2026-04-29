@@ -9,6 +9,13 @@ interface CollectibleGalleryBoardProps {
   selectedListingId: string | null;
   onCellPress?: (x: number, y: number, listingIdAtCell: string | null) => void;
   readOnly?: boolean;
+  i18n?: {
+    a11yEmpty: (x: number, y: number) => string;
+    a11yFilled: (x: number, y: number, title: string) => string;
+    a11yHintPlace: string;
+    a11yHintReadonly: string;
+    imageLabel: (title: string) => string;
+  };
 }
 
 const SIZE = 5;
@@ -19,6 +26,7 @@ export function CollectibleGalleryBoard({
   selectedListingId,
   onCellPress,
   readOnly = false,
+  i18n,
 }: CollectibleGalleryBoardProps) {
   const collectibleMap = new Map(collectibles.map((item) => [item.listingId, item]));
   const placementMap = new Map(placements.map((placement) => [`${placement.cellX}-${placement.cellY}`, placement]));
@@ -42,11 +50,18 @@ export function CollectibleGalleryBoard({
                 style={[styles.cell, active ? styles.cellActive : null]}
                 accessibilityRole="button"
                 accessibilityLabel={
-                  placement ? `Gallery cell ${x + 1},${y + 1} contains ${collectible?.title ?? 'item'}` : `Gallery cell ${x + 1},${y + 1} empty`
+                  placement
+                    ? i18n?.a11yFilled(x + 1, y + 1, collectible?.title ?? 'item') ?? `Gallery cell ${x + 1},${y + 1} contains ${collectible?.title ?? 'item'}`
+                    : i18n?.a11yEmpty(x + 1, y + 1) ?? `Gallery cell ${x + 1},${y + 1} empty`
                 }
+                accessibilityHint={readOnly ? i18n?.a11yHintReadonly ?? 'Read-only gallery cell' : i18n?.a11yHintPlace ?? 'Tap to place or select collectible'}
               >
                 {sourceUri ? (
-                  <Image source={{ uri: sourceUri }} style={styles.thumb} accessibilityLabel={collectible?.title ?? 'Collectible image'} />
+                  <Image
+                    source={{ uri: sourceUri }}
+                    style={styles.thumb}
+                    accessibilityLabel={i18n?.imageLabel(collectible?.title ?? 'Collectible image') ?? collectible?.title ?? 'Collectible image'}
+                  />
                 ) : (
                   <Text style={styles.dot}>·</Text>
                 )}
@@ -95,4 +110,3 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
-

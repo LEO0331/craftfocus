@@ -44,7 +44,19 @@ export default function UserRoomScreen() {
       <Text style={styles.heading}>{t('userRoom.title')}</Text>
       <Card>
         <Text style={styles.label}>{t('userRoom.theme', { theme: roomType })}</Text>
-        <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={null} onSelectAnchor={() => {}} />
+        <IsometricRoom
+          roomType={roomType}
+          placements={placements}
+          selectedAnchorId={null}
+          onSelectAnchor={() => {}}
+          readOnly
+          i18n={{
+            anchorEmpty: (anchorId) => t('room.anchorEmpty', { anchorId }),
+            anchorFilled: (anchorId, itemId) => t('room.anchorFilled', { anchorId, itemId }),
+            anchorHintEditable: t('room.anchorHintEditable'),
+            anchorHintReadonly: t('room.anchorHintReadonly'),
+          }}
+        />
       </Card>
       <Card>
         <Text style={styles.label}>{t('room.galleryTitle')}</Text>
@@ -53,6 +65,13 @@ export default function UserRoomScreen() {
           collectibles={galleryItems}
           selectedListingId={null}
           readOnly
+          i18n={{
+            a11yEmpty: (x, y) => t('room.galleryCellEmpty', { x, y }),
+            a11yFilled: (x, y, title) => t('room.galleryCellFilled', { x, y, title }),
+            a11yHintPlace: t('room.galleryCellHint'),
+            a11yHintReadonly: t('room.galleryCellReadonly'),
+            imageLabel: (title) => t('room.collectibleImage', { title }),
+          }}
         />
       </Card>
     </ScrollView>

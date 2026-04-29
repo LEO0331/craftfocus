@@ -3,13 +3,16 @@ import { StyleSheet, Text } from 'react-native';
 interface AsciiPetProps {
   art: string;
   compact?: boolean;
+  accessibilityLabel?: string;
 }
 
-export function AsciiPet({ art, compact = false }: AsciiPetProps) {
+export function AsciiPet({ art, compact = false, accessibilityLabel }: AsciiPetProps) {
   return (
     <Text
       style={[styles.base, compact ? styles.compact : null]}
-      accessibilityLabel="ASCII animal companion"
+      accessible={Boolean(accessibilityLabel)}
+      accessibilityLabel={accessibilityLabel}
+      importantForAccessibility={accessibilityLabel ? 'yes' : 'no-hide-descendants'}
     >
       {art}
     </Text>
@@ -28,4 +31,3 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
 });
-

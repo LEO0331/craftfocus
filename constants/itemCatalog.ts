@@ -11,4 +11,9 @@ export const ITEM_CATALOG_SEED: ItemCatalogRow[] = [
   { id: 'desk_lamp', name: 'Desk Lamp', category: 'study', description: 'Warm light for late-night concentration.', required_progress: 100 },
   { id: 'work_desk', name: 'Work Desk', category: 'work', description: 'A practical workstation for productivity.', required_progress: 100 },
   { id: 'plant', name: 'Plant', category: 'craft', description: 'A small plant to brighten your room.', required_progress: 100 },
+  { id: 'wall_clock', name: 'Wall Clock', category: 'study', description: 'Keep sessions on time with a clean wall clock.', required_progress: 100 },
+  { id: 'bean_bag', name: 'Bean Bag', category: 'craft', description: 'A comfy lounge seat for your pixel room corner.', required_progress: 100 },
+  { id: 'tool_box', name: 'Tool Box', category: 'work', description: 'Organize tools and crafting essentials in one box.', required_progress: 100 },
+  { id: 'floor_rug', name: 'Floor Rug', category: 'study', description: 'Add a cozy patterned rug to your room floor.', required_progress: 100 },
+  { id: 'wall_frame', name: 'Wall Frame', category: 'craft', description: 'Showcase a framed memory on your wall.', required_progress: 100 },
 ];

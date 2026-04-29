@@ -17,9 +17,16 @@ interface IsometricRoomProps {
   placements: Placement[];
   selectedAnchorId: string | null;
   onSelectAnchor: (anchorId: string) => void;
+  readOnly?: boolean;
+  i18n?: {
+    anchorEmpty: (anchorId: string) => string;
+    anchorFilled: (anchorId: string, itemId: string) => string;
+    anchorHintEditable: string;
+    anchorHintReadonly: string;
+  };
 }
 
-export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelectAnchor }: IsometricRoomProps) {
+export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelectAnchor, readOnly = false, i18n }: IsometricRoomProps) {
   const anchors = ROOM_ANCHORS[roomType];
 
   return (
@@ -32,6 +39,15 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           <Pressable
             key={anchor.id}
             onPress={() => onSelectAnchor(anchor.id)}
+            disabled={readOnly}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedAnchorId === anchor.id, disabled: readOnly }}
+            accessibilityLabel={
+              placed
+                ? i18n?.anchorFilled(anchor.id, placed.item_id) ?? `Anchor ${anchor.id} has ${placed.item_id}`
+                : i18n?.anchorEmpty(anchor.id) ?? `Anchor ${anchor.id} empty`
+            }
+            accessibilityHint={readOnly ? i18n?.anchorHintReadonly ?? 'Read-only room anchor' : i18n?.anchorHintEditable ?? 'Select anchor for placing or removing item'}
             style={[
               styles.anchor,
               {

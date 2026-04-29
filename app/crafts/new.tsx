@@ -91,7 +91,7 @@ export default function NewCraftPostScreen() {
       if (!id) {
         throw new Error(t('craft.new.publishFailed'));
       }
-      router.replace('/(tabs)/crafts');
+      router.replace(`/crafts/${id}`);
     } catch (error) {
       Alert.alert(t('craft.new.publish'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
@@ -103,17 +103,37 @@ export default function NewCraftPostScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>{t('craft.new.title')}</Text>
       <Card>
-        <TextInput placeholder={t('craft.new.fieldTitle')} value={title} onChangeText={setTitle} style={styles.input} />
-        <TextInput placeholder={t('craft.new.fieldDescription')} value={description} onChangeText={setDescription} style={[styles.input, styles.textarea]} multiline />
-        <TextInput placeholder={t('craft.new.seedCost')} keyboardType="number-pad" value={seedCost} onChangeText={setSeedCost} style={styles.input} />
+        <TextInput
+          placeholder={t('craft.new.fieldTitle')}
+          value={title}
+          onChangeText={setTitle}
+          style={styles.input}
+          accessibilityLabel={t('craft.new.fieldTitle')}
+        />
+        <TextInput
+          placeholder={t('craft.new.fieldDescription')}
+          value={description}
+          onChangeText={setDescription}
+          style={[styles.input, styles.textarea]}
+          multiline
+          accessibilityLabel={t('craft.new.fieldDescription')}
+        />
+        <TextInput
+          placeholder={t('craft.new.seedCost')}
+          keyboardType="number-pad"
+          value={seedCost}
+          onChangeText={setSeedCost}
+          style={styles.input}
+          accessibilityLabel={t('craft.new.seedCost')}
+        />
 
         <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} />
-        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} /> : null}
+        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel={t('craft.new.originalImage')} /> : null}
 
         <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
         <Button label={isPixelizing ? t('craft.new.surprising') : t('craft.new.surprise')} onPress={handleSurprisePixel} disabled={isPixelizing} variant="secondary" />
 
-        {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} /> : null}
+        {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} accessibilityLabel={t('craft.new.pixelPreview')} /> : null}
 
         <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
       </Card>

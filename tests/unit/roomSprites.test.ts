@@ -5,15 +5,20 @@ import { ROOM_SPRITES } from '@/constants/roomSprites';
 describe('ROOM_SPRITES', () => {
   it('contains all expected sprite ids', () => {
     expect(Object.keys(ROOM_SPRITES).sort()).toEqual([
+      'bean_bag',
       'bookshelf',
       'desk_lamp',
       'dumbbell',
       'fabric_roll',
+      'floor_rug',
       'leather_wallet',
       'plant',
       'sewing_kit',
       'study_desk',
+      'tool_box',
       'unknown',
+      'wall_clock',
+      'wall_frame',
       'work_desk',
       'yoga_mat',
     ]);

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -33,6 +33,9 @@ export default function RoomScreen() {
   const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<BuildTargetId>('plant');
   const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null);
+  const [collectibleSearch, setCollectibleSearch] = useState('');
+  const [collectiblePage, setCollectiblePage] = useState(1);
+  const COLLECTIBLE_PAGE_SIZE = 6;
 
   const selectedPlacement = useMemo(
     () => (selectedAnchorId ? placements.find((entry) => entry.anchor_id === selectedAnchorId) ?? null : null),
@@ -52,6 +55,22 @@ export default function RoomScreen() {
     () => collectibles.find((entry) => entry.listingId === selectedCollectibleId) ?? null,
     [collectibles, selectedCollectibleId]
   );
+  const visibleCollectibles = useMemo(() => {
+    const keyword = collectibleSearch.trim().toLowerCase();
+    if (!keyword) return collectibles;
+    return collectibles.filter((entry) => entry.title.toLowerCase().includes(keyword));
+  }, [collectibleSearch, collectibles]);
+  const collectibleTotalPages = Math.max(1, Math.ceil(visibleCollectibles.length / COLLECTIBLE_PAGE_SIZE));
+  const pagedCollectibles = useMemo(() => {
+    const start = (collectiblePage - 1) * COLLECTIBLE_PAGE_SIZE;
+    return visibleCollectibles.slice(start, start + COLLECTIBLE_PAGE_SIZE);
+  }, [collectiblePage, visibleCollectibles]);
+
+  useEffect(() => {
+    if (collectiblePage > collectibleTotalPages) {
+      setCollectiblePage(collectibleTotalPages);
+    }
+  }, [collectiblePage, collectibleTotalPages]);
 
   const handlePlace = async () => {
     if (!selectedAnchorId) {
@@ -121,7 +140,18 @@ export default function RoomScreen() {
         <Text style={styles.label}>{t('room.isometric')}</Text>
         <View style={styles.roomGalleryWrap}>
           <View style={styles.sceneWrap}>
-            <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={selectedAnchorId} onSelectAnchor={setSelectedAnchorId} />
+            <IsometricRoom
+              roomType={roomType}
+              placements={placements}
+              selectedAnchorId={selectedAnchorId}
+              onSelectAnchor={setSelectedAnchorId}
+              i18n={{
+                anchorEmpty: (anchorId) => t('room.anchorEmpty', { anchorId }),
+                anchorFilled: (anchorId, itemId) => t('room.anchorFilled', { anchorId, itemId }),
+                anchorHintEditable: t('room.anchorHintEditable'),
+                anchorHintReadonly: t('room.anchorHintReadonly'),
+              }}
+            />
           </View>
           <View style={styles.galleryWrap}>
             <Text style={styles.label}>{t('room.galleryTitle')}</Text>
@@ -129,6 +159,13 @@ export default function RoomScreen() {
               placements={galleryPlacements}
               collectibles={collectibles}
               selectedListingId={selectedCollectibleId}
+              i18n={{
+                a11yEmpty: (x, y) => t('room.galleryCellEmpty', { x, y }),
+                a11yFilled: (x, y, title) => t('room.galleryCellFilled', { x, y, title }),
+                a11yHintPlace: t('room.galleryCellHint'),
+                a11yHintReadonly: t('room.galleryCellReadonly'),
+                imageLabel: (title) => t('room.collectibleImage', { title }),
+              }}
               onCellPress={(x, y, listingIdAtCell) => void handleGalleryCellPress(x, y, listingIdAtCell)}
             />
           </View>
@@ -171,14 +208,28 @@ export default function RoomScreen() {
 
       <Card>
         <Text style={styles.label}>{t('room.collectibles')}</Text>
+        <TextInput
+          value={collectibleSearch}
+          onChangeText={(value) => {
+            setCollectibleSearch(value);
+            setCollectiblePage(1);
+          }}
+          placeholder={t('room.collectibleSearch')}
+          style={styles.searchInput}
+          accessibilityLabel={t('room.collectibleSearch')}
+        />
         {!collectibles.length ? <Text style={styles.text}>{t('room.noCollectibles')}</Text> : null}
         <View style={styles.collectibleWrap}>
-          {collectibles.map((collectible) => {
+          {pagedCollectibles.map((collectible) => {
             const isPlaced = placedCollectibleIds.has(collectible.listingId);
             const isActive = selectedCollectibleId === collectible.listingId;
+            const previewUri = collectible.pixelImageUrl ?? collectible.imageUrl;
             return (
               <View key={collectible.listingId} style={[styles.collectibleCard, isActive ? styles.collectibleCardActive : null]}>
-                <Text style={styles.collectibleTitle}>{collectible.title}</Text>
+                <View style={styles.collectibleHead}>
+                  {previewUri ? <Image source={{ uri: previewUri }} style={styles.collectibleThumb} accessibilityLabel={t('room.collectibleImage', { title: collectible.title })} /> : null}
+                  <Text style={styles.collectibleTitle}>{collectible.title}</Text>
+                </View>
                 <Text style={styles.collectibleMeta}>{isPlaced ? t('room.galleryPlaced') : t('room.galleryUnplaced')}</Text>
                 <Button
                   label={isActive ? t('room.selected') : t('room.select')}
@@ -188,6 +239,16 @@ export default function RoomScreen() {
               </View>
             );
           })}
+        </View>
+        <View style={styles.paginationRow}>
+          <Button label={t('common.prev')} onPress={() => setCollectiblePage((prev) => Math.max(1, prev - 1))} disabled={collectiblePage <= 1} variant="secondary" />
+          <Text style={styles.pageText}>{t('common.pageOf', { page: collectiblePage, total: collectibleTotalPages })}</Text>
+          <Button
+            label={t('common.next')}
+            onPress={() => setCollectiblePage((prev) => Math.min(collectibleTotalPages, prev + 1))}
+            disabled={collectiblePage >= collectibleTotalPages}
+            variant="secondary"
+          />
         </View>
         <Button
           label={selectedCollectible ? t('room.galleryRemoveSelected', { title: selectedCollectible.title }) : t('room.galleryRemoveAny')}
@@ -242,6 +303,8 @@ const styles = StyleSheet.create({
   inventoryName: { color: theme.colors.text, fontWeight: '700', fontFamily: theme.typography.body },
   inventoryMeta: { color: theme.colors.muted, fontFamily: theme.typography.body, fontSize: 12 },
   collectibleWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   collectibleCard: {
@@ -249,8 +312,10 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.md,
     padding: 10,
-    gap: 6,
+    gap: 8,
     backgroundColor: '#fff',
+    flexBasis: Platform.OS === 'web' ? '31%' : '100%',
+    flexGrow: 1,
   },
   collectibleCardActive: {
     borderWidth: 2,
@@ -261,10 +326,42 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontWeight: '700',
     fontFamily: theme.typography.body,
+    flexShrink: 1,
   },
   collectibleMeta: {
     color: theme.colors.muted,
     fontFamily: theme.typography.body,
     fontSize: 12,
+  },
+  collectibleHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  collectibleThumb: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#E5DFD1',
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 8,
+  },
+  pageText: {
+    color: theme.colors.muted,
+    fontFamily: theme.typography.body,
+    fontWeight: '700',
   },
 });

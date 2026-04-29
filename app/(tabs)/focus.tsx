@@ -11,12 +11,14 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusSession } from '@/hooks/useFocusSession';
 import { useI18n } from '@/hooks/useI18n';
+import { useProfile } from '@/hooks/useProfile';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { getActiveAnimal, resolveAnimalSpecies } from '@/lib/animals';
 
 export default function FocusScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { profile } = useProfile();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
   const [activityMode, setActivityMode] = useState<'sewing' | 'training'>('sewing');
   const [isRunning, setIsRunning] = useState(false);
@@ -56,8 +58,17 @@ export default function FocusScreen() {
   );
 
   const activityLabel = useMemo(
-    () => (activityMode === 'sewing' ? t('focus.activity.sewing') : t('focus.activity.training')),
-    [activityMode, t]
+    () => {
+      const name =
+        profile?.display_name?.trim() ||
+        profile?.username?.trim() ||
+        user?.email?.split('@')[0] ||
+        t('profile.title');
+      return activityMode === 'sewing'
+        ? t('focus.activity.sewingWithName', { name })
+        : t('focus.activity.trainingWithName', { name });
+    },
+    [activityMode, profile?.display_name, profile?.username, t, user?.email]
   );
 
   const handleFinish = async (status: 'completed' | 'given_up') => {

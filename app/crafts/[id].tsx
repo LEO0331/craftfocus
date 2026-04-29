@@ -108,18 +108,25 @@ export default function CraftDetailScreen() {
         <Card>
           <View style={styles.actionsRow}>
             <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
+            <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
             {post.user_id !== user?.id ? (
               <Button label={post.claimed_by_me ? t('craft.detail.claimed') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={post.claimed_by_me} />
             ) : null}
           </View>
-          <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
         </Card>
       ) : null}
 
       {post ? (
         <Card>
           <Text style={styles.label}>{t('craft.detail.comments')}</Text>
-          <TextInput placeholder={t('craft.detail.commentPlaceholder')} value={comment} onChangeText={setComment} style={styles.input} multiline />
+          <TextInput
+            placeholder={t('craft.detail.commentPlaceholder')}
+            value={comment}
+            onChangeText={setComment}
+            style={styles.input}
+            multiline
+            accessibilityLabel={t('craft.detail.commentPlaceholder')}
+          />
           <Button label={t('craft.detail.postComment')} onPress={handleAddComment} />
           {post.comments.map((entry) => (
             <View key={entry.id} style={styles.commentRow}>
