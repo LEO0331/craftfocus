@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       await Promise.all([
         supabase.from('focus_sessions').select('duration_minutes,status').eq('user_id', user.id),
         supabase.from('craft_posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-        (supabase as any).from('user_inventory').select('quantity').eq('user_id', user.id),
+        supabase.from('user_inventory').select('quantity').eq('user_id', user.id),
       ]);
 
     if (sessionsError) throw sessionsError;

@@ -6,6 +6,7 @@ type ProfileRow = TableRow<'profiles'>;
 type CraftPostRow = TableRow<'craft_posts'>;
 type LikeRow = TableRow<'likes'>;
 type CommentRow = TableRow<'comments'>;
+type ListingClaimRow = TableRow<'listing_claims'>;
 
 export interface CraftFeedItem extends CraftPostRow {
   author_name: string;
@@ -44,25 +45,18 @@ function countByPostId<T extends { craft_post_id: string }>(rows: T[]) {
 }
 
 export async function listCraftPosts(currentUserId?: string): Promise<CraftFeedItem[]> {
-  const { data: postsRaw, error: postsError } = await (supabase as any)
+  const { data: posts, error: postsError } = await supabase
     .from('craft_posts')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(40);
 
-  if (postsError) {
-    throw postsError;
-  }
+  if (postsError) throw postsError;
+  if (!posts?.length) return [];
 
-  const posts = (postsRaw ?? []) as any[];
-
-  if (!posts.length) {
-    return [];
-  }
-
-  const authorIds = Array.from(new Set(posts.map((post: any) => post.user_id)));
-  const postIds = posts.map((post: any) => post.id as string);
+  const authorIds = Array.from(new Set(posts.map((post) => post.user_id)));
+  const postIds = posts.map((post) => post.id);
 
   const [profilesResult, likesResult, commentsResult, likedResult, claimsResult] = await Promise.all([
     supabase.from('profiles').select('*').in('id', authorIds),
@@ -72,8 +66,8 @@ export async function listCraftPosts(currentUserId?: string): Promise<CraftFeedI
       ? supabase.from('likes').select('craft_post_id').eq('user_id', currentUserId).in('craft_post_id', postIds)
       : Promise.resolve({ data: [] as Pick<LikeRow, 'craft_post_id'>[], error: null }),
     currentUserId
-      ? (supabase as any).from('listing_claims').select('listing_id').eq('user_id', currentUserId).in('listing_id', postIds)
-      : Promise.resolve({ data: [] as Array<{ listing_id: string }>, error: null }),
+      ? supabase.from('listing_claims').select('listing_id').eq('user_id', currentUserId).in('listing_id', postIds)
+      : Promise.resolve({ data: [] as Pick<ListingClaimRow, 'listing_id'>[], error: null }),
   ]);
 
   if (profilesResult.error) throw profilesResult.error;
@@ -86,9 +80,9 @@ export async function listCraftPosts(currentUserId?: string): Promise<CraftFeedI
   const likesMap = countByPostId(likesResult.data ?? []);
   const commentsMap = countByPostId(commentsResult.data ?? []);
   const likedSet = new Set((likedResult.data ?? []).map((row) => row.craft_post_id));
-  const claimSet = new Set((claimsResult.data ?? []).map((row: any) => row.listing_id));
+  const claimSet = new Set((claimsResult.data ?? []).map((row) => row.listing_id));
 
-  return posts.map((post: any) => ({
+  return posts.map((post) => ({
     ...post,
     author_name: profileName(profileMap.get(post.user_id)),
     likes_count: likesMap.get(post.id) ?? 0,
@@ -113,7 +107,7 @@ export async function createCraftPost(input: {
   const safeTitle = sanitizeText(input.title, 80);
   const safeDescription = input.description ? sanitizeText(input.description, 500) : '';
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('craft_posts')
     .insert({
       user_id: input.userId,
@@ -132,11 +126,11 @@ export async function createCraftPost(input: {
     .single();
 
   if (error) throw error;
-  return data.id as string;
+  return data.id;
 }
 
 export async function getCraftPostDetail(postId: string, currentUserId?: string): Promise<CraftPostDetail> {
-  const { data: post, error: postError } = await (supabase as any).from('craft_posts').select('*').eq('id', postId).single();
+  const { data: post, error: postError } = await supabase.from('craft_posts').select('*').eq('id', postId).single();
   if (postError) throw postError;
 
   const [authorResult, likesCountResult, commentsCountResult, likedResult, commentsResult, claimsResult] = await Promise.all([
@@ -148,7 +142,7 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
       : Promise.resolve({ data: null, error: null }),
     supabase.from('comments').select('*').eq('craft_post_id', postId).order('created_at', { ascending: true }),
     currentUserId
-      ? (supabase as any).from('listing_claims').select('id').eq('listing_id', postId).eq('user_id', currentUserId).maybeSingle()
+      ? supabase.from('listing_claims').select('id').eq('listing_id', postId).eq('user_id', currentUserId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
 
@@ -186,11 +180,11 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
     liked_by_me: Boolean(likedResult.data),
     claimed_by_me: Boolean(claimsResult.data),
     comments,
-  } as CraftPostDetail;
+  };
 }
 
 export async function claimListingWithSeeds(listingId: string) {
-  const { error } = await (supabase as any).rpc('claim_listing_with_seeds', { p_listing_id: listingId });
+  const { error } = await supabase.rpc('claim_listing_with_seeds', { p_listing_id: listingId });
   if (error) throw error;
 }
 
@@ -224,10 +218,6 @@ export async function addComment(postId: string, userId: string, body: string) {
 }
 
 export async function deleteCraftPost(postId: string, userId: string) {
-  const { error } = await (supabase as any)
-    .from('craft_posts')
-    .update({ is_active: false })
-    .eq('id', postId)
-    .eq('user_id', userId);
+  const { error } = await supabase.from('craft_posts').update({ is_active: false }).eq('id', postId).eq('user_id', userId);
   if (error) throw error;
 }

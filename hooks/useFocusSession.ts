@@ -16,27 +16,22 @@ export function useFocusSession() {
   const [isSaving, setIsSaving] = useState(false);
 
   const submitFocusSession = async (input: SubmitFocusSessionInput) => {
-    if (!user?.id) {
-      throw new Error('You must be logged in to save focus sessions.');
-    }
+    if (!user?.id) throw new Error('You must be logged in to save focus sessions.');
 
     setIsSaving(true);
-
     try {
       const reward = getFocusReward(input.durationMinutes, input.status);
-      const { data, error } = await (supabase as any).rpc('award_seeds_for_session', {
+      const { data, error } = await supabase.rpc('award_seeds_for_session', {
         p_duration_minutes: input.durationMinutes,
         p_mode: input.mode,
         p_status: input.status,
       });
+      if (error) throw error;
 
-      if (error) {
-        throw error;
-      }
-
+      const row = data?.[0];
       return {
-        coins: reward.coins,
-        seedsBalance: typeof data === 'number' ? data : reward.seedsBalance,
+        coins: row?.coins ?? reward.coins,
+        seedsBalance: row?.seeds_balance ?? reward.seedsBalance,
       };
     } finally {
       setIsSaving(false);
