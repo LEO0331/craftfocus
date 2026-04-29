@@ -121,7 +121,9 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'crafts.official.searchPlaceholder': 'Search official items',
     'crafts.official.defaultDescription': 'Official room collectible.',
     'crafts.custom.title': 'Custom Craft Gallery',
+    'crafts.custom.hint': 'Browse player-made pixel crafts and claim with seeds.',
     'crafts.custom.searchPlaceholder': 'Search custom listings',
+    'crafts.custom.seedLabel': '🧩 Pixel item · {count} 🌱',
 
     'craft.new.title': 'Publish Listing',
     'craft.new.fieldTitle': 'Title',
@@ -355,7 +357,9 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'crafts.official.searchPlaceholder': '搜尋官方物件',
     'crafts.official.defaultDescription': '官方房間收藏物件。',
     'crafts.custom.title': '自訂作品收藏',
+    'crafts.custom.hint': '瀏覽玩家自製像素作品並用種子領取。',
     'crafts.custom.searchPlaceholder': '搜尋自訂上架',
+    'crafts.custom.seedLabel': '🧩 像素物件 · {count} 🌱',
 
     'craft.new.title': '發布上架',
     'craft.new.fieldTitle': '標題',

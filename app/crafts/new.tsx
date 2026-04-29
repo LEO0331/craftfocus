@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { createCraftPost } from '@/lib/crafts';
 import { generateSurprisePixelArt, pixelizeImage } from '@/lib/pixelize';
+import { ensureProfileRow } from '@/lib/profiles';
 import { storageAdapter } from '@/lib/storage';
 import { sanitizeText } from '@/lib/validation';
 
@@ -25,6 +26,7 @@ export default function NewCraftPostScreen() {
   const [pixelPreviewUri, setPixelPreviewUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPixelizing, setIsPixelizing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
@@ -63,6 +65,9 @@ export default function NewCraftPostScreen() {
 
     setIsSaving(true);
     try {
+      setSaveError(null);
+      await ensureProfileRow(user.id, user.email);
+
       const safeTitle = sanitizeText(title, 80);
       const safeDescription = description ? sanitizeText(description, 500) : '';
       const timestamp = Date.now();
@@ -93,7 +98,9 @@ export default function NewCraftPostScreen() {
       }
       router.replace(`/crafts/${id}`);
     } catch (error) {
-      Alert.alert(t('craft.new.publish'), error instanceof Error ? error.message : t('common.unknownError'));
+      const message = error instanceof Error ? error.message : t('common.unknownError');
+      setSaveError(message);
+      Alert.alert(t('craft.new.publish'), message);
     } finally {
       setIsSaving(false);
     }
@@ -136,6 +143,7 @@ export default function NewCraftPostScreen() {
         {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} accessibilityLabel={t('craft.new.pixelPreview')} /> : null}
 
         <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
       </Card>
     </ScrollView>
   );
@@ -155,4 +163,5 @@ const styles = StyleSheet.create({
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
   preview: { width: '100%', aspectRatio: 1.2, borderRadius: theme.radius.md, backgroundColor: '#E5DFD1' },
+  errorText: { color: theme.colors.danger, fontWeight: '700' },
 });

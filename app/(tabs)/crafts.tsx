@@ -177,6 +177,7 @@ export default function CraftsScreen() {
 
       <Card>
         <Text style={styles.sectionTitle}>{t('crafts.custom.title')}</Text>
+        <Text style={styles.sectionHint}>{t('crafts.custom.hint')}</Text>
         <TextInput
           value={listingSearch}
           onChangeText={setListingSearch}
@@ -184,46 +185,45 @@ export default function CraftsScreen() {
           style={styles.searchInput}
           accessibilityLabel={t('crafts.custom.searchPlaceholder')}
         />
+        {isLoading && !posts.length ? <ActivityIndicator color={theme.colors.primary} /> : null}
+        {!isLoading && !posts.length ? <Text style={styles.empty}>{t('crafts.empty')}</Text> : null}
+        <View style={styles.grid}>
+          {pagedListings.map((post) => (
+            <View key={post.id} style={styles.gridItem}>
+              <CraftPostCard
+                authorName={post.author_name}
+                authorAnimalId={post.author_animal_id}
+                title={post.title}
+                description={post.description ?? undefined}
+                imageUrl={post.image_url ?? undefined}
+                pixelImageUrl={post.pixel_image_url ?? undefined}
+                likes={post.likes_count}
+                comments={post.comments_count}
+                likedByMe={post.liked_by_me}
+                seedCost={Number(post.seed_cost ?? 0)}
+                claimedByMe={post.claimed_by_me}
+                onPress={() => router.push(`/crafts/${post.id}`)}
+                layout="compact"
+              />
+              <Text style={styles.seedLabel}>{t('crafts.custom.seedLabel', { count: post.seed_cost ?? 0 })}</Text>
+              {!post.claimed_by_me && post.user_id !== user?.id ? (
+                <View style={styles.claimBtnWrap}>
+                  <Button
+                    label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })}
+                    onPress={() => handleClaim(post.id)}
+                    variant="secondary"
+                  />
+                </View>
+              ) : null}
+            </View>
+          ))}
+        </View>
+        <View style={styles.paginationRow}>
+          <Button label={t('common.prev')} onPress={() => setListingPage((prev) => Math.max(1, prev - 1))} disabled={listingPage <= 1} variant="secondary" />
+          <Text style={styles.pageText}>{t('common.pageOf', { page: listingPage, total: listingTotalPages })}</Text>
+          <Button label={t('common.next')} onPress={() => setListingPage((prev) => Math.min(listingTotalPages, prev + 1))} disabled={listingPage >= listingTotalPages} variant="secondary" />
+        </View>
       </Card>
-
-      {isLoading && !posts.length ? <ActivityIndicator color={theme.colors.primary} /> : null}
-
-      {!isLoading && !posts.length ? <Text style={styles.empty}>{t('crafts.empty')}</Text> : null}
-
-      <View style={styles.grid}>
-        {pagedListings.map((post) => (
-          <View key={post.id} style={styles.gridItem}>
-            <CraftPostCard
-              authorName={post.author_name}
-              authorAnimalId={post.author_animal_id}
-              title={post.title}
-              description={post.description ?? undefined}
-              imageUrl={post.image_url ?? undefined}
-              pixelImageUrl={post.pixel_image_url ?? undefined}
-              likes={post.likes_count}
-              comments={post.comments_count}
-              likedByMe={post.liked_by_me}
-              seedCost={Number(post.seed_cost ?? 0)}
-              claimedByMe={post.claimed_by_me}
-              onPress={() => router.push(`/crafts/${post.id}`)}
-            />
-            {!post.claimed_by_me && post.user_id !== user?.id ? (
-              <View style={styles.claimBtnWrap}>
-                <Button
-                  label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })}
-                  onPress={() => handleClaim(post.id)}
-                  variant="secondary"
-                />
-              </View>
-            ) : null}
-          </View>
-        ))}
-      </View>
-      <View style={styles.paginationRow}>
-        <Button label={t('common.prev')} onPress={() => setListingPage((prev) => Math.max(1, prev - 1))} disabled={listingPage <= 1} variant="secondary" />
-        <Text style={styles.pageText}>{t('common.pageOf', { page: listingPage, total: listingTotalPages })}</Text>
-        <Button label={t('common.next')} onPress={() => setListingPage((prev) => Math.min(listingTotalPages, prev + 1))} disabled={listingPage >= listingTotalPages} variant="secondary" />
-      </View>
     </ScrollView>
   );
 }
@@ -295,6 +295,13 @@ const styles = StyleSheet.create({
   },
   claimBtnWrap: {
     marginTop: 8,
+  },
+  seedLabel: {
+    marginTop: 8,
+    color: theme.colors.primaryDark,
+    fontFamily: theme.typography.body,
+    fontWeight: '700',
+    fontSize: 12,
   },
   paginationRow: {
     flexDirection: 'row',

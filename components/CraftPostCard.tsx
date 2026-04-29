@@ -20,6 +20,7 @@ interface CraftPostCardProps {
   claimedByMe?: boolean;
   onPress?: () => void;
   likedByMe?: boolean;
+  layout?: 'default' | 'compact';
 }
 
 export function CraftPostCard({
@@ -35,14 +36,25 @@ export function CraftPostCard({
   claimedByMe = false,
   onPress,
   likedByMe = false,
+  layout = 'default',
 }: CraftPostCardProps) {
   const { t } = useI18n();
   const displayImageUrl = pixelImageUrl ?? imageUrl;
+  const compact = layout === 'compact';
 
   const content = (
     <Card>
-      {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.image} accessibilityLabel={t('craft.card.image')} /> : null}
-      <Text style={styles.title}>{title}</Text>
+      {compact ? (
+        <View style={styles.compactHead}>
+          {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.thumb} accessibilityLabel={t('craft.card.image')} /> : null}
+          <Text style={styles.title}>{title}</Text>
+        </View>
+      ) : (
+        <>
+          {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.image} accessibilityLabel={t('craft.card.image')} /> : null}
+          <Text style={styles.title}>{title}</Text>
+        </>
+      )}
       <View style={styles.authorRow}>
         <AsciiPet art={resolveAsciiAnimalBadge(authorAnimalId)} compact />
         <Text style={styles.meta}>
@@ -92,10 +104,17 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     backgroundColor: '#E5DFD1',
   },
+  thumb: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#E5DFD1',
+  },
   title: {
     fontSize: 18,
     fontWeight: '700',
     color: theme.colors.text,
+    flexShrink: 1,
   },
   meta: {
     color: theme.colors.muted,
@@ -113,6 +132,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  compactHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   price: {
     color: theme.colors.info,
