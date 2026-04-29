@@ -132,9 +132,7 @@ export default function ClaimsScreen() {
         {claimedListings.map((item) => (
           <View key={item.claimId} style={styles.itemRow}>
             <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.text}>
-              {item.listingType} · {item.seedCost} seeds
-            </Text>
+            <Text style={styles.text}>{t('claims.listingMeta', { type: item.listingType, count: item.seedCost })}</Text>
           </View>
         ))}
       </Card>

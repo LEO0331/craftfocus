@@ -2,6 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 
+import { TopStatusBadge } from '@/components/TopStatusBadge';
 import { theme } from '@/constants/theme';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -20,6 +21,7 @@ export default function TabLayout() {
         headerTintColor: theme.colors.text,
         tabBarStyle: { backgroundColor: theme.colors.card },
         tabBarActiveTintColor: theme.colors.primary,
+        headerRight: () => <TopStatusBadge />,
       }}
     >
       <Tabs.Screen

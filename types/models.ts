@@ -26,7 +26,28 @@ export interface ItemCatalogRow {
   id: BuildTargetId;
   name: string;
   category: string;
+  description?: string;
   image_url?: string;
   half_built_image_url?: string;
   required_progress: number;
+}
+
+export interface CustomGalleryPlacement {
+  id: string;
+  userId: string;
+  listingId: string;
+  cellX: number;
+  cellY: number;
+}
+
+export interface GalleryCell {
+  x: number;
+  y: number;
+}
+
+export interface GalleryItem {
+  listingId: string;
+  title: string;
+  imageUrl: string | null;
+  pixelImageUrl: string | null;
 }

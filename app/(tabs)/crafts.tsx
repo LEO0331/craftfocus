@@ -1,24 +1,26 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CraftPostCard } from '@/components/CraftPostCard';
+import { PixelSprite } from '@/components/PixelSprite';
 import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, type CraftFeedItem } from '@/lib/crafts';
 import { useI18n } from '@/hooks/useI18n';
-import { ensureWallet, getWalletBalance } from '@/lib/wallet';
+import { emitTopStatusRefresh } from '@/lib/topStatusBus';
+import { ensureWallet } from '@/lib/wallet';
 
 export default function CraftsScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [posts, setPosts] = useState<CraftFeedItem[]>([]);
-  const [seedBalance, setSeedBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [claimingOfficialId, setClaimingOfficialId] = useState<string | null>(null);
+  const [officialSearch, setOfficialSearch] = useState('');
 
   const loadPosts = useCallback(async () => {
     setIsLoading(true);
@@ -28,10 +30,6 @@ export default function CraftsScreen() {
       }
       const nextPosts = await listCraftPosts(user?.id);
       setPosts(nextPosts);
-      if (user?.id) {
-        const balance = await getWalletBalance(user.id);
-        setSeedBalance(balance);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +49,7 @@ export default function CraftsScreen() {
         await ensureWallet(user.id);
         await claimListingWithSeeds(listingId);
         await loadPosts();
+        emitTopStatusRefresh();
       } catch (error) {
         Alert.alert(t('craft.detail.claim'), error instanceof Error ? error.message : t('common.unknownError'));
       }
@@ -69,6 +68,7 @@ export default function CraftsScreen() {
         await ensureWallet(user.id);
         await claimOfficialInventoryItem(itemId, seedCost);
         await loadPosts();
+        emitTopStatusRefresh();
       } catch (error) {
         Alert.alert(t('crafts.official.title'), error instanceof Error ? error.message : t('common.unknownError'));
       } finally {
@@ -78,33 +78,45 @@ export default function CraftsScreen() {
     [loadPosts, t, user?.id]
   );
 
+  const visibleOfficialItems = useMemo(() => {
+    const keyword = officialSearch.trim().toLowerCase();
+    if (!keyword) return ITEM_CATALOG_SEED;
+    return ITEM_CATALOG_SEED.filter((item) => {
+      const haystack = `${item.name} ${item.description ?? ''}`.toLowerCase();
+      return haystack.includes(keyword);
+    });
+  }, [officialSearch]);
+
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadPosts} />}
     >
-      <View style={styles.headerRow}>
-        <Text style={styles.heading}>{t('crafts.title')}</Text>
-        <View style={styles.seedBadge}>
-          <Text style={styles.seedIcon}>🌱</Text>
-          <Text style={styles.seedText}>{seedBalance}</Text>
-        </View>
-      </View>
+      <Text style={styles.heading}>{t('crafts.title')}</Text>
       <Button label={t('crafts.upload')} onPress={() => router.push('/crafts/new')} />
 
       <Card>
         <Text style={styles.sectionTitle}>{t('crafts.official.title')}</Text>
         <Text style={styles.sectionHint}>{t('crafts.official.hint')}</Text>
+        <TextInput
+          value={officialSearch}
+          onChangeText={setOfficialSearch}
+          placeholder={t('crafts.official.searchPlaceholder')}
+          style={styles.searchInput}
+        />
         <View style={styles.officialGrid}>
-          {ITEM_CATALOG_SEED.map((item) => {
+          {visibleOfficialItems.map((item) => {
             const officialSeedCost = 25;
             return (
               <View key={item.id} style={styles.officialCard}>
-                <Text style={styles.officialName}>{item.name}</Text>
-                <Text style={styles.officialMeta}>{item.category}</Text>
+                <View style={styles.officialHead}>
+                  <PixelSprite spriteId={item.id} size={34} />
+                  <Text style={styles.officialName}>{item.name}</Text>
+                </View>
+                <Text style={styles.officialMeta}>{item.description ?? t('crafts.official.defaultDescription')}</Text>
                 <Button
-                  label={t('crafts.official.claim', { count: officialSeedCost })}
+                  label={`${officialSeedCost} 🌱`}
                   onPress={() => handleClaimOfficial(item.id, officialSeedCost)}
                   disabled={claimingOfficialId === item.id}
                   variant="secondary"
@@ -124,15 +136,14 @@ export default function CraftsScreen() {
           <View key={post.id} style={styles.gridItem}>
             <CraftPostCard
               authorName={post.author_name}
+              authorAnimalId={post.author_animal_id}
               title={post.title}
-              category={post.category}
               description={post.description ?? undefined}
               imageUrl={post.image_url ?? undefined}
               pixelImageUrl={post.pixel_image_url ?? undefined}
               likes={post.likes_count}
               comments={post.comments_count}
               likedByMe={post.liked_by_me}
-              listingType={post.listing_type as 'catalog' | 'custom'}
               seedCost={Number(post.seed_cost ?? 0)}
               claimedByMe={post.claimed_by_me}
               onPress={() => router.push(`/crafts/${post.id}`)}
@@ -163,24 +174,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  seedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: '#fff',
-    borderRadius: 999,
-  },
-  seedIcon: { fontSize: 14 },
-  seedText: { color: theme.colors.text, fontWeight: '700', fontFamily: theme.typography.body },
   empty: { color: theme.colors.muted, fontFamily: theme.typography.body },
   sectionTitle: {
     fontSize: 18,
@@ -189,6 +182,14 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.body,
   },
   sectionHint: { color: theme.colors.muted, fontFamily: theme.typography.body },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+  },
   officialGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -204,6 +205,11 @@ const styles = StyleSheet.create({
     flexBasis: Platform.OS === 'web' ? '31%' : '48%',
     flexGrow: 1,
   },
+  officialHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   officialName: {
     color: theme.colors.text,
     fontWeight: '700',
@@ -211,8 +217,8 @@ const styles = StyleSheet.create({
   },
   officialMeta: {
     color: theme.colors.muted,
-    textTransform: 'capitalize',
     fontFamily: theme.typography.body,
+    fontSize: 12,
   },
   grid: {
     flexDirection: 'row',

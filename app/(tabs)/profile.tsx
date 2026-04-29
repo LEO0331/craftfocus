@@ -3,22 +3,26 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
+import { AsciiPet } from '@/components/AsciiPet';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CategoryPicker } from '@/components/CategoryPicker';
+import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n, type AppLanguage } from '@/hooks/useI18n';
 import { useProfile } from '@/hooks/useProfile';
 import { deleteMyAccount } from '@/lib/auth';
 import { getWalletBalance } from '@/lib/wallet';
-import { getActiveAnimal, listUserAnimals, setActiveAnimal, type UserAnimal } from '@/lib/animals';
+import { getActiveAnimal, listUserAnimals, resolveAnimalSpecies, setActiveAnimal, type UserAnimal } from '@/lib/animals';
+import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { storageAdapter } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/validation';
 import type { TableRow } from '@/types/database';
 
 type FocusSessionRow = TableRow<'focus_sessions'>;
+type UserInventoryRow = TableRow<'user_inventory'>;
 
 const STORAGE_BUCKET = 'craft-images';
 
@@ -34,6 +38,7 @@ export default function ProfileScreen() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [animals, setAnimals] = useState<UserAnimal[]>([]);
   const [activeAnimalName, setActiveAnimalName] = useState('None');
+  const [activeAnimalSpecies, setActiveAnimalSpecies] = useState('cat');
 
   const [stats, setStats] = useState({ totalMinutes: 0, completedSessions: 0, uploadedWorks: 0, unlockedItems: 0 });
 
@@ -53,6 +58,7 @@ export default function ProfileScreen() {
     setWalletBalance(balance);
     setAnimals(userAnimals);
     setActiveAnimalName(active?.name ?? 'None');
+    setActiveAnimalSpecies(resolveAnimalSpecies(active?.sprite_key ?? 'cat'));
   }, [user?.id]);
 
   const loadStats = useCallback(async () => {
@@ -71,7 +77,10 @@ export default function ProfileScreen() {
 
     const completed = (sessions ?? []).filter((entry: Pick<FocusSessionRow, 'status' | 'duration_minutes'>) => entry.status === 'completed');
     const totalMinutes = completed.reduce((sum: number, entry) => sum + Number(entry.duration_minutes ?? 0), 0);
-    const inventoryCount = (inventory ?? []).reduce((sum: number, row: any) => sum + Number(row.quantity ?? 0), 0);
+    const inventoryCount = (inventory ?? []).reduce(
+      (sum: number, row: Pick<UserInventoryRow, 'quantity'>) => sum + Number(row.quantity ?? 0),
+      0
+    );
 
     setStats({ totalMinutes, completedSessions: completed.length, uploadedWorks: works ?? 0, unlockedItems: inventoryCount });
   }, [user?.id]);
@@ -105,7 +114,7 @@ export default function ProfileScreen() {
       await saveProfile({ display_name: safeDisplayName || null, bio: safeBio || null, avatar_url: avatarUrlToSave });
       Alert.alert(t('profile.saved'), t('profile.profileUpdated'));
     } catch (error) {
-      Alert.alert(t('profile.saveFailed'), error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('profile.saveFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsSaving(false);
     }
@@ -121,9 +130,9 @@ export default function ProfileScreen() {
           try {
             await deleteMyAccount();
             await logout();
-            Alert.alert('Account deleted', 'Your account has been permanently deleted.');
+            Alert.alert(t('profile.accountDeleted'), t('profile.accountDeletedBody'));
           } catch (error) {
-            Alert.alert('Delete failed', error instanceof Error ? error.message : 'Unknown error');
+            Alert.alert(t('profile.deleteFailed'), error instanceof Error ? error.message : t('common.unknownError'));
           }
         },
       },
@@ -138,9 +147,10 @@ export default function ProfileScreen() {
     try {
       await setActiveAnimal(animalId);
       await loadMeta();
-      Alert.alert('Updated', 'Active animal updated.');
+      emitTopStatusRefresh();
+      Alert.alert(t('profile.saved'), t('profile.activeUpdated'));
     } catch (error) {
-      Alert.alert('Failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('profile.activeUpdateFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -196,6 +206,7 @@ export default function ProfileScreen() {
 
       <Card>
         <Text style={styles.name}>{t('profile.companionWallet')}</Text>
+        <AsciiPet art={resolveAsciiAnimalBadge(activeAnimalSpecies)} compact />
         <Text style={styles.sub}>{t('profile.activeAnimal', { name: activeAnimalName })}</Text>
         <Text style={styles.sub}>{t('profile.seedsBalance', { count: walletBalance })}</Text>
         {animals.map((animal) => (

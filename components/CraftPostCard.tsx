@@ -1,19 +1,21 @@
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AsciiPet } from '@/components/AsciiPet';
 import { Card } from '@/components/Card';
+import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
 import { theme } from '@/constants/theme';
+import { useI18n } from '@/hooks/useI18n';
 
 interface CraftPostCardProps {
   authorName?: string;
+  authorAnimalId?: string;
   title: string;
-  category: string;
   description?: string;
   imageUrl?: string;
   pixelImageUrl?: string;
   likes?: number;
   comments?: number;
-  listingType?: 'catalog' | 'custom';
   seedCost?: number;
   claimedByMe?: boolean;
   onPress?: () => void;
@@ -22,42 +24,40 @@ interface CraftPostCardProps {
 
 export function CraftPostCard({
   authorName,
+  authorAnimalId = 'cat',
   title,
-  category,
   description,
   imageUrl,
   pixelImageUrl,
   likes = 0,
   comments = 0,
-  listingType = 'custom',
   seedCost = 0,
   claimedByMe = false,
   onPress,
   likedByMe = false,
 }: CraftPostCardProps) {
+  const { t } = useI18n();
+  const displayImageUrl = pixelImageUrl ?? imageUrl;
+
   const content = (
     <Card>
-      {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} accessibilityLabel="Craft post image" /> : null}
-      {pixelImageUrl ? (
-        <View style={styles.pixelWrap}>
-          <Text style={styles.pixelLabel}>Pixel Preview</Text>
-          <Image source={{ uri: pixelImageUrl }} style={styles.image} accessibilityLabel="Pixel-art preview of craft post" />
-        </View>
-      ) : null}
+      {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.image} accessibilityLabel={t('craft.card.image')} /> : null}
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.meta}>
-        by {authorName ?? 'Unknown'} · {category}
-      </Text>
+      <View style={styles.authorRow}>
+        <AsciiPet art={resolveAsciiAnimalBadge(authorAnimalId)} compact />
+        <Text style={styles.meta}>
+          {t('craft.card.by')} {authorName ?? t('craft.card.unknownAuthor')}
+        </Text>
+      </View>
       {description ? <Text style={styles.description}>{description}</Text> : null}
       <View style={styles.row}>
         <Text style={[styles.meta, likedByMe ? styles.liked : null]}>♥ {likes}</Text>
         <Text style={styles.meta}>💬 {comments}</Text>
-        <Text style={[styles.meta, styles.price]}>{seedCost} seeds</Text>
+        <Text style={[styles.meta, styles.price]}>{seedCost} 🌱</Text>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.meta}>Type: {listingType}</Text>
-        <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>{claimedByMe ? 'Claimed' : 'Unclaimed'}</Text>
-      </View>
+      <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>
+        {claimedByMe ? t('craft.card.claimed') : t('craft.card.unclaimed')}
+      </Text>
     </Card>
   );
 
@@ -78,14 +78,6 @@ export function CraftPostCard({
 }
 
 const styles = StyleSheet.create({
-  pixelWrap: {
-    gap: 6,
-  },
-  pixelLabel: {
-    color: theme.colors.muted,
-    fontWeight: '600',
-    fontSize: 12,
-  },
   liked: {
     color: theme.colors.danger,
     fontWeight: '700',
@@ -112,6 +104,11 @@ const styles = StyleSheet.create({
   description: {
     color: theme.colors.text,
     lineHeight: 20,
+  },
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   row: {
     flexDirection: 'row',

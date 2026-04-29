@@ -5,22 +5,23 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { FocusTimer } from '@/components/FocusTimer';
+import { resolveAsciiAnimalFrame } from '@/constants/asciiPets';
 import { FOCUS_DURATIONS } from '@/constants/categories';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocusSession } from '@/hooks/useFocusSession';
 import { useI18n } from '@/hooks/useI18n';
-import { getActiveAnimal, resolveAnimalVariant } from '@/lib/animals';
-import type { FocusMode } from '@/types/models';
+import { emitTopStatusRefresh } from '@/lib/topStatusBus';
+import { getActiveAnimal, resolveAnimalSpecies } from '@/lib/animals';
 
 export default function FocusScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
-  const [activityMode, setActivityMode] = useState<FocusMode>('sewing');
+  const [activityMode, setActivityMode] = useState<'sewing' | 'training'>('sewing');
   const [isRunning, setIsRunning] = useState(false);
   const [resultText, setResultText] = useState<string | null>(null);
-  const [animalSpriteKey, setAnimalSpriteKey] = useState('cat');
+  const [animalSpecies, setAnimalSpecies] = useState<'cat' | 'dog' | 'rabbit' | 'fox'>('cat');
   const [animFrame, setAnimFrame] = useState(0);
 
   const { submitFocusSession, isSaving } = useFocusSession();
@@ -32,11 +33,11 @@ export default function FocusScreen() {
     getActiveAnimal(user.id)
       .then((animal) => {
         if (animal?.sprite_key) {
-          setAnimalSpriteKey(animal.sprite_key);
+          setAnimalSpecies(resolveAnimalSpecies(animal.sprite_key));
         }
       })
       .catch(() => {
-        setAnimalSpriteKey('cat');
+        setAnimalSpecies('cat');
       });
   }, [user?.id]);
 
@@ -44,14 +45,14 @@ export default function FocusScreen() {
     if (!isRunning) {
       return;
     }
-    const timer = setInterval(() => setAnimFrame((prev) => (prev + 1) % 2), 900);
+    const timer = setInterval(() => setAnimFrame((prev) => (prev + 1) % 3), 500);
     return () => clearInterval(timer);
   }, [isRunning]);
 
   const durationSeconds = useMemo(() => duration * 60, [duration]);
-  const activeSprite = useMemo(
-    () => resolveAnimalVariant(animalSpriteKey, activityMode, animFrame),
-    [animalSpriteKey, activityMode, animFrame]
+  const asciiArt = useMemo(
+    () => resolveAsciiAnimalFrame(animalSpecies, activityMode, animFrame),
+    [animalSpecies, activityMode, animFrame]
   );
 
   const activityLabel = useMemo(
@@ -61,16 +62,21 @@ export default function FocusScreen() {
 
   const handleFinish = async (status: 'completed' | 'given_up') => {
     try {
-      const reward = await submitFocusSession({ durationMinutes: duration, mode: activityMode, status });
+      const reward = await submitFocusSession({
+        durationMinutes: duration,
+        mode: activityMode === 'sewing' ? 'sewing' : 'crafting',
+        status,
+      });
 
       setResultText(
         status === 'completed'
           ? t('focus.result.completed', { coins: reward.coins, balance: reward.seedsBalance })
           : t('focus.result.stopped', { coins: reward.coins, balance: reward.seedsBalance })
       );
+      emitTopStatusRefresh();
       setIsRunning(false);
     } catch (error) {
-      Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : t('common.unknownError'));
       setIsRunning(false);
     }
   };
@@ -91,7 +97,7 @@ export default function FocusScreen() {
           <Button
             label={t('focus.start')}
             onPress={() => {
-              setActivityMode(Math.random() > 0.5 ? 'sewing' : 'crafting');
+              setActivityMode(Math.random() > 0.5 ? 'sewing' : 'training');
               setIsRunning(true);
             }}
             disabled={isSaving}
@@ -102,11 +108,11 @@ export default function FocusScreen() {
         <FocusTimer
           totalSeconds={durationSeconds}
           activityLabel={activityLabel}
+          asciiArt={asciiArt}
           title={t('focus.timer.title')}
           subtitle={t('focus.timer.subtitle')}
           stopLabel={t('focus.timer.stop')}
           devCompleteLabel={t('focus.timer.devComplete')}
-          animationSpriteId={activeSprite}
           onCompleted={() => {
             handleFinish('completed');
           }}

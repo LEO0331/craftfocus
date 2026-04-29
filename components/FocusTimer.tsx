@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AsciiPet } from '@/components/AsciiPet';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { PixelSprite } from '@/components/PixelSprite';
 import { theme } from '@/constants/theme';
 
 interface FocusTimerProps {
   totalSeconds: number;
   onCompleted: () => void;
   onStop: () => void;
-  animationSpriteId?: string;
+  asciiArt: string;
   activityLabel: string;
   title: string;
   subtitle: string;
@@ -22,7 +22,7 @@ export function FocusTimer({
   totalSeconds,
   onCompleted,
   onStop,
-  animationSpriteId,
+  asciiArt,
   activityLabel,
   title,
   subtitle,
@@ -77,8 +77,6 @@ export function FocusTimer({
     return `${mins}:${secs}`;
   }, [remaining]);
 
-  const resolvedSpriteId = animationSpriteId && animationSpriteId.length > 0 ? animationSpriteId : 'cat_general_0';
-
   return (
     <Card>
       <Text style={styles.title}>{title}</Text>
@@ -91,7 +89,7 @@ export function FocusTimer({
       </View>
 
       <View style={styles.animationPanel}>
-        <PixelSprite spriteId={resolvedSpriteId} size={88} />
+        <AsciiPet art={asciiArt} />
         <Text style={styles.modeLabel}>{activityLabel}</Text>
       </View>
 

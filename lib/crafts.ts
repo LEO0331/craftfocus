@@ -10,6 +10,7 @@ type ListingClaimRow = TableRow<'listing_claims'>;
 
 export interface CraftFeedItem extends CraftPostRow {
   author_name: string;
+  author_animal_id: string;
   likes_count: number;
   comments_count: number;
   liked_by_me: boolean;
@@ -34,6 +35,14 @@ function buildProfileMap(profiles: ProfileRow[]) {
 
 function profileName(profile: ProfileRow | undefined): string {
   return profile?.display_name || profile?.username || 'Unknown user';
+}
+
+function profileAnimal(profile: ProfileRow | undefined): string {
+  const raw = profile?.active_animal_id?.toLowerCase();
+  if (raw?.startsWith('dog')) return 'dog';
+  if (raw?.startsWith('rabbit')) return 'rabbit';
+  if (raw?.startsWith('fox')) return 'fox';
+  return 'cat';
 }
 
 function countByPostId<T extends { craft_post_id: string }>(rows: T[]) {
@@ -85,6 +94,7 @@ export async function listCraftPosts(currentUserId?: string): Promise<CraftFeedI
   return posts.map((post) => ({
     ...post,
     author_name: profileName(profileMap.get(post.user_id)),
+    author_animal_id: profileAnimal(profileMap.get(post.user_id)),
     likes_count: likesMap.get(post.id) ?? 0,
     comments_count: commentsMap.get(post.id) ?? 0,
     liked_by_me: likedSet.has(post.id),
@@ -175,6 +185,7 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
   return {
     ...post,
     author_name: profileName(authorResult.data ?? undefined),
+    author_animal_id: profileAnimal(authorResult.data ?? undefined),
     likes_count: likesCountResult.count ?? 0,
     comments_count: commentsCountResult.count ?? 0,
     liked_by_me: Boolean(likedResult.data),

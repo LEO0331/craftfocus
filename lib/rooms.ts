@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { ROOM_ANCHORS } from '@/constants/roomLayout';
 import type { RoomType } from '@/types/models';
 
 export interface RoomPlacement {
@@ -71,4 +72,8 @@ export async function placeInventoryAtAnchor(input: { roomId: string; itemId: st
 export async function removeRoomPlacement(roomPlacementId: string) {
   const { error } = await supabase.rpc('remove_room_placement', { p_room_placement_id: roomPlacementId });
   if (error) throw error;
+}
+
+export function listRoomAnchors(roomType: RoomType) {
+  return ROOM_ANCHORS[roomType] ?? [];
 }

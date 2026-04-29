@@ -8,7 +8,8 @@ import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
-import { addComment, claimListingWithSeeds, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
+import { addComment, claimListingWithSeeds, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
+import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { sanitizeText } from '@/lib/validation';
 import { ensureWallet } from '@/lib/wallet';
 
@@ -54,6 +55,7 @@ export default function CraftDetailScreen() {
       await claimListingWithSeeds(postId);
       Alert.alert(t('craft.detail.claimed'), t('craft.detail.claimed'));
       await loadPost();
+      emitTopStatusRefresh();
     } catch (error) {
       Alert.alert(t('craft.detail.claim'), error instanceof Error ? error.message : t('common.unknownError'));
     }
@@ -68,25 +70,6 @@ export default function CraftDetailScreen() {
     } catch (error) {
       Alert.alert(t('craft.detail.comments'), error instanceof Error ? error.message : t('common.unknownError'));
     }
-  };
-
-  const handleDeletePost = () => {
-    if (!user?.id || !postId) return;
-    Alert.alert('Delete Listing', 'Are you sure you want to archive this listing?', [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteCraftPost(postId, user.id);
-            router.replace('/(tabs)/crafts');
-          } catch (error) {
-            Alert.alert(t('craft.detail.deleteListing'), error instanceof Error ? error.message : t('common.unknownError'));
-          }
-        },
-      },
-    ]);
   };
 
   if (!postId) {
@@ -104,15 +87,14 @@ export default function CraftDetailScreen() {
       {post ? (
         <CraftPostCard
           authorName={post.author_name}
+          authorAnimalId={post.author_animal_id}
           title={post.title}
-          category={post.category}
           description={post.description ?? undefined}
           imageUrl={post.image_url ?? undefined}
           pixelImageUrl={post.pixel_image_url ?? undefined}
           likes={post.likes_count}
           comments={post.comments_count}
           likedByMe={post.liked_by_me}
-          listingType={post.listing_type as 'catalog' | 'custom'}
           seedCost={Number(post.seed_cost ?? 0)}
           claimedByMe={post.claimed_by_me}
         />
@@ -124,12 +106,13 @@ export default function CraftDetailScreen() {
 
       {post ? (
         <Card>
-          <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
-          {post.user_id !== user?.id ? (
-            <Button label={post.claimed_by_me ? t('craft.detail.claimed') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={post.claimed_by_me} />
-          ) : null}
+          <View style={styles.actionsRow}>
+            <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
+            {post.user_id !== user?.id ? (
+              <Button label={post.claimed_by_me ? t('craft.detail.claimed') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={post.claimed_by_me} />
+            ) : null}
+          </View>
           <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
-          {post.user_id === user?.id ? <Button label={t('craft.detail.deleteListing')} onPress={handleDeletePost} variant="danger" /> : null}
         </Card>
       ) : null}
 
@@ -167,4 +150,8 @@ const styles = StyleSheet.create({
   },
   commentRow: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 8, gap: 2 },
   commentAuthor: { color: theme.colors.text, fontWeight: '700' },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
 });

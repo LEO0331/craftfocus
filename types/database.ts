@@ -273,6 +273,12 @@ export type Database = {
         Update: { id?: string; user_id?: string; listing_id?: string; image_url?: string | null; pixel_image_url?: string | null; created_at?: string; };
         Relationships: [];
       };
+      custom_gallery_placements: {
+        Row: { id: string; user_id: string; listing_id: string; cell_x: number; cell_y: number; created_at: string; updated_at: string; };
+        Insert: { id?: string; user_id: string; listing_id: string; cell_x: number; cell_y: number; created_at?: string; updated_at?: string; };
+        Update: { id?: string; user_id?: string; listing_id?: string; cell_x?: number; cell_y?: number; created_at?: string; updated_at?: string; };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -287,6 +293,14 @@ export type Database = {
       claim_official_inventory_item: {
         Args: { p_item_id: string; p_seed_cost?: number };
         Returns: { seeds_balance: number; item_id: string; quantity: number }[];
+      };
+      upsert_custom_gallery_placement: {
+        Args: { p_listing_id: string; p_cell_x: number; p_cell_y: number };
+        Returns: undefined;
+      };
+      remove_custom_gallery_placement: {
+        Args: { p_listing_id: string };
+        Returns: undefined;
       };
       place_inventory_at_anchor: {
         Args: { p_room_id: string; p_item_id: string; p_anchor_id: string };

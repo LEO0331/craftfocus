@@ -12,8 +12,9 @@ Runs from one codebase on **iOS / Android / Web**.
 
 - Run focus sessions (`25 / 45 / 60`) and earn seeds
 - Build a personal pixel room and place inventory items
+- Place custom claimed collectibles in a 5×5 gallery board
 - Switch room themes (`Bedroom` / `Gym`)
-- Upload craft listings (`catalog` or `custom`) and claim with seeds
+- Upload custom craft listings and claim with seeds
 - Keep custom claimed works as collectibles
 - Like/comment for social interaction
 - Unlock and set active animal companions
@@ -21,7 +22,7 @@ Runs from one codebase on **iOS / Android / Web**.
 ## How It Works
 
 1. Sign up and log in.
-2. Start a session with mode: `general`, `crafting`, or `sewing`.
+2. Start a session; companion activity is auto-randomized (`sewing` or `training`).
 3. Rewards: complete `25 -> 25`, `45 -> 50`, `60 -> 75`; stop -> `5` seeds.
 4. Spend seeds on listings, place earned catalog items in your room.
 5. Unlock more companions as completed focus minutes grow.
@@ -57,6 +58,17 @@ CraftFocus is designed to feel quick, calm, and rewarding:
 - MVP is low-cost (Supabase free-tier friendly)
 - No payments, full chat, or expensive AI generation
 - Pixel preview generation is local/browser-first and lightweight
+
+## V2 Canonical Model
+
+CraftFocus V2 uses these canonical gameplay tables:
+- `user_wallets` (seed balance)
+- `user_inventory` (official placeable items)
+- `listing_claims` (claimed listings)
+- `custom_collectibles` (claimed custom works)
+- `custom_gallery_placements` (5×5 collectible gallery placements)
+
+Legacy tables like `user_items`, `room_items`, and `exchange_requests` are retained for backward compatibility but no longer drive core V2 UI flows.
 
 ## Quick Start
 
@@ -100,6 +112,13 @@ Use Supabase SQL Editor or CLI query:
 ```sql
 -- paste file contents of:
 -- supabase/seed_item_catalog.sql
+```
+
+### Optional V2 showcase seed
+
+```sql
+-- edit demo_user_id inside:
+-- supabase/seed_v2_showcase.sql
 ```
 
 ### Required settings
