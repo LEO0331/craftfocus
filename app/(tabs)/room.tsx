@@ -1,64 +1,49 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { IsometricRoom } from '@/components/IsometricRoom';
 import { PixelSprite } from '@/components/PixelSprite';
-import { RoomGrid } from '@/components/RoomGrid';
 import { ROOM_SPRITES } from '@/constants/roomSprites';
 import { resolveSpriteId } from '@/constants/spriteUtils';
 import { theme } from '@/constants/theme';
 import { useRoom } from '@/hooks/useRoom';
+import type { BuildTargetId, RoomType } from '@/types/models';
+
+const ROOM_TYPES: RoomType[] = ['bedroom', 'gym'];
 
 export default function RoomScreen() {
-  const { roomGridItems, inventory, unlockedInventory, placeItem, clearCell } = useRoom();
+  const { roomType, placements, inventory, inventoryByItem, placeAtAnchor, removePlacementAtAnchor, switchRoomType } = useRoom();
+  const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<BuildTargetId>('plant');
 
-  const [selectedUserItemId, setSelectedUserItemId] = useState<string | null>(unlockedInventory[0]?.id ?? null);
-  const [selectedCell, setSelectedCell] = useState<{ x: number; y: number } | null>(null);
-
-  const selectedItemInfo = useMemo(
-    () => unlockedInventory.find((item) => item.id === selectedUserItemId) ?? null,
-    [unlockedInventory, selectedUserItemId]
+  const selectedPlacement = useMemo(
+    () => (selectedAnchorId ? placements.find((entry) => entry.anchor_id === selectedAnchorId) ?? null : null),
+    [placements, selectedAnchorId]
   );
 
-  useEffect(() => {
-    if (!selectedUserItemId && unlockedInventory.length) {
-      setSelectedUserItemId(unlockedInventory[0].id);
-    }
-  }, [selectedUserItemId, unlockedInventory]);
-
-  const selectedRoomItem = useMemo(() => {
-    if (!selectedCell) {
-      return null;
-    }
-    return roomGridItems.find((entry) => entry.x === selectedCell.x && entry.y === selectedCell.y) ?? null;
-  }, [roomGridItems, selectedCell]);
-
-  const handleCellPress = (cell: { x: number; y: number }) => {
-    setSelectedCell({ x: cell.x, y: cell.y });
-  };
+  const quantity = inventoryByItem.get(selectedItemId) ?? 0;
 
   const handlePlace = async () => {
-    if (!selectedCell || !selectedUserItemId || !selectedItemInfo) {
+    if (!selectedAnchorId) {
       return;
     }
-
     try {
-      await placeItem({ userItemId: selectedUserItemId, x: selectedCell.x, y: selectedCell.y });
+      await placeAtAnchor(selectedItemId, selectedAnchorId);
     } catch (error) {
-      Alert.alert('Place item failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Placement failed', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
-  const handleClear = async () => {
-    if (!selectedRoomItem?.id) {
+  const handleRemove = async () => {
+    if (!selectedAnchorId) {
       return;
     }
-
     try {
-      await clearCell(selectedRoomItem.id);
+      await removePlacementAtAnchor(selectedAnchorId);
     } catch (error) {
-      Alert.alert('Remove item failed', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Remove failed', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -67,56 +52,53 @@ export default function RoomScreen() {
       <Text style={styles.heading}>My Focus Room</Text>
 
       <Card>
-        <Text style={styles.label}>Room Layout (tap a cell to select it)</Text>
-        <RoomGrid
-          items={roomGridItems}
-          size={10}
-          selectedCell={selectedCell ? { x: selectedCell.x, y: selectedCell.y } : null}
-          onCellPress={handleCellPress}
-        />
-
-        <Text style={styles.text}>
-          Selected cell: {selectedCell ? `(${selectedCell.x}, ${selectedCell.y})` : 'none'}
-          {selectedRoomItem ? ` · contains ${selectedRoomItem.item_name}` : ' · empty'}
-        </Text>
-        <Button
-          label="Place Selected Item In Selected Cell"
-          onPress={handlePlace}
-          disabled={!selectedCell || !selectedUserItemId || !selectedItemInfo}
-        />
-        <Button
-          label="Remove Item At Selected Cell"
-          onPress={handleClear}
-          variant="danger"
-          disabled={!selectedRoomItem}
-        />
+        <Text style={styles.label}>Room Type</Text>
+        <View style={styles.switchRow}>
+          {ROOM_TYPES.map((entry) => (
+            <Button
+              key={entry}
+              label={entry === roomType ? `${entry} ✓` : entry}
+              onPress={() => switchRoomType(entry)}
+              variant={entry === roomType ? 'primary' : 'secondary'}
+            />
+          ))}
+        </View>
       </Card>
 
       <Card>
-        <Text style={styles.label}>Unlocked Inventory</Text>
+        <Text style={styles.label}>Isometric Room</Text>
+        <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={selectedAnchorId} onSelectAnchor={setSelectedAnchorId} />
+        <Text style={styles.text}>
+          Selected anchor: {selectedAnchorId ?? 'none'} {selectedPlacement ? `· has ${selectedPlacement.item_id}` : '· empty'}
+        </Text>
+      </Card>
+
+      <Card>
+        <Text style={styles.label}>Inventory</Text>
         <View style={styles.inventoryWrap}>
-          {unlockedInventory.length ? (
-            unlockedInventory.map((item) => {
-              const active = item.id === selectedUserItemId;
-              const spriteId = resolveSpriteId(item.item_id);
-              return (
-                <View key={item.id} style={[styles.inventoryCard, active ? styles.inventoryCardActive : null]}>
-                  <PixelSprite spriteId={spriteId} size={30} />
-                  <Text style={styles.inventoryName}>{ROOM_SPRITES[spriteId].name}</Text>
-                  <Text style={styles.inventoryMeta}>progress: {item.progress}%</Text>
-                  <Button
-                    label={active ? 'Selected' : 'Select'}
-                    onPress={() => setSelectedUserItemId(item.id)}
-                    variant={active ? 'primary' : 'secondary'}
-                  />
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.text}>No unlocked items yet. Complete focus sessions to unlock furniture.</Text>
-          )}
+          {inventory.map((item) => {
+            const spriteId = resolveSpriteId(item.item_id);
+            const active = selectedItemId === item.item_id;
+            return (
+              <View key={item.item_id} style={[styles.inventoryCard, active ? styles.inventoryCardActive : null]}>
+                <PixelSprite spriteId={spriteId} size={34} />
+                <Text style={styles.inventoryName}>{ROOM_SPRITES[spriteId].name}</Text>
+                <Text style={styles.inventoryMeta}>Owned: {item.quantity}</Text>
+                <Button
+                  label={active ? 'Selected' : 'Select'}
+                  onPress={() => setSelectedItemId(item.item_id as BuildTargetId)}
+                  variant={active ? 'primary' : 'secondary'}
+                />
+              </View>
+            );
+          })}
         </View>
-        <Text style={styles.text}>Total items tracked: {inventory.length}</Text>
+        <Button
+          label={`Place Selected Item (owned: ${quantity})`}
+          onPress={handlePlace}
+          disabled={!selectedAnchorId || quantity <= 0}
+        />
+        <Button label="Remove Item At Selected Anchor" onPress={handleRemove} variant="danger" disabled={!selectedPlacement} />
       </Card>
     </ScrollView>
   );
@@ -132,11 +114,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
-  label: { color: theme.colors.muted, fontWeight: '600', fontFamily: theme.typography.body },
+  label: { color: theme.colors.muted, fontWeight: '700', fontFamily: theme.typography.body },
   text: { color: theme.colors.muted, fontFamily: theme.typography.body },
-  inventoryWrap: {
-    gap: 8,
-  },
+  switchRow: { flexDirection: 'row', gap: 8 },
+  inventoryWrap: { gap: 8 },
   inventoryCard: {
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -146,18 +127,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FCF8EE',
   },
   inventoryCardActive: {
-    borderColor: theme.colors.primary,
     borderWidth: 2,
+    borderColor: theme.colors.primary,
     backgroundColor: '#EEF7EC',
   },
-  inventoryName: {
-    color: theme.colors.text,
-    fontWeight: '700',
-    fontFamily: theme.typography.body,
-  },
-  inventoryMeta: {
-    color: theme.colors.muted,
-    fontSize: 12,
-    fontFamily: theme.typography.body,
-  },
+  inventoryName: { color: theme.colors.text, fontWeight: '700', fontFamily: theme.typography.body },
+  inventoryMeta: { color: theme.colors.muted, fontFamily: theme.typography.body, fontSize: 12 },
 });

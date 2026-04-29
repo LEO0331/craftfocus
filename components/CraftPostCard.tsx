@@ -13,7 +13,9 @@ interface CraftPostCardProps {
   pixelImageUrl?: string;
   likes?: number;
   comments?: number;
-  openToExchange?: boolean;
+  listingType?: 'catalog' | 'custom';
+  seedCost?: number;
+  claimedByMe?: boolean;
   onPress?: () => void;
   likedByMe?: boolean;
 }
@@ -27,7 +29,9 @@ export function CraftPostCard({
   pixelImageUrl,
   likes = 0,
   comments = 0,
-  openToExchange = false,
+  listingType = 'custom',
+  seedCost = 0,
+  claimedByMe = false,
   onPress,
   likedByMe = false,
 }: CraftPostCardProps) {
@@ -48,9 +52,11 @@ export function CraftPostCard({
       <View style={styles.row}>
         <Text style={[styles.meta, likedByMe ? styles.liked : null]}>♥ {likes}</Text>
         <Text style={styles.meta}>💬 {comments}</Text>
-        <Text style={[styles.meta, openToExchange ? styles.exchange : null]}>
-          {openToExchange ? 'Exchange open' : 'Closed'}
-        </Text>
+        <Text style={[styles.meta, styles.price]}>{seedCost} seeds</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.meta}>Type: {listingType}</Text>
+        <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>{claimedByMe ? 'Claimed' : 'Unclaimed'}</Text>
       </View>
     </Card>
   );
@@ -59,17 +65,17 @@ export function CraftPostCard({
     return content;
   }
 
-    return (
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`Open craft post: ${title}`}
-        accessibilityHint="Opens the craft post detail page"
-      >
-        {content}
-      </Pressable>
-    );
-  }
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open craft post: ${title}`}
+      accessibilityHint="Opens the craft post detail page"
+    >
+      {content}
+    </Pressable>
+  );
+}
 
 const styles = StyleSheet.create({
   pixelWrap: {
@@ -82,6 +88,10 @@ const styles = StyleSheet.create({
   },
   liked: {
     color: theme.colors.danger,
+    fontWeight: '700',
+  },
+  claimed: {
+    color: theme.colors.primaryDark,
     fontWeight: '700',
   },
   image: {
@@ -107,7 +117,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  exchange: {
+  price: {
     color: theme.colors.info,
     fontWeight: '700',
   },

@@ -7,8 +7,7 @@ import { Card } from '@/components/Card';
 import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
-import { addComment, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
-import { createExchangeRequest } from '@/lib/exchanges';
+import { addComment, claimListingWithSeeds, deleteCraftPost, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
 import { sanitizeText } from '@/lib/validation';
 
 export default function CraftDetailScreen() {
@@ -18,13 +17,10 @@ export default function CraftDetailScreen() {
 
   const [post, setPost] = useState<CraftPostDetail | null>(null);
   const [comment, setComment] = useState('');
-  const [exchangeMessage, setExchangeMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const loadPost = useCallback(async () => {
-    if (!postId) {
-      return;
-    }
+    if (!postId) return;
     setIsLoading(true);
     try {
       const detail = await getCraftPostDetail(postId, user?.id);
@@ -39,9 +35,7 @@ export default function CraftDetailScreen() {
   }, [loadPost]);
 
   const handleToggleLike = async () => {
-    if (!user?.id || !postId) {
-      return;
-    }
+    if (!user?.id || !postId) return;
     try {
       await toggleLike(postId, user.id);
       await loadPost();
@@ -50,11 +44,19 @@ export default function CraftDetailScreen() {
     }
   };
 
-  const handleAddComment = async () => {
-    if (!user?.id || !postId) {
-      return;
+  const handleClaim = async () => {
+    if (!user?.id || !postId || !post) return;
+    try {
+      await claimListingWithSeeds(postId);
+      Alert.alert('Claimed', 'Listing claimed successfully.');
+      await loadPost();
+    } catch (error) {
+      Alert.alert('Claim failed', error instanceof Error ? error.message : 'Unknown error');
     }
+  };
 
+  const handleAddComment = async () => {
+    if (!user?.id || !postId) return;
     try {
       await addComment(postId, user.id, sanitizeText(comment, 240));
       setComment('');
@@ -64,31 +66,9 @@ export default function CraftDetailScreen() {
     }
   };
 
-  const handleExchange = async () => {
-    if (!user?.id || !post || !postId) {
-      return;
-    }
-
-    try {
-      await createExchangeRequest({
-        requesterId: user.id,
-        ownerId: post.user_id,
-        craftPostId: postId,
-        message: exchangeMessage ? sanitizeText(exchangeMessage, 240) : '',
-      });
-      setExchangeMessage('');
-      Alert.alert('Sent', 'Exchange request sent.');
-      router.push('/exchanges');
-    } catch (error) {
-      Alert.alert('Exchange failed', error instanceof Error ? error.message : 'Unknown error');
-    }
-  };
-
   const handleDeletePost = () => {
-    if (!user?.id || !postId) {
-      return;
-    }
-    Alert.alert('Delete Craft Post', 'Are you sure you want to delete this craft post?', [
+    if (!user?.id || !postId) return;
+    Alert.alert('Delete Listing', 'Are you sure you want to archive this listing?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -108,14 +88,14 @@ export default function CraftDetailScreen() {
   if (!postId) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>Invalid craft id.</Text>
+        <Text style={styles.text}>Invalid listing id.</Text>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Craft Detail</Text>
+      <Text style={styles.heading}>Listing Detail</Text>
 
       {post ? (
         <CraftPostCard
@@ -128,50 +108,32 @@ export default function CraftDetailScreen() {
           likes={post.likes_count}
           comments={post.comments_count}
           likedByMe={post.liked_by_me}
-          openToExchange={post.open_to_exchange}
+          listingType={post.listing_type as 'catalog' | 'custom'}
+          seedCost={Number(post.seed_cost ?? 0)}
+          claimedByMe={post.claimed_by_me}
         />
       ) : (
         <Card>
-          <Text style={styles.text}>{isLoading ? 'Loading...' : 'Post not found.'}</Text>
+          <Text style={styles.text}>{isLoading ? 'Loading...' : 'Listing not found.'}</Text>
         </Card>
       )}
 
       {post ? (
         <Card>
           <Button label={post.liked_by_me ? 'Unlike' : 'Like'} onPress={handleToggleLike} />
-          <Button label="Visit Creator Room" onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
-          <Button label="Open Exchanges" onPress={() => router.push('/exchanges')} variant="secondary" />
-          {post.user_id === user?.id ? (
-            <Button label="Delete This Craft Post" onPress={handleDeletePost} variant="danger" />
+          {post.user_id !== user?.id ? (
+            <Button label={post.claimed_by_me ? 'Already Claimed' : `Claim (${post.seed_cost ?? 0} seeds)`} onPress={handleClaim} disabled={post.claimed_by_me} />
           ) : null}
-        </Card>
-      ) : null}
-
-      {post?.open_to_exchange && post.user_id !== user?.id ? (
-        <Card>
-          <Text style={styles.label}>Request exchange</Text>
-          <TextInput
-            placeholder="Optional message"
-            value={exchangeMessage}
-            onChangeText={setExchangeMessage}
-            style={styles.input}
-          />
-          <Button label="Send Exchange Request" onPress={handleExchange} />
+          <Button label="Visit Creator Room" onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
+          {post.user_id === user?.id ? <Button label="Delete This Listing" onPress={handleDeletePost} variant="danger" /> : null}
         </Card>
       ) : null}
 
       {post ? (
         <Card>
           <Text style={styles.label}>Comments</Text>
-          <TextInput
-            placeholder="Write a comment"
-            value={comment}
-            onChangeText={setComment}
-            style={styles.input}
-            multiline
-          />
+          <TextInput placeholder="Write a comment" value={comment} onChangeText={setComment} style={styles.input} multiline />
           <Button label="Post Comment" onPress={handleAddComment} />
-
           {post.comments.map((entry) => (
             <View key={entry.id} style={styles.commentRow}>
               <Text style={styles.commentAuthor}>{entry.author_name}</Text>
@@ -186,25 +148,11 @@ export default function CraftDetailScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.background },
-  content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-    maxWidth: 960,
-    width: '100%',
-    alignSelf: 'center',
-  },
+  content: { padding: theme.spacing.lg, gap: theme.spacing.md, maxWidth: 960, width: '100%', alignSelf: 'center' },
   heading: { fontSize: 24, fontWeight: '800', color: theme.colors.text },
   text: { color: theme.colors.muted },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  label: {
-    color: theme.colors.text,
-    fontWeight: '700',
-  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
+  label: { color: theme.colors.text, fontWeight: '700' },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -213,14 +161,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#fff',
   },
-  commentRow: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: 8,
-    gap: 2,
-  },
-  commentAuthor: {
-    color: theme.colors.text,
-    fontWeight: '700',
-  },
+  commentRow: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 8, gap: 2 },
+  commentAuthor: { color: theme.colors.text, fontWeight: '700' },
 });

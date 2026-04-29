@@ -178,6 +178,11 @@ export type Database = {
           image_url: string | null;
           pixel_image_url: string | null;
           open_to_exchange: boolean;
+          listing_category: string | null;
+          seed_cost: number;
+          listing_type: 'catalog' | 'custom';
+          reward_item_id: string | null;
+          is_active: boolean;
           created_at: string;
         };
         Insert: {
@@ -189,6 +194,11 @@ export type Database = {
           image_url?: string | null;
           pixel_image_url?: string | null;
           open_to_exchange?: boolean;
+          listing_category?: string | null;
+          seed_cost?: number;
+          listing_type?: 'catalog' | 'custom';
+          reward_item_id?: string | null;
+          is_active?: boolean;
           created_at?: string;
         };
         Update: {
@@ -200,6 +210,11 @@ export type Database = {
           image_url?: string | null;
           pixel_image_url?: string | null;
           open_to_exchange?: boolean;
+          listing_category?: string | null;
+          seed_cost?: number;
+          listing_type?: 'catalog' | 'custom';
+          reward_item_id?: string | null;
+          is_active?: boolean;
           created_at?: string;
         };
         Relationships: [];

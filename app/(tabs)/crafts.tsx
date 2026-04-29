@@ -53,7 +53,10 @@ export default function CraftsScreen() {
               likes={post.likes_count}
               comments={post.comments_count}
               likedByMe={post.liked_by_me}
-              openToExchange={post.open_to_exchange}
+              listingType={post.listing_type as 'catalog' | 'custom'}
+              seedCost={Number(post.seed_cost ?? 0)}
+              claimedByMe={post.claimed_by_me}
+              
               onPress={() => router.push(`/crafts/${post.id}`)}
             />
           </View>

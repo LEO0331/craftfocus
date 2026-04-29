@@ -9,6 +9,30 @@ export type SpriteId =
   | 'desk_lamp'
   | 'work_desk'
   | 'plant'
+  | 'cat_general_0'
+  | 'cat_general_1'
+  | 'cat_crafting_0'
+  | 'cat_crafting_1'
+  | 'cat_sewing_0'
+  | 'cat_sewing_1'
+  | 'dog_general_0'
+  | 'dog_general_1'
+  | 'dog_crafting_0'
+  | 'dog_crafting_1'
+  | 'dog_sewing_0'
+  | 'dog_sewing_1'
+  | 'rabbit_general_0'
+  | 'rabbit_general_1'
+  | 'rabbit_crafting_0'
+  | 'rabbit_crafting_1'
+  | 'rabbit_sewing_0'
+  | 'rabbit_sewing_1'
+  | 'fox_general_0'
+  | 'fox_general_1'
+  | 'fox_crafting_0'
+  | 'fox_crafting_1'
+  | 'fox_sewing_0'
+  | 'fox_sewing_1'
   | 'unknown';
 
 export type PixelGrid = string[];
@@ -21,7 +45,7 @@ export interface SpriteDefinition {
 
 const COMMON_BG = '#00000000';
 
-export const ROOM_SPRITES: Record<SpriteId, SpriteDefinition> = {
+export const ROOM_SPRITES: Record<string, SpriteDefinition> = {
   leather_wallet: {
     name: 'Leather Wallet',
     palette: { '.': COMMON_BG, b: '#5A3E2A', d: '#3C281C', l: '#8B5E3C', s: '#D8B17A' },

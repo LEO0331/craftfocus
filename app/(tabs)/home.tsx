@@ -7,7 +7,7 @@ import { Card } from '@/components/Card';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { listCraftPosts } from '@/lib/crafts';
-import { listMyRoomLayout } from '@/lib/rooms';
+import { listMyRoom } from '@/lib/rooms';
 import { supabase } from '@/lib/supabase';
 import type { TableRow } from '@/types/database';
 
@@ -37,7 +37,7 @@ export default function HomeScreen() {
           .select('duration_minutes,status')
           .eq('user_id', user.id)
           .gte('created_at', startOfDay.toISOString()),
-        listMyRoomLayout(user.id),
+        listMyRoom(user.id),
         listCraftPosts(user.id),
       ]);
 
@@ -52,7 +52,7 @@ export default function HomeScreen() {
       );
 
       setTodayMinutes(completedMinutes);
-      setRoomItemCount(roomLayout.length);
+      setRoomItemCount(roomLayout.placements.length);
       setRecentActivity(posts.slice(0, 3).map((post) => `${post.author_name} posted "${post.title}" in ${post.category}`));
     } finally {
       setIsLoading(false);

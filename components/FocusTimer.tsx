@@ -3,25 +3,27 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { PixelSprite } from '@/components/PixelSprite';
 import { theme } from '@/constants/theme';
+import type { FocusMode } from '@/types/models';
 
 interface FocusTimerProps {
   totalSeconds: number;
   onCompleted: () => void;
-  onGiveUp: () => void;
+  onStop: () => void;
+  animationSpriteId?: any;
+  mode: FocusMode;
 }
 
-export function FocusTimer({ totalSeconds, onCompleted, onGiveUp }: FocusTimerProps) {
+export function FocusTimer({ totalSeconds, onCompleted, onStop, animationSpriteId, mode }: FocusTimerProps) {
   const [remaining, setRemaining] = useState(totalSeconds);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     setRemaining(totalSeconds);
-    setIsPaused(false);
   }, [totalSeconds]);
 
   useEffect(() => {
-    if (isPaused || remaining <= 0) {
+    if (remaining <= 0) {
       return;
     }
 
@@ -38,7 +40,7 @@ export function FocusTimer({ totalSeconds, onCompleted, onGiveUp }: FocusTimerPr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isPaused, onCompleted, remaining]);
+  }, [onCompleted, remaining]);
 
   const clockLabel = useMemo(() => {
     const mins = Math.floor(remaining / 60)
@@ -51,13 +53,19 @@ export function FocusTimer({ totalSeconds, onCompleted, onGiveUp }: FocusTimerPr
   return (
     <Card>
       <Text style={styles.title}>Focus In Progress</Text>
+      <Text style={styles.sub}>Don\'t interrupt me</Text>
+
       <View style={styles.timerBox}>
-        <Text style={styles.timerText}>{clockLabel}</Text>
+        <Text style={styles.timerText}>⌛ {clockLabel}</Text>
+      </View>
+
+      <View style={styles.animationPanel}>
+        {animationSpriteId ? <PixelSprite spriteId={animationSpriteId} size={88} /> : null}
+        <Text style={styles.modeLabel}>{mode.toUpperCase()} MODE</Text>
       </View>
 
       <View style={styles.row}>
-        <Button label={isPaused ? 'Resume' : 'Pause'} onPress={() => setIsPaused((prev) => !prev)} variant="secondary" />
-        <Button label="Give Up" onPress={onGiveUp} variant="danger" />
+        <Button label="Stop Focus" onPress={onStop} variant="danger" />
       </View>
 
       <Button label="Dev: Complete Now" onPress={onCompleted} />
@@ -71,6 +79,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.text,
   },
+  sub: {
+    color: theme.colors.muted,
+    fontWeight: '600',
+  },
   timerBox: {
     borderWidth: 2,
     borderColor: theme.colors.primary,
@@ -80,10 +92,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF7EC',
   },
   timerText: {
-    fontSize: 42,
+    fontSize: 40,
     fontWeight: '800',
-    letterSpacing: 2,
+    letterSpacing: 1,
     color: theme.colors.primaryDark,
+  },
+  animationPanel: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: '#F7F0E2',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  modeLabel: {
+    fontWeight: '700',
+    color: theme.colors.accent,
   },
   row: {
     flexDirection: 'row',

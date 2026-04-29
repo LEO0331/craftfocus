@@ -1,42 +1,62 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { FocusTimer } from '@/components/FocusTimer';
-import { BUILD_TARGETS, FOCUS_CATEGORIES, FOCUS_DURATIONS } from '@/constants/categories';
+import { FOCUS_DURATIONS, FOCUS_MODES } from '@/constants/categories';
 import { theme } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 import { useFocusSession } from '@/hooks/useFocusSession';
-import type { BuildTargetId, FocusCategory } from '@/types/models';
-
-const TARGET_IDS = BUILD_TARGETS.map((target) => target.id);
-const TARGET_LABELS = new Map(BUILD_TARGETS.map((target) => [target.id, target.label] as const));
+import { getActiveAnimal, resolveAnimalVariant } from '@/lib/animals';
+import type { FocusMode } from '@/types/models';
 
 export default function FocusScreen() {
+  const { user } = useAuth();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
-  const [category, setCategory] = useState<FocusCategory>('craft');
-  const [buildTarget, setBuildTarget] = useState<BuildTargetId>('leather_wallet');
+  const [mode, setMode] = useState<FocusMode>('general');
   const [isRunning, setIsRunning] = useState(false);
   const [resultText, setResultText] = useState<string | null>(null);
+  const [animalSpriteKey, setAnimalSpriteKey] = useState('cat');
+  const [animFrame, setAnimFrame] = useState(0);
 
   const { submitFocusSession, isSaving } = useFocusSession();
 
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+    getActiveAnimal(user.id)
+      .then((animal) => {
+        if (animal?.sprite_key) {
+          setAnimalSpriteKey(animal.sprite_key);
+        }
+      })
+      .catch(() => {
+        setAnimalSpriteKey('cat');
+      });
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isRunning) {
+      return;
+    }
+    const timer = setInterval(() => setAnimFrame((prev) => (prev + 1) % 2), 900);
+    return () => clearInterval(timer);
+  }, [isRunning]);
+
   const durationSeconds = useMemo(() => duration * 60, [duration]);
+  const activeSprite = useMemo(() => resolveAnimalVariant(animalSpriteKey, mode, animFrame), [animalSpriteKey, mode, animFrame]);
 
   const handleFinish = async (status: 'completed' | 'given_up') => {
     try {
-      const reward = await submitFocusSession({
-        durationMinutes: duration,
-        category,
-        buildTarget,
-        status,
-      });
+      const reward = await submitFocusSession({ durationMinutes: duration, mode, status });
 
       setResultText(
         status === 'completed'
-          ? `Great job! +${reward.coins} coins, +${reward.progress} progress`
-          : `Saved partial build: +${reward.coins} coins, +${reward.progress} progress`
+          ? `Great focus. +${reward.coins} seeds. Balance: ${reward.seedsBalance}`
+          : `Focus stopped. +${reward.coins} seeds. Balance: ${reward.seedsBalance}`
       );
       setIsRunning(false);
     } catch (error) {
@@ -58,15 +78,7 @@ export default function FocusScreen() {
             onSelect={(value) => setDuration(Number(value) as (typeof FOCUS_DURATIONS)[number])}
           />
 
-          <CategoryPicker label="Category" options={FOCUS_CATEGORIES} selected={category} onSelect={setCategory} />
-
-          <CategoryPicker
-            label="Build Target"
-            options={TARGET_IDS}
-            selected={buildTarget}
-            onSelect={setBuildTarget}
-            renderLabel={(option) => TARGET_LABELS.get(option as BuildTargetId) ?? option}
-          />
+          <CategoryPicker label="Focus Mode" options={FOCUS_MODES} selected={mode} onSelect={(next) => setMode(next as FocusMode)} />
 
           <Button label="Start Focus" onPress={() => setIsRunning(true)} disabled={isSaving} />
           {resultText ? <Text style={styles.result}>{resultText}</Text> : null}
@@ -74,10 +86,12 @@ export default function FocusScreen() {
       ) : (
         <FocusTimer
           totalSeconds={durationSeconds}
+          mode={mode}
+          animationSpriteId={activeSprite}
           onCompleted={() => {
             handleFinish('completed');
           }}
-          onGiveUp={() => {
+          onStop={() => {
             handleFinish('given_up');
           }}
         />

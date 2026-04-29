@@ -1,5 +1,3 @@
-export type FocusCategory = 'craft' | 'leather' | 'sewing' | 'study' | 'gym' | 'work';
-
 export type BuildTargetId =
   | 'leather_wallet'
   | 'sewing_kit'
@@ -13,10 +11,15 @@ export type BuildTargetId =
   | 'plant';
 
 export type FocusStatus = 'completed' | 'given_up';
+export type FocusMode = 'general' | 'crafting' | 'sewing';
+export type RoomType = 'bedroom' | 'gym';
+export type ListingType = 'catalog' | 'custom';
+export type AnimalId = 'cat' | 'dog' | 'rabbit' | 'fox';
+export type InventoryQuantity = number;
 
 export interface FocusReward {
   coins: number;
-  progress: number;
+  seedsBalance: number;
 }
 
 export interface ItemCatalogRow {

@@ -1,181 +1,103 @@
 import { supabase } from '@/lib/supabase';
-import type { TableRow } from '@/types/database';
+import type { RoomType } from '@/types/models';
 
-type RoomRow = TableRow<'rooms'>;
-type RoomItemRow = TableRow<'room_items'>;
-type UserItemRow = TableRow<'user_items'>;
-type ItemCatalogRow = TableRow<'item_catalog'>;
-
-export interface RoomLayoutItem {
+export interface RoomPlacement {
   id: string;
-  user_item_id: string;
-  x: number;
-  y: number;
+  anchor_id: string;
   item_id: string;
-  item_name: string;
-  unlocked: boolean;
 }
 
 export interface UserInventoryItem {
-  id: string;
   item_id: string;
-  progress: number;
-  unlocked: boolean;
+  quantity: number;
 }
 
-export async function getOrCreateRoomId(userId: string): Promise<string> {
-  const { data: existingRoom, error: roomError } = await supabase
-    .from('rooms')
-    .select('id')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (roomError) {
-    throw roomError;
+export async function getOrCreateRoom(userId: string): Promise<{ id: string; room_type: RoomType }> {
+  const { data: existing, error } = await (supabase as any).from('rooms').select('id,room_type').eq('user_id', userId).maybeSingle();
+  if (error) {
+    throw error;
   }
-
-  if (existingRoom?.id) {
-    return existingRoom.id;
+  if (existing?.id) {
+    return { id: existing.id, room_type: (existing.room_type as RoomType) ?? 'bedroom' };
   }
-
-  const { data: createdRoom, error: createError } = await supabase
+  const { data: created, error: createError } = await (supabase as any)
     .from('rooms')
-    .insert({ user_id: userId })
-    .select('id')
+    .insert({ user_id: userId, room_type: 'bedroom' })
+    .select('id,room_type')
     .single();
-
   if (createError) {
     throw createError;
   }
+  return { id: created.id, room_type: (created.room_type as RoomType) ?? 'bedroom' };
+}
 
-  return createdRoom.id;
+export async function listMyRoom(userId: string): Promise<{ roomId: string; roomType: RoomType; placements: RoomPlacement[] }> {
+  const room = await getOrCreateRoom(userId);
+  const { data, error } = await (supabase as any)
+    .from('room_placements')
+    .select('id,anchor_id,item_id')
+    .eq('room_id', room.id)
+    .order('created_at', { ascending: true });
+  if (error) {
+    throw error;
+  }
+  return {
+    roomId: room.id,
+    roomType: room.room_type,
+    placements: (data ?? []).map((row: any) => ({ id: row.id, anchor_id: row.anchor_id, item_id: row.item_id })),
+  };
+}
+
+export async function listPublicRoomLayout(userId: string): Promise<{ roomType: RoomType; placements: RoomPlacement[] }> {
+  const { data: room, error } = await (supabase as any).from('rooms').select('id,room_type').eq('user_id', userId).maybeSingle();
+  if (error || !room?.id) {
+    return { roomType: 'bedroom', placements: [] };
+  }
+  const { data, error: pError } = await (supabase as any).from('room_placements').select('id,anchor_id,item_id').eq('room_id', room.id);
+  if (pError) {
+    throw pError;
+  }
+  return {
+    roomType: (room.room_type as RoomType) ?? 'bedroom',
+    placements: (data ?? []).map((row: any) => ({ id: row.id, anchor_id: row.anchor_id, item_id: row.item_id })),
+  };
 }
 
 export async function listUserInventory(userId: string): Promise<UserInventoryItem[]> {
-  const { data, error } = await supabase
-    .from('user_items')
-    .select('id,item_id,progress,unlocked')
+  const { data, error } = await (supabase as any)
+    .from('user_inventory')
+    .select('item_id,quantity')
     .eq('user_id', userId)
-    .order('created_at', { ascending: true });
-
+    .order('item_id', { ascending: true });
   if (error) {
     throw error;
   }
-
-  return (data ?? []).map((row: Pick<UserItemRow, 'id' | 'item_id' | 'progress' | 'unlocked'>) => ({
-    id: row.id,
-    item_id: row.item_id,
-    progress: row.progress,
-    unlocked: row.unlocked,
-  }));
+  return (data ?? []).map((row: any) => ({ item_id: row.item_id, quantity: row.quantity }));
 }
 
-async function buildRoomLayout(roomId: string): Promise<RoomLayoutItem[]> {
-  const { data: roomItems, error: roomItemsError } = await supabase
-    .from('room_items')
-    .select('id,user_item_id,x,y')
-    .eq('room_id', roomId)
-    .order('created_at', { ascending: true });
-
-  if (roomItemsError) {
-    throw roomItemsError;
+export async function setRoomType(userId: string, roomType: RoomType) {
+  const room = await getOrCreateRoom(userId);
+  const { error } = await (supabase as any).from('rooms').update({ room_type: roomType }).eq('id', room.id);
+  if (error) {
+    throw error;
   }
+}
 
-  const roomRows = roomItems ?? [];
-  const userItemIds = Array.from(new Set(roomRows.map((entry: Pick<RoomItemRow, 'user_item_id'>) => entry.user_item_id)));
-  if (!userItemIds.length) {
-    return [];
-  }
-
-  const { data: userItems, error: userItemsError } = await supabase
-    .from('user_items')
-    .select('id,item_id,unlocked')
-    .in('id', userItemIds);
-
-  if (userItemsError) {
-    throw userItemsError;
-  }
-
-  const userRows = userItems ?? [];
-  const itemIds = Array.from(new Set(userRows.map((entry: Pick<UserItemRow, 'item_id'>) => entry.item_id)));
-
-  const { data: itemCatalog, error: itemCatalogError } = await supabase
-    .from('item_catalog')
-    .select('id,name')
-    .in('id', itemIds);
-
-  if (itemCatalogError) {
-    throw itemCatalogError;
-  }
-
-  const userItemMap = new Map(
-    userRows.map((item: Pick<UserItemRow, 'id' | 'item_id' | 'unlocked'>) => [item.id, item])
-  );
-  const catalogMap = new Map(
-    (itemCatalog ?? []).map((item: Pick<ItemCatalogRow, 'id' | 'name'>) => [item.id, item])
-  );
-
-  return roomRows.map((roomItem: Pick<RoomItemRow, 'id' | 'user_item_id' | 'x' | 'y'>) => {
-    const userItem = userItemMap.get(roomItem.user_item_id);
-    const catalog = userItem ? catalogMap.get(userItem.item_id) : undefined;
-
-    return {
-      id: roomItem.id,
-      user_item_id: roomItem.user_item_id,
-      x: roomItem.x,
-      y: roomItem.y,
-      item_id: userItem?.item_id ?? 'unknown',
-      item_name: catalog?.name ?? userItem?.item_id ?? 'Unknown',
-      unlocked: Boolean(userItem?.unlocked),
-    };
+export async function placeInventoryAtAnchor(input: { roomId: string; itemId: string; anchorId: string }) {
+  const { error } = await (supabase as any).rpc('place_inventory_at_anchor', {
+    p_room_id: input.roomId,
+    p_item_id: input.itemId,
+    p_anchor_id: input.anchorId,
   });
-}
-
-export async function listMyRoomLayout(userId: string): Promise<RoomLayoutItem[]> {
-  const roomId = await getOrCreateRoomId(userId);
-  return buildRoomLayout(roomId);
-}
-
-export async function listPublicRoomLayout(userId: string): Promise<RoomLayoutItem[]> {
-  const { data: room, error } = await supabase.from('rooms').select('id').eq('user_id', userId).maybeSingle();
   if (error) {
     throw error;
   }
-  if (!room?.id) {
-    return [];
-  }
-
-  return buildRoomLayout(room.id);
 }
 
-export async function placeRoomItem(input: { userId: string; userItemId: string; x: number; y: number }) {
-  const roomId = await getOrCreateRoomId(input.userId);
-
-  const { error: clearError } = await supabase
-    .from('room_items')
-    .delete()
-    .eq('room_id', roomId)
-    .eq('x', input.x)
-    .eq('y', input.y);
-
-  if (clearError) {
-    throw clearError;
-  }
-
-  const { error } = await supabase.from('room_items').insert({
-    room_id: roomId,
-    user_item_id: input.userItemId,
-    x: input.x,
-    y: input.y,
+export async function removeRoomPlacement(roomPlacementId: string) {
+  const { error } = await (supabase as any).rpc('remove_room_placement', {
+    p_room_placement_id: roomPlacementId,
   });
-
-  if (error) {
-    throw error;
-  }
-}
-
-export async function removeRoomItem(input: { roomItemId: string }) {
-  const { error } = await supabase.from('room_items').delete().eq('id', input.roomItemId);
   if (error) {
     throw error;
   }

@@ -3,23 +3,24 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import { Card } from '@/components/Card';
-import { RoomGrid } from '@/components/RoomGrid';
-import { resolveSpriteId } from '@/constants/spriteUtils';
+import { IsometricRoom } from '@/components/IsometricRoom';
 import { theme } from '@/constants/theme';
-import { listPublicRoomLayout, type RoomLayoutItem } from '@/lib/rooms';
+import { listPublicRoomLayout, type RoomPlacement } from '@/lib/rooms';
+import type { RoomType } from '@/types/models';
 
 export default function UserRoomScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const userId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
-
-  const [items, setItems] = useState<RoomLayoutItem[]>([]);
+  const [roomType, setRoomType] = useState<RoomType>('bedroom');
+  const [placements, setPlacements] = useState<RoomPlacement[]>([]);
 
   const load = useCallback(async () => {
     if (!userId) {
       return;
     }
     const data = await listPublicRoomLayout(userId);
-    setItems(data);
+    setRoomType(data.roomType);
+    setPlacements(data.placements);
   }, [userId]);
 
   useEffect(() => {
@@ -30,16 +31,8 @@ export default function UserRoomScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>Friend Room</Text>
       <Card>
-        <Text style={styles.label}>User ID: {userId}</Text>
-        <RoomGrid
-          size={10}
-          items={items.map((item) => ({
-            id: item.id,
-            x: item.x,
-            y: item.y,
-            spriteId: resolveSpriteId(item.item_id),
-          }))}
-        />
+        <Text style={styles.label}>Theme: {roomType}</Text>
+        <IsometricRoom roomType={roomType} placements={placements} selectedAnchorId={null} onSelectAnchor={() => {}} />
       </Card>
     </ScrollView>
   );
