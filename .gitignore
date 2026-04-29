@@ -1,15 +1,13 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
 # dependencies
 node_modules/
 
-# Expo
+# Expo / build outputs
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native / signing artifacts
 .kotlin/
 *.orig.*
 *.jks
@@ -21,26 +19,28 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# logs / debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 *.log
 
-# macOS
+# OS
 .DS_Store
-*.pem
 
 # local env files
 .env
 .env*.local
+.env.*.local
+
+# Lighthouse artifacts
 lighthouse-report.report.json
 lighthouse-report.report.html
 lighthouse-report*.json
 lighthouse-report*.html
 .lighthouseci/
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 
 # test artifacts
@@ -51,6 +51,8 @@ test-results/
 # generated native folders
 /ios
 /android
-.omx
+
+# local orchestrator/runtime data
+.omx/
 supabase/.temp/
 /docs

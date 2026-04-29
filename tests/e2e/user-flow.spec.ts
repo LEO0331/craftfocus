@@ -2,8 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const EMAIL = process.env.E2E_EMAIL ?? 'codex@test.com';
-const PASSWORD = process.env.E2E_PASSWORD ?? 'codexcodex';
+const EMAIL = process.env.E2E_EMAIL;
+const PASSWORD = process.env.E2E_PASSWORD;
+
+test.skip(!EMAIL || !PASSWORD, 'E2E_EMAIL/E2E_PASSWORD not set');
 
 async function snap(page: Page, name: string) {
   const dir = path.join(process.cwd(), 'docs', 'e2e');
@@ -15,8 +17,8 @@ test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) =>
   await page.goto('auth/login');
   await expect(page.getByRole('heading', { name: 'Log In' })).toBeVisible();
 
-  await page.getByPlaceholder('Email').fill(EMAIL);
-  await page.getByPlaceholder('Password').fill(PASSWORD);
+  await page.getByPlaceholder('Email').fill(EMAIL!);
+  await page.getByPlaceholder('Password').fill(PASSWORD!);
   await page.getByRole('button', { name: 'Log In' }).click();
 
   await expect(page.getByText('Build A Room By Protecting Your Time')).toBeVisible({ timeout: 20000 });

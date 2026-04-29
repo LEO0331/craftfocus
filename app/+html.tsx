@@ -5,7 +5,6 @@ export default function Root({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <title>CraftFocus</title>
         <meta
@@ -21,6 +20,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content="Focus sessions, pixel rooms, and craft sharing in one cross-platform app."
         />
         <meta property="og:type" content="website" />
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self'; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self';"
+        />
+        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
       </head>
