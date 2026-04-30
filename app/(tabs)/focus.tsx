@@ -47,12 +47,6 @@ export default function FocusScreen() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (profile?.active_animal_id) {
-      setAnimalSpecies(resolveAnimalSpecies(profile.active_animal_id));
-    }
-  }, [profile?.active_animal_id]);
-
-  useEffect(() => {
     void loadAnimalSpecies();
   }, [loadAnimalSpecies]);
 

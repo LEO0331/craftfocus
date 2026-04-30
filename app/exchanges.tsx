@@ -29,7 +29,6 @@ interface CustomClaimItem {
   id: string;
   listingId: string;
   title: string;
-  imageUrl: string | null;
   pixelImageUrl: string | null;
   createdAt: string;
 }
@@ -140,7 +139,6 @@ export default function ClaimsScreen() {
           id: row.id,
           listingId: row.listing_id,
           title: postMap.get(row.listing_id)?.title ?? t('claims.unknownListing'),
-          imageUrl: row.image_url,
           pixelImageUrl: row.pixel_image_url,
           createdAt: row.created_at,
         }))
