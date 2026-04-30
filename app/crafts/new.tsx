@@ -9,7 +9,7 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { createCraftPost } from '@/lib/crafts';
-import { convertImageToPixelSprite, generateSurprisePixelArt, pixelizeImage, type PixelGridSpriteData } from '@/lib/pixelize';
+import { convertImageToPixelSprite, pixelizeImage, type PixelGridSpriteData } from '@/lib/pixelize';
 import { ensureProfileRow } from '@/lib/profiles';
 import { storageAdapter } from '@/lib/storage';
 import { sanitizeText } from '@/lib/validation';
@@ -51,23 +51,16 @@ export default function NewCraftPostScreen() {
     }
   };
 
-  const handleSurprisePixel = async () => {
-    setIsPixelizing(true);
-    try {
-      const nextPixelPreviewUri = await generateSurprisePixelArt();
-      setPixelPreviewUri(nextPixelPreviewUri);
-      setPixelSpriteData(await convertImageToPixelSprite(nextPixelPreviewUri));
-    } catch (error) {
-      Alert.alert(t('craft.new.surprise'), error instanceof Error ? error.message : t('common.unknownError'));
-    } finally {
-      setIsPixelizing(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
     if (!imageUri) return Alert.alert(t('craft.new.missingImage'), t('craft.new.pickImageFirst'));
     if (!title.trim()) return Alert.alert(t('craft.new.fieldTitle'), t('craft.new.titleRequired'));
+    if (!description.trim()) return Alert.alert(t('craft.new.fieldDescription'), t('craft.new.fieldDescription'));
+    if (!seedCost.trim()) return Alert.alert(t('craft.new.seedCost'), t('craft.new.seedCost'));
+    const parsedSeedCost = Number(seedCost);
+    if (!Number.isFinite(parsedSeedCost) || parsedSeedCost < 1) {
+      return Alert.alert(t('craft.new.seedCost'), t('craft.new.seedCost'));
+    }
 
     setIsSaving(true);
     try {
@@ -102,7 +95,7 @@ export default function NewCraftPostScreen() {
         pixelPalette: spriteData?.palette ?? null,
         pixelGrid: spriteData?.grid ?? null,
         listingCategory: 'custom',
-        seedCost: Math.max(1, Number(seedCost) || 1),
+        seedCost: Math.max(1, Math.floor(parsedSeedCost)),
         listingType: 'custom',
         rewardItemId: null,
       });
@@ -110,7 +103,7 @@ export default function NewCraftPostScreen() {
       if (!id) {
         throw new Error(t('craft.new.publishFailed'));
       }
-      router.replace(`/crafts/${id}`);
+      router.push(`/crafts/${id}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : t('common.unknownError');
       setSaveError(message);
@@ -152,7 +145,6 @@ export default function NewCraftPostScreen() {
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel={t('craft.new.originalImage')} /> : null}
 
         <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
-        <Button label={isPixelizing ? t('craft.new.surprising') : t('craft.new.surprise')} onPress={handleSurprisePixel} disabled={isPixelizing} variant="secondary" />
 
         {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} accessibilityLabel={t('craft.new.pixelPreview')} /> : null}
 

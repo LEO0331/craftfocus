@@ -206,8 +206,21 @@ export async function claimListingWithSeeds(listingId: string) {
 export async function claimOfficialInventoryItem(itemId: string) {
   const { error } = await supabase.rpc('claim_official_inventory_item', {
     p_item_id: itemId,
+    p_seed_cost: 25,
   });
-  if (error) throw error;
+  if (!error) return;
+
+  const code = (error as { code?: string }).code ?? '';
+  const message = (error as { message?: string }).message ?? '';
+
+  // Backward compatibility: some deployments expose only the 1-arg function signature.
+  if (code === 'PGRST202' || code === '42883' || /function/i.test(message)) {
+    const fallback = await supabase.rpc('claim_official_inventory_item', { p_item_id: itemId });
+    if (fallback.error) throw fallback.error;
+    return;
+  }
+
+  throw error;
 }
 
 export async function toggleLike(postId: string, userId: string) {

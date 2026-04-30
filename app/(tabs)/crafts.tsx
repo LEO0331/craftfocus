@@ -207,7 +207,7 @@ export default function CraftsScreen() {
                 onPress={() => router.push(`/crafts/${post.id}`)}
                 layout="compact"
               />
-              {!post.claimed_by_me && post.user_id !== user?.id ? (
+              {!post.claimed_by_me ? (
                 <View style={styles.claimBtnWrap}>
                   <Button
                     label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })}

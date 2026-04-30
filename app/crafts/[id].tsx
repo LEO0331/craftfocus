@@ -111,9 +111,7 @@ export default function CraftDetailScreen() {
           <View style={styles.actionsRow}>
             <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
             <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
-            {post.user_id !== user?.id ? (
-              <Button label={post.claimed_by_me ? t('craft.detail.claimed') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={post.claimed_by_me} />
-            ) : null}
+            {!post.claimed_by_me ? <Button label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} /> : null}
           </View>
         </Card>
       ) : null}
