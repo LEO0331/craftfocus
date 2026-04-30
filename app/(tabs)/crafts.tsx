@@ -154,16 +154,19 @@ export default function CraftsScreen() {
             return (
               <View key={item.id} style={styles.officialCard}>
                 <View style={styles.officialHead}>
-                  <PixelSprite spriteId={item.id} size={34} />
-                  <Text style={styles.officialName}>{item.name}</Text>
+                  <View style={styles.officialTitleWrap}>
+                    <PixelSprite spriteId={item.id} size={34} />
+                    <Text style={styles.officialName}>{item.name}</Text>
+                  </View>
+                  <Button
+                    label={`${officialSeedCost}🌱`}
+                    onPress={() => handleClaimOfficial(item.id)}
+                    disabled={claimingOfficialId === item.id}
+                    variant="secondary"
+                    style={styles.officialClaimBtn}
+                  />
                 </View>
                 <Text style={styles.officialMeta}>{item.description ?? t('crafts.official.defaultDescription')}</Text>
-                <Button
-                  label={`${officialSeedCost} 🌱`}
-                  onPress={() => handleClaimOfficial(item.id)}
-                  disabled={claimingOfficialId === item.id}
-                  variant="secondary"
-                />
               </View>
             );
           })}
@@ -206,16 +209,9 @@ export default function CraftsScreen() {
                 claimedByMe={post.claimed_by_me}
                 onPress={() => router.push(`/crafts/${post.id}`)}
                 layout="compact"
+                claimLabel={!post.claimed_by_me ? `${post.seed_cost ?? 0}🌱` : undefined}
+                onClaimPress={!post.claimed_by_me ? () => handleClaim(post.id) : undefined}
               />
-              {!post.claimed_by_me ? (
-                <View style={styles.claimBtnWrap}>
-                  <Button
-                    label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })}
-                    onPress={() => handleClaim(post.id)}
-                    variant="secondary"
-                  />
-                </View>
-              ) : null}
             </View>
           ))}
         </View>
@@ -273,7 +269,14 @@ const styles = StyleSheet.create({
   officialHead: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
+  },
+  officialTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
   },
   officialName: {
     color: theme.colors.text,
@@ -285,6 +288,13 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.body,
     fontSize: 12,
   },
+  officialClaimBtn: {
+    minHeight: 34,
+    height: 34,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    minWidth: 82,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -293,9 +303,6 @@ const styles = StyleSheet.create({
   gridItem: {
     flexBasis: Platform.OS === 'web' ? '31%' : '100%',
     flexGrow: 1,
-  },
-  claimBtnWrap: {
-    marginTop: 8,
   },
   paginationRow: {
     flexDirection: 'row',

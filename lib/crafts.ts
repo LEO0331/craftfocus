@@ -116,8 +116,8 @@ export async function createCraftPost(input: {
   listingType: 'catalog' | 'custom';
   rewardItemId?: string | null;
 }) {
-  const safeTitle = sanitizeText(input.title, 80);
-  const safeDescription = input.description ? sanitizeText(input.description, 500) : '';
+  const safeTitle = sanitizeText(input.title, 20);
+  const safeDescription = input.description ? sanitizeText(input.description, 60) : '';
 
   const { data, error } = await supabase
     .from('craft_posts')

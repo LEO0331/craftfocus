@@ -24,6 +24,8 @@ interface CraftPostCardProps {
   onPress?: () => void;
   likedByMe?: boolean;
   layout?: 'default' | 'compact';
+  claimLabel?: string;
+  onClaimPress?: () => void;
 }
 
 export function CraftPostCard({
@@ -42,6 +44,8 @@ export function CraftPostCard({
   onPress,
   likedByMe = false,
   layout = 'default',
+  claimLabel,
+  onClaimPress,
 }: CraftPostCardProps) {
   const { t } = useI18n();
   const displayImageUrl = pixelImageUrl ?? imageUrl;
@@ -87,9 +91,21 @@ export function CraftPostCard({
         <Text style={styles.meta}>💬 {comments}</Text>
         <Text style={[styles.meta, styles.price]}>{seedCost} 🌱</Text>
       </View>
-      <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>
-        {claimedByMe ? t('craft.card.claimed') : t('craft.card.unclaimed')}
-      </Text>
+      <View style={styles.footerRow}>
+        <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>
+          {claimedByMe ? t('craft.card.claimed') : t('craft.card.unclaimed')}
+        </Text>
+        {onClaimPress && claimLabel ? (
+          <Pressable
+            onPress={onClaimPress}
+            style={styles.claimChip}
+            accessibilityRole="button"
+            accessibilityLabel={claimLabel}
+          >
+            <Text style={styles.claimChipText}>{claimLabel}</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </Card>
   );
 
@@ -188,6 +204,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   compactHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,5 +218,21 @@ const styles = StyleSheet.create({
   price: {
     color: theme.colors.info,
     fontWeight: '700',
+  },
+  claimChip: {
+    minWidth: 92,
+    height: 34,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: '#FFF4E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  claimChipText: {
+    color: theme.colors.text,
+    fontWeight: '800',
+    fontSize: 16,
   },
 });
