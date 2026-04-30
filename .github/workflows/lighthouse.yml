@@ -52,6 +52,15 @@ jobs:
             --output=json --output=html \
             --output-path=./lighthouse-report
 
+      - name: Run Lighthouse (PWA report, non-blocking)
+        continue-on-error: true
+        run: |
+          npx lighthouse http://127.0.0.1:4174/craftfocus/ \
+            --only-categories=pwa \
+            --chrome-flags="--headless --no-sandbox" \
+            --output=json --output=html \
+            --output-path=./lighthouse-pwa-report
+
       - name: Upload Lighthouse artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -59,6 +68,8 @@ jobs:
           path: |
             lighthouse-report.report.json
             lighthouse-report.report.html
+            lighthouse-pwa-report.report.json
+            lighthouse-pwa-report.report.html
 
       - name: Stop server
         if: always()

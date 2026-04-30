@@ -12,6 +12,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content="CraftFocus helps you complete focus sessions, unlock pixel furniture, and share your craft journey with friends."
         />
         <meta name="theme-color" content="#B14C2F" />
+        <link rel="manifest" href="/craftfocus/manifest.webmanifest" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/craftfocus/icons/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="CraftFocus" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="robots" content="index,follow" />
         <link rel="canonical" href="https://example.com/" />
         <meta property="og:title" content="CraftFocus" />

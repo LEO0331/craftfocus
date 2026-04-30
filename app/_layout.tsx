@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { theme } from '@/constants/theme';
@@ -37,6 +37,28 @@ export default function RootLayout() {
     if (typeof document !== 'undefined' && !document.title) {
       document.title = 'CraftFocus';
     }
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') {
+      return;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      return;
+    }
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const pathname = window.location.pathname;
+    const isCraftFocusBase = pathname === '/craftfocus' || pathname.startsWith('/craftfocus/');
+    const basePath = isCraftFocusBase ? '/craftfocus' : '';
+    const scope = basePath ? `${basePath}/` : '/';
+    const swUrl = `${basePath}/service-worker.js`;
+
+    navigator.serviceWorker.register(swUrl, { scope }).catch(() => {
+      // no-op: registration is best effort
+    });
   }, []);
 
   if (!loaded) {

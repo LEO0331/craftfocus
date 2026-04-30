@@ -60,6 +60,7 @@ CraftFocus is designed to feel quick, calm, and rewarding:
 - No payments, full chat, or expensive AI generation
 - Pixel preview generation is local/browser-first and lightweight
 - Web routes include refresh-safe fallback navigation on key detail/create pages
+- Web now includes a lightweight PWA layer for installability and shell caching
 
 ## V2 Canonical Model
 
@@ -163,6 +164,24 @@ Web deployment uses GitHub Pages via GitHub Actions. Live URL pattern:
 
 Current deployment:
 - [CraftFocus Web](https://leo0331.github.io/craftfocus/)
+
+## PWA Support (Web)
+
+CraftFocus web supports a secondary PWA channel on GitHub Pages:
+- Installable app metadata (`manifest.webmanifest`)
+- Service worker shell caching for faster reopen/offline shell access
+- Browser-native install flow (no custom in-app install prompt)
+
+### Offline behavior (MVP)
+- Works offline for previously cached static shell/assets/routes.
+- Supabase-powered features still require network:
+  - auth/login
+  - feed/claims/wallet updates
+  - uploads/comments/friend actions
+
+### Install
+- **Chrome/Edge (Desktop/Android):** use browser install button (`Install app` in address bar/menu).
+- **Safari (iOS):** Share -> `Add to Home Screen`.
 
 ## Privacy & Security
 

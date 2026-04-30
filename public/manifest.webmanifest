@@ -1,0 +1,35 @@
+{
+  "name": "CraftFocus",
+  "short_name": "CraftFocus",
+  "description": "Focus sessions, pixel rooms, and social craft sharing.",
+  "start_url": "/craftfocus/",
+  "scope": "/craftfocus/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#B14C2F",
+  "background_color": "#f2ebdd",
+  "icons": [
+    {
+      "src": "/craftfocus/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/craftfocus/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/craftfocus/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/craftfocus/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
