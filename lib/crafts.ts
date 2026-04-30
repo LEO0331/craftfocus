@@ -204,33 +204,34 @@ export async function claimListingWithSeeds(listingId: string) {
 }
 
 export async function claimOfficialInventoryItem(itemId: string) {
+  const attemptErrors: Array<{ path: string; error: unknown }> = [];
+
   const primary = await supabase.rpc('claim_official_inventory_item_v2', {
     p_item_id: itemId,
   });
   if (!primary.error) return;
-
-  const code = (primary.error as { code?: string }).code ?? '';
-  const message = (primary.error as { message?: string }).message ?? '';
-  const looksLikeMissingFunction = code === 'PGRST202' || code === '42883' || /function/i.test(message);
-  if (!looksLikeMissingFunction) {
-    throw primary.error;
-  }
+  attemptErrors.push({ path: 'claim_official_inventory_item_v2(text)', error: primary.error });
 
   const fallbackOneArg = await supabase.rpc('claim_official_inventory_item', { p_item_id: itemId });
   if (!fallbackOneArg.error) return;
-
-  const fallbackCode = (fallbackOneArg.error as { code?: string }).code ?? '';
-  const fallbackMessage = (fallbackOneArg.error as { message?: string }).message ?? '';
-  const looksLikeMissingLegacyFunction = fallbackCode === 'PGRST202' || fallbackCode === '42883' || /function/i.test(fallbackMessage);
-  if (!looksLikeMissingLegacyFunction) {
-    throw fallbackOneArg.error;
-  }
+  attemptErrors.push({ path: 'claim_official_inventory_item(text)', error: fallbackOneArg.error });
 
   const fallbackTwoArgs = await supabase.rpc('claim_official_inventory_item', {
     p_item_id: itemId,
     p_seed_cost: 25,
   });
-  if (fallbackTwoArgs.error) throw fallbackTwoArgs.error;
+  if (!fallbackTwoArgs.error) return;
+  attemptErrors.push({ path: 'claim_official_inventory_item(text, integer)', error: fallbackTwoArgs.error });
+
+  const formatError = (input: unknown) => {
+    const e = input as { message?: string; details?: string; hint?: string; code?: string };
+    const parts = [e.message, e.details, e.hint].filter((v): v is string => Boolean(v && v.trim()));
+    const suffix = e.code ? ` [${e.code}]` : '';
+    return `${parts.join(' | ') || 'Unknown error'}${suffix}`;
+  };
+
+  const reasons = attemptErrors.map((entry) => `${entry.path}: ${formatError(entry.error)}`).join(' || ');
+  throw new Error(`Official claim failed. ${reasons}`);
 }
 
 export async function toggleLike(postId: string, userId: string) {
