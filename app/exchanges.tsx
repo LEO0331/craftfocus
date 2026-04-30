@@ -233,14 +233,15 @@ export default function ClaimsScreen() {
     <>
       <Stack.Screen
         options={{
+          headerBackVisible: false,
           headerLeft: () => (
             <Pressable
               onPress={handleBack}
               accessibilityRole="button"
-              accessibilityLabel={t('claims.back')}
-              style={({ pressed }) => [styles.headerBack, pressed ? styles.headerBackPressed : null]}
+              accessibilityLabel={t('common.back')}
+              style={({ pressed }) => [styles.backArrowPressable, pressed ? styles.backArrowPressed : null]}
             >
-              <Text style={styles.headerBackText}>{t('claims.back')}</Text>
+              <Text style={styles.backArrow}>←</Text>
             </Pressable>
           ),
         }}
@@ -302,22 +303,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
-  headerBack: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: '#fff',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  backArrowPressable: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     marginLeft: 2,
   },
-  headerBackPressed: {
-    opacity: 0.84,
+  backArrowPressed: {
+    opacity: 0.72,
   },
-  headerBackText: {
+  backArrow: {
+    fontSize: 26,
+    lineHeight: 30,
     color: theme.colors.text,
     fontFamily: theme.typography.body,
-    fontSize: 12,
     fontWeight: '700',
   },
   subheading: { fontSize: 16, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },

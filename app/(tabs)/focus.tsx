@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -28,20 +29,39 @@ export default function FocusScreen() {
 
   const { submitFocusSession, isSaving } = useFocusSession();
 
-  useEffect(() => {
+  const loadAnimalSpecies = useCallback(async () => {
     if (!user?.id) {
+      setAnimalSpecies('cat');
       return;
     }
-    getActiveAnimal(user.id)
-      .then((animal) => {
-        if (animal?.sprite_key) {
-          setAnimalSpecies(resolveAnimalSpecies(animal.sprite_key));
-        }
-      })
-      .catch(() => {
-        setAnimalSpecies('cat');
-      });
+    try {
+      const animal = await getActiveAnimal(user.id);
+      if (animal?.sprite_key) {
+        setAnimalSpecies(resolveAnimalSpecies(animal.sprite_key));
+        return;
+      }
+      setAnimalSpecies('cat');
+    } catch {
+      setAnimalSpecies('cat');
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    if (profile?.active_animal_id) {
+      setAnimalSpecies(resolveAnimalSpecies(profile.active_animal_id));
+    }
+  }, [profile?.active_animal_id]);
+
+  useEffect(() => {
+    void loadAnimalSpecies();
+  }, [loadAnimalSpecies]);
+
+  useFocusEffect(
+    useCallback(() => {
+        void loadAnimalSpecies();
+        return undefined;
+      }, [loadAnimalSpecies])
+  );
 
   useEffect(() => {
     if (!isRunning) {

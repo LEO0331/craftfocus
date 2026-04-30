@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
 import { AsciiPet } from '@/components/AsciiPet';
@@ -209,18 +209,32 @@ export default function ProfileScreen() {
         <AsciiPet art={resolveAsciiAnimalBadge(activeAnimalSpecies)} compact />
         <Text style={styles.sub}>{t('profile.activeAnimal', { name: activeAnimalName })}</Text>
         <Text style={styles.sub}>{t('profile.seedsBalance', { count: walletBalance })}</Text>
-        {animals.map((animal) => (
-          <Button
-            key={animal.animal_id}
-            label={
-              animal.is_active
-                ? t('profile.activeLabel', { name: animal.name })
-                : t('profile.setActive', { name: animal.name })
-            }
-            onPress={() => handleSetActive(animal.animal_id)}
-            variant={animal.is_active ? 'secondary' : 'primary'}
-          />
-        ))}
+        <View style={styles.animalGrid}>
+          {animals.map((animal) => (
+            <Pressable
+              key={animal.animal_id}
+              onPress={() => handleSetActive(animal.animal_id)}
+              disabled={animal.is_active}
+              accessibilityRole="button"
+              accessibilityLabel={
+                animal.is_active
+                  ? t('profile.activeLabel', { name: animal.name })
+                  : t('profile.setActive', { name: animal.name })
+              }
+              style={({ pressed }) => [
+                styles.animalChip,
+                animal.is_active ? styles.animalChipActive : styles.animalChipIdle,
+                pressed && !animal.is_active ? styles.animalChipPressed : null,
+              ]}
+            >
+              <Text style={[styles.animalChipText, animal.is_active ? styles.animalChipTextActive : null]} numberOfLines={2}>
+                {animal.is_active
+                  ? t('profile.activeLabel', { name: animal.name })
+                  : t('profile.setActive', { name: animal.name })}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </Card>
 
       <Card>
@@ -256,4 +270,40 @@ const styles = StyleSheet.create({
   },
   bioInput: { minHeight: 88, textAlignVertical: 'top' },
   readOnlyInput: { opacity: 0.7 },
+  animalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  animalChip: {
+    flexBasis: '31%',
+    maxWidth: '31%',
+    minHeight: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    justifyContent: 'center',
+  },
+  animalChipIdle: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  animalChipActive: {
+    backgroundColor: '#FFF',
+    borderColor: theme.colors.border,
+  },
+  animalChipPressed: {
+    opacity: 0.82,
+  },
+  animalChipText: {
+    color: '#FFF5EA',
+    fontFamily: theme.typography.body,
+    fontWeight: '700',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  animalChipTextActive: {
+    color: theme.colors.text,
+  },
 });
