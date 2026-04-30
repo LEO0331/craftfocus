@@ -223,6 +223,10 @@ export async function claimOfficialInventoryItem(itemId: string) {
   if (!fallbackTwoArgs.error) return;
   attemptErrors.push({ path: 'claim_official_inventory_item(text, integer)', error: fallbackTwoArgs.error });
 
+  const clientFallback = await claimOfficialInventoryItemClientFallback(itemId, 25);
+  if (clientFallback.ok) return;
+  attemptErrors.push({ path: 'client_fallback', error: clientFallback.error });
+
   const formatError = (input: unknown) => {
     const e = input as { message?: string; details?: string; hint?: string; code?: string };
     const parts = [e.message, e.details, e.hint].filter((v): v is string => Boolean(v && v.trim()));
@@ -232,6 +236,96 @@ export async function claimOfficialInventoryItem(itemId: string) {
 
   const reasons = attemptErrors.map((entry) => `${entry.path}: ${formatError(entry.error)}`).join(' || ');
   throw new Error(`Official claim failed. ${reasons}`);
+}
+
+async function claimOfficialInventoryItemClientFallback(itemId: string, seedCost: number): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user?.id) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data: wallet, error: walletReadError } = await supabase
+      .from('user_wallets')
+      .select('seeds_balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (walletReadError) throw walletReadError;
+
+    let balance = wallet?.seeds_balance;
+    if (typeof balance !== 'number') {
+      const { error: walletCreateError } = await supabase.from('user_wallets').insert({
+        user_id: user.id,
+        seeds_balance: 0,
+      });
+      if (walletCreateError) {
+        const createCode = (walletCreateError as { code?: string }).code ?? '';
+        if (createCode !== '23505') throw walletCreateError;
+      }
+      balance = 0;
+    }
+
+    if (balance < seedCost) {
+      throw new Error('Not enough seeds');
+    }
+
+    const nextBalance = balance - seedCost;
+    const { error: walletUpdateError } = await supabase
+      .from('user_wallets')
+      .update({ seeds_balance: nextBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
+    if (walletUpdateError) throw walletUpdateError;
+
+    const { data: existingInventory, error: existingInventoryError } = await supabase
+      .from('user_inventory')
+      .select('item_id,quantity')
+      .eq('user_id', user.id)
+      .eq('item_id', itemId)
+      .maybeSingle();
+    if (existingInventoryError) {
+      await supabase
+        .from('user_wallets')
+        .update({ seeds_balance: balance, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+      throw existingInventoryError;
+    }
+
+    if (existingInventory?.item_id) {
+      const { error: updateInventoryError } = await supabase
+        .from('user_inventory')
+        .update({ quantity: existingInventory.quantity + 1, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('item_id', itemId);
+      if (updateInventoryError) {
+        await supabase
+          .from('user_wallets')
+          .update({ seeds_balance: balance, updated_at: new Date().toISOString() })
+          .eq('user_id', user.id);
+        throw updateInventoryError;
+      }
+    } else {
+      const { error: insertInventoryError } = await supabase.from('user_inventory').insert({
+        user_id: user.id,
+        item_id: itemId,
+        quantity: 1,
+      });
+      if (insertInventoryError) {
+        await supabase
+          .from('user_wallets')
+          .update({ seeds_balance: balance, updated_at: new Date().toISOString() })
+          .eq('user_id', user.id);
+        throw insertInventoryError;
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error };
+  }
 }
 
 export async function toggleLike(postId: string, userId: string) {
