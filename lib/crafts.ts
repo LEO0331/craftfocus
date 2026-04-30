@@ -204,23 +204,33 @@ export async function claimListingWithSeeds(listingId: string) {
 }
 
 export async function claimOfficialInventoryItem(itemId: string) {
-  const { error } = await supabase.rpc('claim_official_inventory_item', {
+  const primary = await supabase.rpc('claim_official_inventory_item_v2', {
+    p_item_id: itemId,
+  });
+  if (!primary.error) return;
+
+  const code = (primary.error as { code?: string }).code ?? '';
+  const message = (primary.error as { message?: string }).message ?? '';
+  const looksLikeMissingFunction = code === 'PGRST202' || code === '42883' || /function/i.test(message);
+  if (!looksLikeMissingFunction) {
+    throw primary.error;
+  }
+
+  const fallbackOneArg = await supabase.rpc('claim_official_inventory_item', { p_item_id: itemId });
+  if (!fallbackOneArg.error) return;
+
+  const fallbackCode = (fallbackOneArg.error as { code?: string }).code ?? '';
+  const fallbackMessage = (fallbackOneArg.error as { message?: string }).message ?? '';
+  const looksLikeMissingLegacyFunction = fallbackCode === 'PGRST202' || fallbackCode === '42883' || /function/i.test(fallbackMessage);
+  if (!looksLikeMissingLegacyFunction) {
+    throw fallbackOneArg.error;
+  }
+
+  const fallbackTwoArgs = await supabase.rpc('claim_official_inventory_item', {
     p_item_id: itemId,
     p_seed_cost: 25,
   });
-  if (!error) return;
-
-  const code = (error as { code?: string }).code ?? '';
-  const message = (error as { message?: string }).message ?? '';
-
-  // Backward compatibility: some deployments expose only the 1-arg function signature.
-  if (code === 'PGRST202' || code === '42883' || /function/i.test(message)) {
-    const fallback = await supabase.rpc('claim_official_inventory_item', { p_item_id: itemId });
-    if (fallback.error) throw fallback.error;
-    return;
-  }
-
-  throw error;
+  if (fallbackTwoArgs.error) throw fallbackTwoArgs.error;
 }
 
 export async function toggleLike(postId: string, userId: string) {

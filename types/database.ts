@@ -300,6 +300,10 @@ export type Database = {
         Args: { p_item_id: string; p_seed_cost?: number };
         Returns: { seeds_balance: number; item_id: string; quantity: number }[];
       };
+      claim_official_inventory_item_v2: {
+        Args: { p_item_id: string };
+        Returns: { seeds_balance: number; item_id: string; quantity: number }[];
+      };
       upsert_custom_gallery_placement: {
         Args: { p_listing_id: string; p_cell_x: number; p_cell_y: number };
         Returns: undefined;
