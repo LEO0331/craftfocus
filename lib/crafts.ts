@@ -199,12 +199,33 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
 }
 
 export async function claimListingWithSeeds(listingId: string) {
+  const attemptErrors: Array<{ path: string; error: unknown }> = [];
+
+  const clientPrimary = await claimListingWithSeedsClientFallback(listingId);
+  if (clientPrimary.ok) return;
+  attemptErrors.push({ path: 'client_fallback_primary', error: clientPrimary.error });
+
   const { error } = await supabase.rpc('claim_listing_with_seeds', { p_listing_id: listingId });
-  if (error) throw error;
+  if (!error) return;
+  attemptErrors.push({ path: 'claim_listing_with_seeds(uuid)', error });
+
+  const formatError = (input: unknown) => {
+    const e = input as { message?: string; details?: string; hint?: string; code?: string };
+    const parts = [e.message, e.details, e.hint].filter((v): v is string => Boolean(v && v.trim()));
+    const suffix = e.code ? ` [${e.code}]` : '';
+    return `${parts.join(' | ') || 'Unknown error'}${suffix}`;
+  };
+
+  const reasons = attemptErrors.map((entry) => `${entry.path}: ${formatError(entry.error)}`).join(' || ');
+  throw new Error(`Listing claim failed. ${reasons}`);
 }
 
 export async function claimOfficialInventoryItem(itemId: string) {
   const attemptErrors: Array<{ path: string; error: unknown }> = [];
+
+  const clientPrimary = await claimOfficialInventoryItemClientFallback(itemId, 25);
+  if (clientPrimary.ok) return;
+  attemptErrors.push({ path: 'client_fallback_primary', error: clientPrimary.error });
 
   const primary = await supabase.rpc('claim_official_inventory_item_v2', {
     p_item_id: itemId,
@@ -222,10 +243,6 @@ export async function claimOfficialInventoryItem(itemId: string) {
   });
   if (!fallbackTwoArgs.error) return;
   attemptErrors.push({ path: 'claim_official_inventory_item(text, integer)', error: fallbackTwoArgs.error });
-
-  const clientFallback = await claimOfficialInventoryItemClientFallback(itemId, 25);
-  if (clientFallback.ok) return;
-  attemptErrors.push({ path: 'client_fallback', error: clientFallback.error });
 
   const formatError = (input: unknown) => {
     const e = input as { message?: string; details?: string; hint?: string; code?: string };
@@ -319,6 +336,135 @@ async function claimOfficialInventoryItemClientFallback(itemId: string, seedCost
           .update({ seeds_balance: balance, updated_at: new Date().toISOString() })
           .eq('user_id', user.id);
         throw insertInventoryError;
+      }
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
+async function claimListingWithSeedsClientFallback(listingId: string): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user?.id) throw new Error('Not authenticated');
+
+    const { data: existingClaim, error: existingClaimError } = await supabase
+      .from('listing_claims')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('listing_id', listingId)
+      .maybeSingle();
+    if (existingClaimError) throw existingClaimError;
+    if (existingClaim?.id) throw new Error('Already claimed');
+
+    const { data: post, error: postError } = await supabase
+      .from('craft_posts')
+      .select('id,seed_cost,listing_type,reward_item_id,image_url,pixel_image_url')
+      .eq('id', listingId)
+      .eq('is_active', true)
+      .maybeSingle();
+    if (postError) throw postError;
+    if (!post) throw new Error('Listing not found');
+
+    const seedCost = Math.max(1, Number(post.seed_cost ?? 0));
+    const { data: wallet, error: walletReadError } = await supabase
+      .from('user_wallets')
+      .select('seeds_balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (walletReadError) throw walletReadError;
+
+    let balance = wallet?.seeds_balance;
+    if (typeof balance !== 'number') {
+      const { error: walletCreateError } = await supabase.from('user_wallets').insert({
+        user_id: user.id,
+        seeds_balance: 0,
+      });
+      if (walletCreateError) {
+        const createCode = (walletCreateError as { code?: string }).code ?? '';
+        if (createCode !== '23505') throw walletCreateError;
+      }
+      balance = 0;
+    }
+
+    if (balance < seedCost) throw new Error('Not enough seeds');
+
+    const nextBalance = balance - seedCost;
+    const { error: walletUpdateError } = await supabase
+      .from('user_wallets')
+      .update({ seeds_balance: nextBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
+    if (walletUpdateError) throw walletUpdateError;
+
+    const rollbackWallet = async () => {
+      await supabase
+        .from('user_wallets')
+        .update({ seeds_balance: balance, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+    };
+
+    const { error: insertClaimError } = await supabase.from('listing_claims').insert({
+      user_id: user.id,
+      listing_id: listingId,
+    });
+    if (insertClaimError) {
+      await rollbackWallet();
+      throw insertClaimError;
+    }
+
+    if (post.listing_type === 'catalog' && post.reward_item_id) {
+      const { data: existingInventory, error: existingInventoryError } = await supabase
+        .from('user_inventory')
+        .select('item_id,quantity')
+        .eq('user_id', user.id)
+        .eq('item_id', post.reward_item_id)
+        .maybeSingle();
+      if (existingInventoryError) {
+        await supabase.from('listing_claims').delete().eq('user_id', user.id).eq('listing_id', listingId);
+        await rollbackWallet();
+        throw existingInventoryError;
+      }
+
+      if (existingInventory?.item_id) {
+        const { error: updateInventoryError } = await supabase
+          .from('user_inventory')
+          .update({ quantity: existingInventory.quantity + 1, updated_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .eq('item_id', post.reward_item_id);
+        if (updateInventoryError) {
+          await supabase.from('listing_claims').delete().eq('user_id', user.id).eq('listing_id', listingId);
+          await rollbackWallet();
+          throw updateInventoryError;
+        }
+      } else {
+        const { error: insertInventoryError } = await supabase.from('user_inventory').insert({
+          user_id: user.id,
+          item_id: post.reward_item_id,
+          quantity: 1,
+        });
+        if (insertInventoryError) {
+          await supabase.from('listing_claims').delete().eq('user_id', user.id).eq('listing_id', listingId);
+          await rollbackWallet();
+          throw insertInventoryError;
+        }
+      }
+    } else {
+      const { error: customError } = await supabase.from('custom_collectibles').insert({
+        user_id: user.id,
+        listing_id: listingId,
+        image_url: post.image_url,
+        pixel_image_url: post.pixel_image_url,
+      });
+      if (customError && (customError as { code?: string }).code !== '23505') {
+        await supabase.from('listing_claims').delete().eq('user_id', user.id).eq('listing_id', listingId);
+        await rollbackWallet();
+        throw customError;
       }
     }
 
