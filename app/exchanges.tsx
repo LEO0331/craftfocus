@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { Stack, useRouter } from 'expo-router';
 
 import { Card } from '@/components/Card';
 import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
@@ -78,6 +79,8 @@ function formatRelativeTime(value: string, locale: string): string {
 export default function ClaimsScreen() {
   const { user } = useAuth();
   const { t, language } = useI18n();
+  const navigation = useNavigation();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [claimedListings, setClaimedListings] = useState<ClaimedListingItem[]>([]);
   const [customClaims, setCustomClaims] = useState<CustomClaimItem[]>([]);
@@ -218,50 +221,74 @@ export default function ClaimsScreen() {
     return unifiedClaims.filter((entry) => entry.type === activeFilter);
   }, [activeFilter, unifiedClaims]);
 
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    router.replace('/(tabs)/friends');
+  }, [navigation, router]);
+
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>{t('claims.title')}</Text>
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <Pressable
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel={t('claims.back')}
+              style={({ pressed }) => [styles.headerBack, pressed ? styles.headerBackPressed : null]}
+            >
+              <Text style={styles.headerBackText}>{t('claims.back')}</Text>
+            </Pressable>
+          ),
+        }}
+      />
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <Text style={styles.heading}>{t('claims.title')}</Text>
 
-      <Card>
-        <Text style={styles.subheading}>{t('claims.unifiedTitle')}</Text>
-        <View style={styles.filterRow}>
-          {(['all', 'official', 'custom'] as ClaimFilter[]).map((filter) => {
-            const active = activeFilter === filter;
-            return (
-              <Pressable
-                key={filter}
-                onPress={() => setActiveFilter(filter)}
-                style={({ pressed }) => [styles.filterChip, active ? styles.filterChipActive : null, pressed ? styles.filterChipPressed : null]}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={t(`claims.filter.${filter}`)}
-              >
-                <Text style={[styles.filterChipText, active ? styles.filterChipTextActive : null]}>{t(`claims.filter.${filter}`)}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        {!filteredClaims.length ? <Text style={styles.text}>{t('claims.emptyFiltered')}</Text> : null}
-        {filteredClaims.map((item) => (
-          <View key={item.id} style={styles.itemRow}>
-            <View style={styles.itemHead}>
-              <Text style={styles.title}>{item.title}</Text>
-              <View style={styles.tagRow}>
-                {item.tags.map((tag) => (
-                  <View key={`${item.id}-${tag}`} style={styles.tagPill}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-            <Text style={styles.text}>{item.subtitle}</Text>
-            <Text style={styles.timestamp}>{t('claims.claimedAgo', { timeAgo: formatRelativeTime(item.timestamp, language) })}</Text>
+        <Card>
+          <Text style={styles.subheading}>{t('claims.unifiedTitle')}</Text>
+          <View style={styles.filterRow}>
+            {(['all', 'official', 'custom'] as ClaimFilter[]).map((filter) => {
+              const active = activeFilter === filter;
+              return (
+                <Pressable
+                  key={filter}
+                  onPress={() => setActiveFilter(filter)}
+                  style={({ pressed }) => [styles.filterChip, active ? styles.filterChipActive : null, pressed ? styles.filterChipPressed : null]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={t(`claims.filter.${filter}`)}
+                >
+                  <Text style={[styles.filterChipText, active ? styles.filterChipTextActive : null]}>{t(`claims.filter.${filter}`)}</Text>
+                </Pressable>
+              );
+            })}
           </View>
-        ))}
-      </Card>
+          {!filteredClaims.length ? <Text style={styles.text}>{t('claims.emptyFiltered')}</Text> : null}
+          {filteredClaims.map((item) => (
+            <View key={item.id} style={styles.itemRow}>
+              <View style={styles.itemHead}>
+                <Text style={styles.title}>{item.title}</Text>
+                <View style={styles.tagRow}>
+                  {item.tags.map((tag) => (
+                    <View key={`${item.id}-${tag}`} style={styles.tagPill}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+              <Text style={styles.text}>{item.subtitle}</Text>
+              <Text style={styles.timestamp}>{t('claims.claimedAgo', { timeAgo: formatRelativeTime(item.timestamp, language) })}</Text>
+            </View>
+          ))}
+        </Card>
 
-      {isLoading ? <Text style={styles.text}>{t('common.loading')}</Text> : null}
-    </ScrollView>
+        {isLoading ? <Text style={styles.text}>{t('common.loading')}</Text> : null}
+      </ScrollView>
+    </>
   );
 }
 
@@ -275,6 +302,24 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
+  headerBack: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: '#fff',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginLeft: 2,
+  },
+  headerBackPressed: {
+    opacity: 0.84,
+  },
+  headerBackText: {
+    color: theme.colors.text,
+    fontFamily: theme.typography.body,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   subheading: { fontSize: 16, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },
   title: { fontSize: 15, fontWeight: '700', color: theme.colors.text, fontFamily: theme.typography.body },
   text: { color: theme.colors.muted, fontFamily: theme.typography.body },
