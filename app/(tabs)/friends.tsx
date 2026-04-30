@@ -41,16 +41,6 @@ export default function FriendsScreen() {
     loadFriendships();
   }, [loadFriendships]);
 
-  const incomingPending = useMemo(
-    () => friendships.filter((entry) => entry.status === 'pending' && entry.role === 'addressee').length,
-    [friendships]
-  );
-
-  const sentPending = useMemo(
-    () => friendships.filter((entry) => entry.status === 'pending' && entry.role === 'requester').length,
-    [friendships]
-  );
-
   const filteredFriendships = useMemo(() => {
     if (filter === 'all') {
       return friendships;
@@ -114,13 +104,6 @@ export default function FriendsScreen() {
       <Text style={styles.heading}>{t('friends.title')}</Text>
 
       <Card>
-        <Text style={styles.title}>{t('friends.notifications')}</Text>
-        <Text style={styles.text}>{t('friends.incomingPending', { count: incomingPending })}</Text>
-        <Text style={styles.text}>{t('friends.sentPending', { count: sentPending })}</Text>
-        <Button label={t('friends.openExchanges')} onPress={() => router.push('/exchanges')} variant="secondary" />
-      </Card>
-
-      <Card>
         <Text style={styles.title}>{t('friends.searchUsers')}</Text>
         <TextInput
           placeholder={t('friends.searchByUsername')}
@@ -148,7 +131,10 @@ export default function FriendsScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.title}>{t('friends.myFriendships')}</Text>
+        <View style={styles.friendshipsHeader}>
+          <Text style={styles.title}>{t('friends.myFriendships')}</Text>
+          <Button label={t('friends.openExchanges')} onPress={() => router.push('/exchanges')} variant="secondary" style={styles.claimsButton} />
+        </View>
 
         <View style={styles.filterRow}>
           {FRIEND_FILTER_OPTIONS.map((option) => {
@@ -172,13 +158,23 @@ export default function FriendsScreen() {
 
         {filteredFriendships.map((entry) => (
           <View key={entry.friendship_id} style={styles.friendCard}>
-            <Text style={styles.friendName}>{entry.display_name || entry.username}</Text>
-            {entry.display_name ? <Text style={styles.meta}>@{entry.username}</Text> : null}
+            <View style={styles.friendTopRow}>
+              <View style={styles.friendIdentity}>
+                <Text style={styles.friendName}>{entry.display_name || entry.username}</Text>
+                {entry.display_name ? <Text style={styles.meta}>@{entry.username}</Text> : null}
+              </View>
+              {entry.status === 'accepted' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('friends.visitRoom')}
+                  onPress={() => router.push(`/users/${entry.profile_id}/room`)}
+                  style={({ pressed }) => [styles.visitChip, pressed ? styles.visitChipPressed : null]}
+                >
+                  <Text style={styles.visitChipText}>{t('friends.visitRoom')}</Text>
+                </Pressable>
+              ) : null}
+            </View>
             <Text style={styles.text}>{t('friends.status', { status: entry.status })}</Text>
-
-            {entry.status === 'accepted' ? (
-              <Button label={t('friends.visitRoom')} onPress={() => router.push(`/users/${entry.profile_id}/room`)} variant="secondary" />
-            ) : null}
 
             {entry.status === 'pending' && entry.role === 'addressee' ? (
               <View style={styles.actions}>
@@ -246,16 +242,54 @@ const styles = StyleSheet.create({
   filterLabelActive: {
     color: '#fff',
   },
+  friendshipsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  claimsButton: {
+    minHeight: 34,
+    paddingHorizontal: 10,
+  },
   friendCard: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     paddingTop: 8,
     gap: 8,
   },
+  friendTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  friendIdentity: {
+    flex: 1,
+    minWidth: 0,
+  },
   friendName: {
     color: theme.colors.text,
     fontWeight: '700',
     fontFamily: theme.typography.body,
+  },
+  visitChip: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#fff',
+  },
+  visitChipPressed: {
+    opacity: 0.82,
+  },
+  visitChipText: {
+    color: theme.colors.text,
+    fontFamily: theme.typography.body,
+    fontSize: 12,
+    fontWeight: '700',
   },
   actions: {
     flexDirection: 'row',

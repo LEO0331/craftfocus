@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -17,6 +17,7 @@ import type { BuildTargetId, RoomType } from '@/types/models';
 const ROOM_TYPES: RoomType[] = ['bedroom', 'gym'];
 const GALLERY_CELL_SIZE_WEB = 60;
 const GALLERY_CELL_SIZE_MOBILE = 54;
+const SPLIT_LAYOUT_MIN_WIDTH = 1180;
 
 export default function RoomScreen() {
   const {
@@ -33,6 +34,9 @@ export default function RoomScreen() {
     removeCollectibleFromGallery,
   } = useRoom();
   const { t } = useI18n();
+  const { width } = useWindowDimensions();
+  const splitRoomGallery = Platform.OS === 'web' && width >= SPLIT_LAYOUT_MIN_WIDTH;
+  const galleryCellSize = Platform.OS === 'web' ? (splitRoomGallery ? GALLERY_CELL_SIZE_WEB : 54) : GALLERY_CELL_SIZE_MOBILE;
   const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<BuildTargetId>('plant');
   const [selectedCollectibleId, setSelectedCollectibleId] = useState<string | null>(null);
@@ -140,8 +144,8 @@ export default function RoomScreen() {
       </Card>
 
       <Card>
-        <View style={styles.roomGalleryWrap}>
-          <View style={styles.sceneWrap}>
+        <View style={[styles.roomGalleryWrap, splitRoomGallery ? styles.roomGalleryWrapRow : styles.roomGalleryWrapColumn]}>
+          <View style={[styles.sceneWrap, splitRoomGallery ? styles.sceneWrapRow : styles.sceneWrapColumn]}>
             <Text style={styles.panelTitle}>{t('room.isometric')}</Text>
             <IsometricRoom
               roomType={roomType}
@@ -156,13 +160,13 @@ export default function RoomScreen() {
               }}
             />
           </View>
-          <View style={styles.galleryWrap}>
+          <View style={[styles.galleryWrap, splitRoomGallery ? styles.galleryWrapRow : styles.galleryWrapColumn]}>
             <Text style={styles.panelTitle}>{t('room.galleryTitle')}</Text>
             <CollectibleGalleryBoard
               placements={galleryPlacements}
               collectibles={collectibles}
               selectedListingId={selectedCollectibleId}
-              cellSize={Platform.OS === 'web' ? GALLERY_CELL_SIZE_WEB : GALLERY_CELL_SIZE_MOBILE}
+              cellSize={galleryCellSize}
               i18n={{
                 a11yEmpty: (x, y) => t('room.galleryCellEmpty', { x, y }),
                 a11yFilled: (x, y, title) => t('room.galleryCellFilled', { x, y, title }),
@@ -289,21 +293,39 @@ const styles = StyleSheet.create({
   text: { color: theme.colors.muted, fontFamily: theme.typography.body },
   switchRow: { flexDirection: 'row', gap: 8 },
   roomGalleryWrap: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
     gap: 16,
     alignItems: 'stretch',
   },
+  roomGalleryWrapRow: {
+    flexDirection: 'row',
+  },
+  roomGalleryWrapColumn: {
+    flexDirection: 'column',
+  },
   sceneWrap: {
-    flex: 1,
-    minWidth: 0,
     alignItems: 'center',
     gap: 8,
   },
-  galleryWrap: {
+  sceneWrapRow: {
     flex: 1,
+    minWidth: 430,
+  },
+  sceneWrapColumn: {
+    width: '100%',
     minWidth: 0,
+  },
+  galleryWrap: {
     gap: 8,
     alignItems: 'center',
+  },
+  galleryWrapRow: {
+    flex: 1,
+    minWidth: 360,
+    justifyContent: 'center',
+  },
+  galleryWrapColumn: {
+    width: '100%',
+    minWidth: 0,
   },
   panelTitle: {
     color: theme.colors.muted,

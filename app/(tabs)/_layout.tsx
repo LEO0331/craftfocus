@@ -1,6 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
+import { Platform, useWindowDimensions } from 'react-native';
 
 import { TopStatusBadge } from '@/components/TopStatusBadge';
 import { theme } from '@/constants/theme';
@@ -12,6 +13,9 @@ function TabBarIcon(props: { name: ComponentProps<typeof FontAwesome>['name']; c
 
 export default function TabLayout() {
   const { t } = useI18n();
+  const { width } = useWindowDimensions();
+  const compactHeader = Platform.OS === 'web' && width < 560;
+  const tinyHeader = Platform.OS === 'web' && width < 430;
 
   return (
     <Tabs
@@ -19,6 +23,13 @@ export default function TabLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: theme.colors.card },
         headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          fontSize: tinyHeader ? 28 : compactHeader ? 34 : 42,
+          fontFamily: theme.typography.display,
+        },
+        headerTitleAlign: 'left',
+        headerLeftContainerStyle: { paddingLeft: 8 },
+        headerRightContainerStyle: { paddingRight: tinyHeader ? 2 : 6 },
         tabBarStyle: { backgroundColor: theme.colors.card },
         tabBarActiveTintColor: theme.colors.primary,
         headerRight: () => <TopStatusBadge />,

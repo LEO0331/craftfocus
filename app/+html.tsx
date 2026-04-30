@@ -41,6 +41,8 @@ const globalStyles = `
 
 body {
   margin: 0;
+  min-width: 360px;
+  overflow-x: auto;
   background:
     radial-gradient(circle at 18% 0%, rgba(177, 76, 47, 0.18), transparent 34%),
     radial-gradient(circle at 80% 10%, rgba(62, 127, 87, 0.15), transparent 30%),
@@ -48,6 +50,10 @@ body {
     var(--bg);
   color: var(--ink);
   font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+#root {
+  min-width: 360px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
