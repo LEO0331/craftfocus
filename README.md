@@ -18,11 +18,12 @@ Runs from one codebase on **iOS / Android / Web**.
 - Keep custom claimed works as collectibles
 - Like/comment for social interaction
 - Unlock and set active animal companions
+- Use **My Claims** to track all official/custom claims in one filtered list
 
 ## How It Works
 
 1. Sign up and log in.
-2. Start a session; companion activity is auto-randomized (`sewing` or `training`).
+2. Start a session; companion activity is auto-randomized (`sewing` or `training`) and animation follows your active animal.
 3. Rewards: complete `25 -> 25`, `45 -> 50`, `60 -> 75`; stop -> `5` seeds.
 4. Spend seeds on listings, place earned catalog items in your room.
 5. Unlock more companions as completed focus minutes grow.
@@ -49,7 +50,7 @@ CraftFocus is designed to feel quick, calm, and rewarding:
 |---|---|
 | ![Craft Listing Detail](./docs/e2e/05-craft-detail.png) | ![Friends](./docs/e2e/06-friends.png) |
 
-| Exchanges |
+| My Claims |
 |---|
 | ![Exchanges](./docs/e2e/07-exchanges.png) |
 
@@ -58,6 +59,7 @@ CraftFocus is designed to feel quick, calm, and rewarding:
 - MVP is low-cost (Supabase free-tier friendly)
 - No payments, full chat, or expensive AI generation
 - Pixel preview generation is local/browser-first and lightweight
+- Web routes include refresh-safe fallback navigation on key detail/create pages
 
 ## V2 Canonical Model
 
@@ -158,6 +160,9 @@ npm run test:e2e
 
 Web deployment uses GitHub Pages via GitHub Actions. Live URL pattern:
 - `https://<github-username>.github.io/craftfocus/`
+
+Current deployment:
+- [CraftFocus Web](https://leo0331.github.io/craftfocus/)
 
 ## Privacy & Security
 
