@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, type CraftFeedItem } from '@/lib/crafts';
 import { useI18n } from '@/hooks/useI18n';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
-import { ensureWallet } from '@/lib/wallet';
+import { ensureWallet, getWalletBalance } from '@/lib/wallet';
 
 export default function CraftsScreen() {
   const { user } = useAuth();
@@ -51,6 +51,13 @@ export default function CraftsScreen() {
       }
       try {
         await ensureWallet(user.id);
+        const listing = posts.find((entry) => entry.id === listingId);
+        const requiredSeeds = Math.max(1, Number(listing?.seed_cost ?? 0));
+        const balance = await getWalletBalance(user.id);
+        if (balance < requiredSeeds) {
+          Alert.alert(t('craft.detail.claim'), t('crafts.official.notEnoughSeeds', { count: requiredSeeds }));
+          return;
+        }
         await claimListingWithSeeds(listingId);
         await loadPosts();
         emitTopStatusRefresh();
@@ -58,7 +65,7 @@ export default function CraftsScreen() {
         Alert.alert(t('craft.detail.claim'), error instanceof Error ? error.message : t('common.unknownError'));
       }
     },
-    [loadPosts, t, user?.id]
+    [loadPosts, posts, t, user?.id]
   );
 
   const handleClaimOfficial = useCallback(
@@ -70,6 +77,12 @@ export default function CraftsScreen() {
       setClaimingOfficialId(itemId);
       try {
         await ensureWallet(user.id);
+        const balance = await getWalletBalance(user.id);
+        const requiredSeeds = 25;
+        if (balance < requiredSeeds) {
+          Alert.alert(t('crafts.official.title'), t('crafts.official.notEnoughSeeds', { count: requiredSeeds }));
+          return;
+        }
         await claimOfficialInventoryItem(itemId);
         await loadPosts();
         emitTopStatusRefresh();

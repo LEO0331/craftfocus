@@ -20,6 +20,8 @@ const TITLE_MAX = 20;
 const DESCRIPTION_MAX = 60;
 const SEED_MIN = 1;
 const SEED_MAX = 100;
+type FieldKey = 'title' | 'description' | 'seedCost' | 'image';
+type FieldErrors = Partial<Record<FieldKey, string>>;
 
 export default function NewCraftPostScreen() {
   const { user } = useAuth();
@@ -33,6 +35,7 @@ export default function NewCraftPostScreen() {
   const [isPixelizing, setIsPixelizing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pixelSpriteData, setPixelSpriteData] = useState<PixelGridSpriteData | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
@@ -40,6 +43,7 @@ export default function NewCraftPostScreen() {
     setImageUri(result.assets[0].uri);
     setPixelPreviewUri(null);
     setPixelSpriteData(null);
+    setFieldErrors((prev) => ({ ...prev, image: undefined }));
   };
 
   const handlePixelize = async () => {
@@ -56,15 +60,37 @@ export default function NewCraftPostScreen() {
     }
   };
 
-  const handleSave = async () => {
-    if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
-    if (!imageUri) return Alert.alert(t('craft.new.missingImage'), t('craft.new.pickImageFirst'));
-    if (!title.trim()) return Alert.alert(t('craft.new.fieldTitle'), t('craft.new.titleRequired'));
-    if (!description.trim()) return Alert.alert(t('craft.new.fieldDescription'), t('craft.new.descriptionRequired'));
-    if (!seedCost.trim()) return Alert.alert(t('craft.new.seedCost'), t('craft.new.seedCostRequired'));
+  const validateForm = (): { valid: boolean; parsedSeedCost: number } => {
+    const nextErrors: FieldErrors = {};
+
+    if (!title.trim()) nextErrors.title = t('craft.new.titleRequired');
+    if (!description.trim()) nextErrors.description = t('craft.new.descriptionRequired');
+    if (!imageUri) nextErrors.image = t('craft.new.pickImageFirst');
+    if (!seedCost.trim()) {
+      nextErrors.seedCost = t('craft.new.seedCostRequired');
+    }
+
     const parsedSeedCost = Number(seedCost);
     if (!Number.isFinite(parsedSeedCost) || parsedSeedCost < SEED_MIN || parsedSeedCost > SEED_MAX) {
-      return Alert.alert(t('craft.new.seedCost'), t('craft.new.seedCostRequired'));
+      nextErrors.seedCost = t('craft.new.seedCostRequired');
+    }
+
+    setFieldErrors(nextErrors);
+    return { valid: Object.keys(nextErrors).length === 0, parsedSeedCost };
+  };
+
+  const handleSave = async () => {
+    if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
+    const validation = validateForm();
+    if (!validation.valid) {
+      setSaveError(t('craft.new.publishFailed'));
+      return;
+    }
+    const parsedSeedCost = validation.parsedSeedCost;
+    const imageUriToUpload = imageUri;
+    if (!imageUriToUpload) {
+      setFieldErrors((prev) => ({ ...prev, image: t('craft.new.pickImageFirst') }));
+      return;
     }
 
     setIsSaving(true);
@@ -91,7 +117,7 @@ export default function NewCraftPostScreen() {
       const safeDescription = description ? sanitizeText(description, DESCRIPTION_MAX) : '';
       const timestamp = Date.now();
       const imagePath = `${user.id}/${timestamp}-original.jpg`;
-      const uploadedImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: imagePath, uri: imageUri });
+      const uploadedImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: imagePath, uri: imageUriToUpload });
 
       let pixelImageUrl: string | null = null;
       if (pixelPreviewUri) {
@@ -103,7 +129,7 @@ export default function NewCraftPostScreen() {
         }
       }
 
-      const spriteData = pixelSpriteData ?? (await convertImageToPixelSprite(pixelPreviewUri ?? imageUri));
+      const spriteData = pixelSpriteData ?? (await convertImageToPixelSprite(pixelPreviewUri ?? imageUriToUpload));
 
       const id = await createCraftPost({
         userId: user.id,
@@ -140,23 +166,31 @@ export default function NewCraftPostScreen() {
         <TextInput
           placeholder={t('craft.new.fieldTitle')}
           value={title}
-          onChangeText={setTitle}
+          onChangeText={(value) => {
+            setTitle(value);
+            if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
+          }}
           maxLength={TITLE_MAX}
-          style={styles.input}
+          style={[styles.input, fieldErrors.title ? styles.inputError : null]}
           accessibilityLabel={t('craft.new.fieldTitle')}
         />
+        {fieldErrors.title ? <Text style={styles.errorText}>{fieldErrors.title}</Text> : null}
         <Text style={styles.helperText}>
           {t('craft.new.titleLimitHint', { count: title.length, max: TITLE_MAX })}
         </Text>
         <TextInput
           placeholder={t('craft.new.fieldDescription')}
           value={description}
-          onChangeText={setDescription}
+          onChangeText={(value) => {
+            setDescription(value);
+            if (fieldErrors.description) setFieldErrors((prev) => ({ ...prev, description: undefined }));
+          }}
           maxLength={DESCRIPTION_MAX}
-          style={[styles.input, styles.textarea]}
+          style={[styles.input, styles.textarea, fieldErrors.description ? styles.inputError : null]}
           multiline
           accessibilityLabel={t('craft.new.fieldDescription')}
         />
+        {fieldErrors.description ? <Text style={styles.errorText}>{fieldErrors.description}</Text> : null}
         <Text style={styles.helperText}>
           {t('craft.new.descriptionLimitHint', { count: description.length, max: DESCRIPTION_MAX })}
         </Text>
@@ -164,13 +198,18 @@ export default function NewCraftPostScreen() {
           placeholder={t('craft.new.seedCost')}
           keyboardType="number-pad"
           value={seedCost}
-          onChangeText={setSeedCost}
-          style={styles.input}
+          onChangeText={(value) => {
+            setSeedCost(value);
+            if (fieldErrors.seedCost) setFieldErrors((prev) => ({ ...prev, seedCost: undefined }));
+          }}
+          style={[styles.input, fieldErrors.seedCost ? styles.inputError : null]}
           accessibilityLabel={t('craft.new.seedCost')}
         />
+        {fieldErrors.seedCost ? <Text style={styles.errorText}>{fieldErrors.seedCost}</Text> : null}
         <Text style={styles.helperText}>{t('craft.new.seedCostLimitHint', { min: SEED_MIN, max: SEED_MAX })}</Text>
 
         <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} />
+        {fieldErrors.image ? <Text style={styles.errorText}>{fieldErrors.image}</Text> : null}
         {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel={t('craft.new.originalImage')} /> : null}
 
         <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
@@ -195,6 +234,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: '#fff',
+  },
+  inputError: {
+    borderColor: theme.colors.danger,
+    borderWidth: 2,
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
   preview: { width: '100%', aspectRatio: 1.2, borderRadius: theme.radius.md, backgroundColor: '#E5DFD1' },

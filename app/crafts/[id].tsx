@@ -11,7 +11,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { addComment, claimListingWithSeeds, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { sanitizeText } from '@/lib/validation';
-import { ensureWallet } from '@/lib/wallet';
+import { ensureWallet, getWalletBalance } from '@/lib/wallet';
 
 export default function CraftDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
@@ -52,6 +52,12 @@ export default function CraftDetailScreen() {
     if (!user?.id || !postId || !post) return;
     try {
       await ensureWallet(user.id);
+      const requiredSeeds = Math.max(1, Number(post.seed_cost ?? 0));
+      const balance = await getWalletBalance(user.id);
+      if (balance < requiredSeeds) {
+        Alert.alert(t('craft.detail.claim'), t('crafts.official.notEnoughSeeds', { count: requiredSeeds }));
+        return;
+      }
       await claimListingWithSeeds(postId);
       Alert.alert(t('craft.detail.claimed'), t('craft.detail.claimed'));
       await loadPost();
