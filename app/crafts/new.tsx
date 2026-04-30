@@ -1,7 +1,8 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Stack, router, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -26,6 +27,8 @@ type FieldErrors = Partial<Record<FieldKey, string>>;
 export default function NewCraftPostScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const navigation = useNavigation();
+  const route = useRouter();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [seedCost, setSeedCost] = useState('25');
@@ -36,6 +39,14 @@ export default function NewCraftPostScreen() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pixelSpriteData, setPixelSpriteData] = useState<PixelGridSpriteData | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    route.replace('/(tabs)/crafts');
+  }, [navigation, route]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true });
@@ -160,9 +171,25 @@ export default function NewCraftPostScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>{t('craft.new.title')}</Text>
-      <Card>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+              style={({ pressed }) => [styles.backArrowPressable, pressed ? styles.backArrowPressed : null]}
+            >
+              <Text style={styles.backArrow}>←</Text>
+            </Pressable>
+          ),
+        }}
+      />
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <Text style={styles.heading}>{t('craft.new.title')}</Text>
+        <Card>
         <TextInput
           placeholder={t('craft.new.fieldTitle')}
           value={title}
@@ -218,8 +245,9 @@ export default function NewCraftPostScreen() {
 
         <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
         {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
-      </Card>
-    </ScrollView>
+        </Card>
+      </ScrollView>
+    </>
   );
 }
 
@@ -227,6 +255,21 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   content: { padding: theme.spacing.lg, gap: theme.spacing.md, maxWidth: 960, width: '100%', alignSelf: 'center' },
   heading: { fontSize: 24, fontWeight: '800', color: theme.colors.text },
+  backArrowPressable: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 2,
+  },
+  backArrowPressed: {
+    opacity: 0.72,
+  },
+  backArrow: {
+    fontSize: 26,
+    lineHeight: 30,
+    color: theme.colors.text,
+    fontFamily: theme.typography.body,
+    fontWeight: '700',
+  },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,

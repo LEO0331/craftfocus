@@ -17,6 +17,7 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'common.prev': 'Prev',
     'common.next': 'Next',
     'common.pageOf': 'Page {page} / {total}',
+    'common.back': 'Back',
 
     'tabs.home': 'Home',
     'tabs.focus': 'Focus',
@@ -274,6 +275,7 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'common.prev': '上一頁',
     'common.next': '下一頁',
     'common.pageOf': '第 {page} / {total} 頁',
+    'common.back': '返回',
 
     'tabs.home': '首頁',
     'tabs.focus': '專注',
