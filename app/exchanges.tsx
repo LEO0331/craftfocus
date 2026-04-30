@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { Card } from '@/components/Card';
 import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
@@ -121,6 +122,12 @@ export default function ClaimsScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadData();
+    }, [loadData])
+  );
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>

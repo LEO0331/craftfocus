@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -61,6 +62,12 @@ export function useRoom() {
   useEffect(() => {
     refreshRoom();
   }, [refreshRoom]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshRoom();
+    }, [refreshRoom])
+  );
 
   const inventoryByItem = useMemo(() => new Map(inventory.map((entry) => [entry.item_id, entry.quantity])), [inventory]);
 

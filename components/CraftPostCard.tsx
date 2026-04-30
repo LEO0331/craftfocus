@@ -97,7 +97,10 @@ export function CraftPostCard({
         </Text>
         {onClaimPress && claimLabel ? (
           <Pressable
-            onPress={onClaimPress}
+            onPress={(event) => {
+              event.stopPropagation?.();
+              onClaimPress();
+            }}
             style={styles.claimChip}
             accessibilityRole="button"
             accessibilityLabel={claimLabel}

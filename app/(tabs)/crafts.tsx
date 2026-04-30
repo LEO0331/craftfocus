@@ -59,6 +59,7 @@ export default function CraftsScreen() {
           return;
         }
         await claimListingWithSeeds(listingId);
+        Alert.alert(t('craft.detail.claimed'), t('craft.detail.claimed'));
         await loadPosts();
         emitTopStatusRefresh();
       } catch (error) {
@@ -84,6 +85,7 @@ export default function CraftsScreen() {
           return;
         }
         await claimOfficialInventoryItem(itemId);
+        Alert.alert(t('crafts.official.title'), t('crafts.official.claimedSuccess'));
         await loadPosts();
         emitTopStatusRefresh();
       } catch (error) {
