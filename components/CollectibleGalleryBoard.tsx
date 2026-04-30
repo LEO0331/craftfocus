@@ -10,6 +10,8 @@ interface CollectibleGalleryBoardProps {
   selectedListingId: string | null;
   onCellPress?: (x: number, y: number, listingIdAtCell: string | null) => void;
   readOnly?: boolean;
+  cellSize?: number;
+  gapSize?: number;
   i18n?: {
     a11yEmpty: (x: number, y: number) => string;
     a11yFilled: (x: number, y: number, title: string) => string;
@@ -27,15 +29,17 @@ export function CollectibleGalleryBoard({
   selectedListingId,
   onCellPress,
   readOnly = false,
+  cellSize = 54,
+  gapSize = 6,
   i18n,
 }: CollectibleGalleryBoardProps) {
   const collectibleMap = new Map(collectibles.map((item) => [item.listingId, item]));
   const placementMap = new Map(placements.map((placement) => [`${placement.cellX}-${placement.cellY}`, placement]));
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { gap: gapSize }]}>
       {Array.from({ length: SIZE }).map((_, y) => (
-        <View key={`row-${y}`} style={styles.row}>
+        <View key={`row-${y}`} style={[styles.row, { gap: gapSize }]}>
           {Array.from({ length: SIZE }).map((__, x) => {
             const key = `${x}-${y}`;
             const placement = placementMap.get(key) ?? null;
@@ -48,7 +52,7 @@ export function CollectibleGalleryBoard({
                 key={key}
                 onPress={() => onCellPress?.(x, y, placement?.listingId ?? null)}
                 disabled={readOnly}
-                style={[styles.cell, active ? styles.cellActive : null]}
+                style={[styles.cell, { width: cellSize, height: cellSize }, active ? styles.cellActive : null]}
                 accessibilityRole="button"
                 accessibilityLabel={
                   placement
@@ -81,12 +85,10 @@ export function CollectibleGalleryBoard({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 6,
     alignSelf: 'center',
   },
   row: {
     flexDirection: 'row',
-    gap: 6,
   },
   cell: {
     width: 54,

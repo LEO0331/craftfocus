@@ -15,6 +15,8 @@ import { useI18n } from '@/hooks/useI18n';
 import type { BuildTargetId, RoomType } from '@/types/models';
 
 const ROOM_TYPES: RoomType[] = ['bedroom', 'gym'];
+const GALLERY_CELL_SIZE_WEB = 60;
+const GALLERY_CELL_SIZE_MOBILE = 54;
 
 export default function RoomScreen() {
   const {
@@ -138,9 +140,9 @@ export default function RoomScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.label}>{t('room.isometric')}</Text>
         <View style={styles.roomGalleryWrap}>
           <View style={styles.sceneWrap}>
+            <Text style={styles.panelTitle}>{t('room.isometric')}</Text>
             <IsometricRoom
               roomType={roomType}
               placements={placements}
@@ -155,11 +157,12 @@ export default function RoomScreen() {
             />
           </View>
           <View style={styles.galleryWrap}>
-            <Text style={styles.label}>{t('room.galleryTitle')}</Text>
+            <Text style={styles.panelTitle}>{t('room.galleryTitle')}</Text>
             <CollectibleGalleryBoard
               placements={galleryPlacements}
               collectibles={collectibles}
               selectedListingId={selectedCollectibleId}
+              cellSize={Platform.OS === 'web' ? GALLERY_CELL_SIZE_WEB : GALLERY_CELL_SIZE_MOBILE}
               i18n={{
                 a11yEmpty: (x, y) => t('room.galleryCellEmpty', { x, y }),
                 a11yFilled: (x, y, title) => t('room.galleryCellFilled', { x, y, title }),
@@ -287,15 +290,26 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', gap: 8 },
   roomGalleryWrap: {
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    gap: 12,
-    alignItems: Platform.OS === 'web' ? 'flex-start' : 'stretch',
+    gap: 16,
+    alignItems: 'stretch',
   },
   sceneWrap: {
     flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    gap: 8,
   },
   galleryWrap: {
+    flex: 1,
+    minWidth: 0,
     gap: 8,
-    alignSelf: Platform.OS === 'web' ? 'flex-start' : 'stretch',
+    alignItems: 'center',
+  },
+  panelTitle: {
+    color: theme.colors.muted,
+    fontWeight: '700',
+    fontFamily: theme.typography.body,
+    alignSelf: 'flex-start',
   },
   inventoryWrap: { gap: 8 },
   inventoryCard: {
