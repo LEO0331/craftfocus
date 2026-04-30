@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -13,6 +13,37 @@ import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, type
 import { useI18n } from '@/hooks/useI18n';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { ensureWallet, getWalletBalance } from '@/lib/wallet';
+
+function ClaimChip({
+  label,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      onHoverIn={() => setIsHovered(true)}
+      onHoverOut={() => setIsHovered(false)}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        styles.officialClaimChip,
+        Platform.OS === 'web' && isHovered ? styles.officialClaimChipHover : null,
+        pressed ? styles.officialClaimChipPressed : null,
+        disabled ? styles.officialClaimChipDisabled : null,
+      ]}
+    >
+      <Text style={styles.officialClaimChipText}>{label}</Text>
+    </Pressable>
+  );
+}
 
 export default function CraftsScreen() {
   const { user } = useAuth();
@@ -173,13 +204,7 @@ export default function CraftsScreen() {
                     <PixelSprite spriteId={item.id} size={34} />
                     <Text style={styles.officialName}>{item.name}</Text>
                   </View>
-                  <Button
-                    label={`${officialSeedCost}🌱`}
-                    onPress={() => handleClaimOfficial(item.id)}
-                    disabled={claimingOfficialId === item.id}
-                    variant="secondary"
-                    style={styles.officialClaimBtn}
-                  />
+                  <ClaimChip label={`${officialSeedCost}🌱`} onPress={() => handleClaimOfficial(item.id)} disabled={claimingOfficialId === item.id} />
                 </View>
                 <Text style={styles.officialMeta}>{item.description ?? t('crafts.official.defaultDescription')}</Text>
               </View>
@@ -292,23 +317,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flex: 1,
+    minWidth: 0,
   },
   officialName: {
     color: theme.colors.text,
     fontWeight: '700',
     fontFamily: theme.typography.body,
+    flexShrink: 1,
   },
   officialMeta: {
     color: theme.colors.muted,
     fontFamily: theme.typography.body,
     fontSize: 12,
   },
-  officialClaimBtn: {
-    minHeight: 34,
-    height: 34,
+  officialClaimChip: {
+    minHeight: 32,
+    height: 32,
     paddingHorizontal: 8,
     borderRadius: 8,
-    minWidth: 82,
+    minWidth: 62,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    backgroundColor: '#FFF4E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  officialClaimChipText: {
+    color: theme.colors.text,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  officialClaimChipHover: {
+    shadowColor: '#5B2A19',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  officialClaimChipPressed: {
+    opacity: 0.88,
+    transform: [{ translateY: 1 }],
+  },
+  officialClaimChipDisabled: {
+    opacity: 0.5,
   },
   grid: {
     flexDirection: 'row',

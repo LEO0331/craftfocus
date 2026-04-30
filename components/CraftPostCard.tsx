@@ -1,5 +1,5 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AsciiPet } from '@/components/AsciiPet';
 import { Card } from '@/components/Card';
@@ -50,6 +50,7 @@ export function CraftPostCard({
   const { t } = useI18n();
   const displayImageUrl = pixelImageUrl ?? imageUrl;
   const compact = layout === 'compact';
+  const [isClaimHovered, setIsClaimHovered] = useState(false);
 
   const content = (
     <Card>
@@ -101,7 +102,13 @@ export function CraftPostCard({
               event.stopPropagation?.();
               onClaimPress();
             }}
-            style={styles.claimChip}
+            onHoverIn={() => setIsClaimHovered(true)}
+            onHoverOut={() => setIsClaimHovered(false)}
+            style={({ pressed }) => [
+              styles.claimChip,
+              Platform.OS === 'web' && isClaimHovered ? styles.claimChipHover : null,
+              pressed ? styles.claimChipPressed : null,
+            ]}
             accessibilityRole="button"
             accessibilityLabel={claimLabel}
           >
@@ -223,19 +230,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   claimChip: {
-    minWidth: 92,
-    height: 34,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+    minWidth: 66,
+    height: 30,
+    paddingHorizontal: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'transparent',
     backgroundColor: '#FFF4E5',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  claimChipHover: {
+    shadowColor: '#5B2A19',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  claimChipPressed: {
+    opacity: 0.88,
+    transform: [{ translateY: 1 }],
+  },
   claimChipText: {
     color: theme.colors.text,
     fontWeight: '800',
-    fontSize: 16,
+    fontSize: 14,
   },
 });
