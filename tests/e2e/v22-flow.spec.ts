@@ -9,7 +9,7 @@ const text = {
   loginHeading: /Log In|登入/,
   focusHeading: /Focus Session|專注/, 
   focusInProgress: /Focus In Progress|專注進行中/,
-  dontInterrupt: /Don't interrupt me|不要打擾我/,
+  dontInterrupt: /Do not interrupt me|請勿打擾我/,
   devComplete: /Dev: Complete Now|開發：立即完成/,
   greatFocus: /Great focus\.|專注完成/, 
   roomHeading: /My Focus Room|我的專注房間/,
@@ -21,7 +21,7 @@ const text = {
 };
 
 async function login(page: Page) {
-  await page.goto('/auth/login');
+  await page.goto('auth/login');
   await expect(page.getByRole('heading', { name: text.loginHeading })).toBeVisible();
   await page.getByPlaceholder(/Email|電子郵件/).fill(EMAIL!);
   await page.getByPlaceholder(/Password|密碼/).fill(PASSWORD!);
@@ -34,7 +34,7 @@ test('v2.2 flow: header status, focus timer, official claim, gallery surface', a
 
   await expect(page.getByLabel(/(Active companion|目前夥伴).*(seeds|種子)/)).toBeVisible();
 
-  await page.goto('/focus');
+  await page.goto('focus');
   await expect(page.getByText(text.focusHeading)).toBeVisible();
   await page.getByRole('button', { name: /Start Focus|開始專注/ }).click();
   await expect(page.getByText(text.focusInProgress)).toBeVisible();
@@ -50,17 +50,17 @@ test('v2.2 flow: header status, focus timer, official claim, gallery surface', a
   await page.getByRole('button', { name: text.devComplete }).click();
   await expect(page.getByText(text.greatFocus)).toBeVisible({ timeout: 15000 });
 
-  await page.goto('/crafts');
+  await page.goto('crafts');
   await expect(page.getByText(text.craftsHeading)).toBeVisible();
   await expect(page.getByText(text.officialTitle)).toBeVisible();
   const claimOfficial = page.getByRole('button', { name: /25\s*🌱/ }).first();
   await expect(claimOfficial).toBeVisible();
   await claimOfficial.click();
 
-  await page.goto('/exchanges');
-  await expect(page.getByText(text.claimsHeading)).toBeVisible();
+  await page.goto('exchanges');
+  await expect(page.getByRole('heading', { name: text.claimsHeading })).toBeVisible();
 
-  await page.goto('/room');
+  await page.goto('room');
   await expect(page.getByText(text.roomHeading)).toBeVisible();
   await expect(page.getByText(text.roomGallery)).toBeVisible();
 

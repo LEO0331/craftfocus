@@ -15,21 +15,21 @@ async function snap(page: Page, name: string) {
 
 test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) => {
   await page.goto('auth/login');
-  await expect(page.getByRole('heading', { name: 'Log In' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Log In|登入/ })).toBeVisible();
 
-  await page.getByPlaceholder('Email').fill(EMAIL!);
-  await page.getByPlaceholder('Password').fill(PASSWORD!);
-  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByPlaceholder(/Email|電子郵件/).fill(EMAIL!);
+  await page.getByPlaceholder(/Password|密碼/).fill(PASSWORD!);
+  await page.getByRole('button', { name: /Log In|登入/ }).click();
 
   await expect(page.getByText('Build A Room By Protecting Your Time')).toBeVisible({ timeout: 20000 });
   await snap(page, 'v2-01-home.png');
 
   await page.goto('focus');
-  await expect(page.getByText('Focus Session')).toBeVisible();
+  await expect(page.getByText(/Focus Session|專注/)).toBeVisible();
   await page.getByRole('button', { name: 'Start Focus' }).click();
-  await expect(page.getByText('Focus In Progress')).toBeVisible();
-  await expect(page.getByText("Don't interrupt me")).toBeVisible();
-  await page.getByRole('button', { name: 'Dev: Complete Now' }).click();
+  await expect(page.getByText(/Focus In Progress|專注進行中/)).toBeVisible();
+  await expect(page.getByText(/Do not interrupt me|請勿打擾我/)).toBeVisible();
+  await page.getByRole('button', { name: /Dev: Complete Now|開發：立即完成/ }).click();
   await expect(page.getByText(/Great focus\./)).toBeVisible();
   await snap(page, 'v2-02-focus.png');
 
@@ -45,7 +45,7 @@ test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) =>
   await page.goto('crafts');
   await expect(page.getByText('Craft Feed')).toBeVisible();
   await page.getByRole('button', { name: 'Upload New Craft' }).click();
-  await expect(page.getByText('Publish Listing')).toBeVisible();
+  await expect(page.getByText(/Publish Listing|發布清單|發布作品/).first()).toBeVisible();
 
   await page.getByPlaceholder('Title').fill(`E2E V2 ${Date.now()}`);
   await page.getByPlaceholder('Description').fill('Automated V2 listing flow.');
@@ -56,6 +56,6 @@ test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) =>
   await chooser.setFiles(path.join(process.cwd(), 'assets', 'images', 'icon.png'));
 
   await page.getByRole('button', { name: 'Publish Listing' }).click();
-  await expect(page.getByRole('heading', { name: 'Listing Detail' })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText(/Listing Detail|作品詳情/).first()).toBeVisible({ timeout: 20000 });
   await snap(page, 'v2-05-listing-detail.png');
 });
