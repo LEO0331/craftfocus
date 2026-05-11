@@ -68,10 +68,10 @@ function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, ori
         style={[
           styles.gymWindowGroup,
           {
-            left: originX - wallWidth + sceneWidth * 0.02,
-            top: wallTop + sceneHeight * 0.02,
-            width: wallWidth * 0.82,
-            height: wallHeight * 0.88,
+            left: originX - wallWidth + sceneWidth * 0.04,
+            top: wallTop + sceneHeight * 0.04,
+            width: wallWidth * 0.76,
+            height: wallHeight * 0.64,
           },
         ]}
       >
@@ -166,11 +166,11 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const anchors = ROOM_ANCHORS[roomType];
   const isGym = roomType === 'gym';
   const sceneWidth = Math.min(MAX_SCENE_WIDTH, Math.max(MIN_SCENE_WIDTH, width - 72));
-  const sceneHeight = Math.round(sceneWidth * 0.72);
+  const sceneHeight = Math.round(sceneWidth * (isGym ? 0.64 : 0.72));
   const tileWidth = sceneWidth / 8.2;
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
-  const originY = sceneHeight * (isGym ? 0.55 : FLOOR_ORIGIN_Y_RATIO);
+  const originY = sceneHeight * (isGym ? 0.6 : FLOOR_ORIGIN_Y_RATIO);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
   const wallHeight = sceneHeight * (isGym ? 0.42 : WALL_HEIGHT_RATIO);
@@ -179,6 +179,32 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
 
   return (
     <View style={[styles.scene, { width: sceneWidth, height: sceneHeight, backgroundColor: themeColors.sky }]}>
+      <View
+        style={[
+          styles.leftWall,
+          isGym ? styles.gymLeftWall : null,
+          {
+            left: originX - wallWidth,
+            top: wallTop,
+            width: wallWidth,
+            height: wallHeight,
+            backgroundColor: themeColors.leftWall,
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.rightWall,
+          isGym ? styles.gymRightWall : null,
+          {
+            left: originX,
+            top: wallTop,
+            width: wallWidth,
+            height: wallHeight,
+            backgroundColor: themeColors.rightWall,
+          },
+        ]}
+      />
       <View
         style={[
           styles.floorShadow,
@@ -202,8 +228,9 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           },
         ]}
       />
-      {!isGym
-        ? Array.from({ length: ROOM_GRID_SIZE }).map((_, row) =>
+      {isGym
+        ? null
+        : Array.from({ length: ROOM_GRID_SIZE }).map((_, row) =>
             Array.from({ length: ROOM_GRID_SIZE }).map((__, col) => {
               const projected = projectIso(col, row, tileWidth, tileHeight, originX, originY);
               return (
@@ -223,32 +250,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
                 />
               );
             })
-          )
-        : null}
-      <View
-        style={[
-          styles.leftWall,
-          {
-            left: originX - wallWidth,
-            top: wallTop,
-            width: wallWidth,
-            height: wallHeight,
-            backgroundColor: themeColors.leftWall,
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.rightWall,
-          {
-            left: originX,
-            top: wallTop,
-            width: wallWidth,
-            height: wallHeight,
-            backgroundColor: themeColors.rightWall,
-          },
-        ]}
-      />
+          )}
       <View style={[styles.cornerLine, { left: originX - 1, top: originY - wallHeight + tileHeight * 0.6, height: wallHeight + tileHeight * 0.4 }]} />
       {isGym ? (
         <GymDecor
@@ -346,6 +348,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     borderBottomRightRadius: 8,
     transform: [{ skewY: '24deg' }],
+  },
+  gymLeftWall: {
+    transform: [{ skewY: '-18deg' }],
+    opacity: 0.96,
+  },
+  gymRightWall: {
+    transform: [{ skewY: '18deg' }],
   },
   floorShadow: {
     position: 'absolute',
