@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { ROOM_ANCHORS } from '@/constants/roomLayout';
 import { ROOM_SPRITES } from '@/constants/roomSprites';
 
 describe('ROOM_SPRITES', () => {
@@ -34,5 +35,16 @@ describe('ROOM_SPRITES', () => {
         }
       }
     }
+  });
+
+  it('keeps room anchors inside the 2.5D room grid', () => {
+    Object.values(ROOM_ANCHORS).flat().forEach((anchor) => {
+      expect(anchor.x).toBeGreaterThanOrEqual(0);
+      expect(anchor.x).toBeLessThanOrEqual(6);
+      expect(anchor.y).toBeGreaterThanOrEqual(0);
+      expect(anchor.y).toBeLessThanOrEqual(6);
+      expect(anchor.footprintW).toBeGreaterThan(0);
+      expect(anchor.footprintH).toBeGreaterThan(0);
+    });
   });
 });

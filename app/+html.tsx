@@ -18,13 +18,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="CraftFocus" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="robots" content="index,follow" />
-        <link rel="canonical" href="https://example.com/" />
+        <link rel="canonical" href="https://leo0331.github.io/craftfocus/" />
         <meta property="og:title" content="CraftFocus" />
         <meta
           property="og:description"
           content="Focus sessions, pixel rooms, and craft sharing in one cross-platform app."
         />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://leo0331.github.io/craftfocus/" />
         <meta
           httpEquiv="Content-Security-Policy"
           content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data: blob:; connect-src 'self' https://*.supabase.co https: wss: blob:; font-src 'self' data: https:; base-uri 'self'; form-action 'self';"
