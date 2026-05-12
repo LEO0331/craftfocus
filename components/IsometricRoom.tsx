@@ -265,7 +265,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const tileWidth = sceneWidth / (isGym ? 10.8 : 9.5);
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
-  const originY = sceneHeight * (isGym ? 0.58 : 0.66);
+  const originY = sceneHeight * (isGym ? 0.58 : 0.61);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
   const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
@@ -327,29 +327,6 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           />
         </>
       )}
-      {isGym
-        ? null
-        : Array.from({ length: ROOM_GRID_SIZE }).map((_, row) =>
-            Array.from({ length: ROOM_GRID_SIZE }).map((__, col) => {
-              const projected = projectIso(col, row, tileWidth, tileHeight, originX, originY);
-              return (
-                <View
-                  key={`tile-${col}-${row}`}
-                  pointerEvents="none"
-                  style={[
-                    styles.floorTile,
-                    {
-                      left: projected.x - tileWidth / 2,
-                      top: projected.y - tileHeight / 2,
-                      width: tileWidth,
-                      height: tileHeight,
-                      borderColor: themeColors.grid,
-                    },
-                  ]}
-                />
-              );
-            })
-          )}
       {isGym ? null : <View style={[styles.cornerLine, { left: originX - 1, top: originY - wallHeight + tileHeight * 0.6, height: wallHeight + tileHeight * 0.4 }]} />}
       {isGym ? (
         <GymDecor
