@@ -115,14 +115,14 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
 }
 
 function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
-  const leftDumbbell = projectIso(0.2, 4.35, tileWidth, tileHeight, originX, originY);
+  const leftDumbbell = projectIso(-0.65, 4.4, tileWidth, tileHeight, originX, originY);
   const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
   const sideBench = projectIso(1.05, 5.55, tileWidth, tileHeight, originX, originY);
   const frontBench = projectIso(5.35, 4.95, tileWidth, tileHeight, originX, originY);
-  const rightBench = projectIso(5.2, 3.05, tileWidth, tileHeight, originX, originY);
+  const rightBench = projectIso(6.15, 3.05, tileWidth, tileHeight, originX, originY);
   const rack = projectIso(4.1, 3.0, tileWidth, tileHeight, originX, originY);
   const kettlebells = projectIso(5.25, 2.75, tileWidth, tileHeight, originX, originY);
-  const rightDumbbells = projectIso(5.85, 3.65, tileWidth, tileHeight, originX, originY);
+  const rightDumbbells = projectIso(6.35, 3.95, tileWidth, tileHeight, originX, originY);
   const dumbbellRack = projectIso(2.6, 3.1, tileWidth, tileHeight, originX, originY);
 
   return (
