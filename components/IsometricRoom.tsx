@@ -54,9 +54,9 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
 function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
   const bed = projectIso(4.4, 3.5, tileWidth, tileHeight, originX, originY);
   const dresser = projectIso(0.8, 3.8, tileWidth, tileHeight, originX, originY);
-  const sideBench = projectIso(1.6, 5.7, tileWidth, tileHeight, originX, originY);
-  const rug = projectIso(4.6, 5.2, tileWidth, tileHeight, originX, originY);
-  const chair = projectIso(3.0, 6.0, tileWidth, tileHeight, originX, originY);
+  const sideBench = projectIso(1.6, 4.8, tileWidth, tileHeight, originX, originY);
+  const rug = projectIso(4.6, 4.45, tileWidth, tileHeight, originX, originY);
+  const chair = projectIso(3.0, 5.05, tileWidth, tileHeight, originX, originY);
   const displayStack = projectIso(5.7, 4.1, tileWidth, tileHeight, originX, originY);
 
   return (
@@ -300,34 +300,6 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           },
         ]}
       />
-      {isGym ? null : (
-        <>
-          <View
-            style={[
-              styles.floorShadow,
-              {
-                left: originX - floorWidth / 2 + 4,
-                top: originY - floorWidth / 2 + 8,
-                width: floorWidth,
-                height: floorWidth,
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.floorDiamond,
-              {
-                left: originX - floorWidth / 2,
-                top: originY - floorWidth / 2,
-                width: floorWidth,
-                height: floorWidth,
-                backgroundColor: themeColors.floor,
-              },
-            ]}
-          />
-        </>
-      )}
-      {isGym ? null : <View style={[styles.cornerLine, { left: originX - 1, top: originY - wallHeight + tileHeight * 0.6, height: wallHeight + tileHeight * 0.4 }]} />}
       {isGym ? (
         <GymDecor
           sceneWidth={sceneWidth}

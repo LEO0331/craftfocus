@@ -15,10 +15,10 @@ export interface RoomAnchor {
 export const ROOM_ANCHORS: Record<RoomType, RoomAnchor[]> = {
   bedroom: [
     { id: 'bed_left', x: 3.7, y: 3.1, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'desk_left', x: 0.9, y: 4.7, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'desk_center', x: 1.9, y: 5.8, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'desk_left', x: 0.9, y: 4.2, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'desk_center', x: 1.9, y: 4.9, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
     { id: 'drawer_right', x: 5.3, y: 3.7, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'chair_front', x: 4.2, y: 5.4, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'chair_front', x: 4.2, y: 4.6, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
     { id: 'wall_left', x: 0, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_center', x: 3, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_right', x: 6, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
