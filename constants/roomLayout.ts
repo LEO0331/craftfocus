@@ -19,6 +19,8 @@ export const ROOM_ANCHORS: Record<RoomType, RoomAnchor[]> = {
     { id: 'desk_center', x: 1.7, y: 4.0, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
     { id: 'drawer_right', x: 4.75, y: 2.95, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
     { id: 'chair_front', x: 3.55, y: 3.75, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'lounge_left', x: 0.9, y: 4.9, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'shelf_right', x: 5.45, y: 4.0, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
     { id: 'wall_left', x: 0, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_center', x: 3, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_right', x: 6, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },

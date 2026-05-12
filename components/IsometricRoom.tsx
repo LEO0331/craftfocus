@@ -58,6 +58,8 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
   const rug = projectIso(3.8, 3.55, tileWidth, tileHeight, originX, originY);
   const chair = projectIso(2.8, 4.05, tileWidth, tileHeight, originX, originY);
   const displayStack = projectIso(5.25, 3.25, tileWidth, tileHeight, originX, originY);
+  const armchair = projectIso(1.05, 4.75, tileWidth, tileHeight, originX, originY);
+  const lowShelf = projectIso(5.45, 4.25, tileWidth, tileHeight, originX, originY);
 
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
@@ -105,6 +107,15 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
         {[0, 1, 2].map((index) => (
           <View key={index} style={[styles.bedroomDisplayBook, { bottom: tileHeight * (0.1 + index * 0.2), backgroundColor: ['#F6E7CE', '#A7C8D8', '#E6B85B'][index] }]} />
         ))}
+      </View>
+      <View style={[styles.bedroomArmchair, { left: armchair.x - tileWidth * 0.48, top: armchair.y - tileHeight * 0.38, width: tileWidth * 1.04, height: tileHeight * 0.82 }]}>
+        <View style={styles.bedroomArmchairBack} />
+        <View style={styles.bedroomArmchairSeat} />
+      </View>
+      <View style={[styles.bedroomLowShelf, { left: lowShelf.x - tileWidth * 0.6, top: lowShelf.y - tileHeight * 0.3, width: tileWidth * 1.25, height: tileHeight * 0.78 }]}>
+        <View style={styles.bedroomLowShelfTop} />
+        <View style={styles.bedroomLowShelfBook} />
+        <View style={[styles.bedroomLowShelfBook, styles.bedroomLowShelfBookSecond]} />
       </View>
       <View style={[styles.bedroomPlant, { left: originX - tileWidth * 0.1, top: wallTop + wallHeight * 0.55, width: tileWidth * 0.46, height: tileHeight * 1.1 }]}>
         <View style={styles.bedroomPlantLeafA} />
@@ -621,6 +632,61 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     borderWidth: 1,
     borderColor: 'rgba(61, 42, 31, 0.28)',
+  },
+  bedroomArmchair: {
+    position: 'absolute',
+    zIndex: 34,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.74 }],
+  },
+  bedroomArmchairBack: {
+    position: 'absolute',
+    left: 5,
+    right: 5,
+    top: 0,
+    height: 20,
+    borderRadius: 7,
+    backgroundColor: '#48B69F',
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderColor: '#8B4F22',
+  },
+  bedroomArmchairSeat: {
+    position: 'absolute',
+    left: 11,
+    right: 11,
+    bottom: 0,
+    height: 18,
+    borderRadius: 7,
+    backgroundColor: '#67C9B6',
+  },
+  bedroomLowShelf: {
+    position: 'absolute',
+    zIndex: 34,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.78 }],
+  },
+  bedroomLowShelfTop: {
+    position: 'absolute',
+    left: 4,
+    right: 4,
+    top: 2,
+    height: 14,
+    borderRadius: 5,
+    backgroundColor: '#7D471F',
+    borderWidth: 2,
+    borderColor: '#4E2A11',
+  },
+  bedroomLowShelfBook: {
+    position: 'absolute',
+    left: 12,
+    bottom: 3,
+    width: 22,
+    height: 8,
+    borderRadius: 3,
+    backgroundColor: '#F2E8D4',
+  },
+  bedroomLowShelfBookSecond: {
+    left: 38,
+    backgroundColor: '#A6CFE3',
   },
   bedroomPlant: {
     position: 'absolute',
