@@ -27,8 +27,6 @@ interface IsometricRoomProps {
 }
 
 interface RoomDecorProps {
-  sceneWidth: number;
-  sceneHeight: number;
   tileWidth: number;
   tileHeight: number;
   originX: number;
@@ -51,7 +49,7 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
   };
 }
 
-function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
+function BedroomDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
   const bed = projectIso(3.45, 2.45, tileWidth, tileHeight, originX, originY);
   const dresser = projectIso(0.55, 2.55, tileWidth, tileHeight, originX, originY);
   const sideBench = projectIso(1.1, 3.25, tileWidth, tileHeight, originX, originY);
@@ -125,7 +123,7 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
   );
 }
 
-function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
+function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
   const leftDumbbell = projectIso(-0.65, 4.4, tileWidth, tileHeight, originX, originY);
   const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
   const sideBench = projectIso(1.05, 5.55, tileWidth, tileHeight, originX, originY);
@@ -272,7 +270,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const anchors = ROOM_ANCHORS[roomType];
   const isGym = roomType === 'gym';
   const sceneWidth = Math.min(MAX_SCENE_WIDTH, Math.max(MIN_SCENE_WIDTH, width - 72));
-  const sceneHeight = Math.round(sceneWidth * (isGym ? 0.72 : 0.72));
+  const sceneHeight = Math.round(sceneWidth * 0.72);
   const tileWidth = sceneWidth / (isGym ? 10.8 : 9.5);
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
@@ -280,7 +278,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
   const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
-  const wallTop = isGym ? sceneHeight * 0.08 : sceneHeight * 0.08;
+  const wallTop = sceneHeight * 0.08;
   const themeColors = isGym ? gymColors : bedroomColors;
 
   return (
@@ -313,8 +311,6 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
       />
       {isGym ? (
         <GymDecor
-          sceneWidth={sceneWidth}
-          sceneHeight={sceneHeight}
           tileWidth={tileWidth}
           tileHeight={tileHeight}
           originX={originX}
@@ -325,8 +321,6 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
         />
       ) : (
         <BedroomDecor
-          sceneWidth={sceneWidth}
-          sceneHeight={sceneHeight}
           tileWidth={tileWidth}
           tileHeight={tileHeight}
           originX={originX}
@@ -384,16 +378,12 @@ const bedroomColors = {
   sky: '#F8F5EF',
   leftWall: '#8F8378',
   rightWall: '#9B99D0',
-  floor: '#5F605D',
-  grid: 'rgba(255,255,255,0.08)',
 };
 
 const gymColors = {
   sky: '#48B8B2',
   leftWall: '#43ADA8',
   rightWall: '#3EA8A3',
-  floor: '#319B98',
-  grid: 'rgba(238, 252, 255, 0.18)',
 };
 
 const styles = StyleSheet.create({
@@ -426,30 +416,6 @@ const styles = StyleSheet.create({
   },
   gymRightWall: {
     transform: [{ skewY: '18deg' }],
-  },
-  floorShadow: {
-    position: 'absolute',
-    backgroundColor: 'rgba(23, 77, 92, 0.16)',
-    transform: [{ rotate: '45deg' }, { scaleY: 0.52 }],
-    borderRadius: 10,
-  },
-  floorDiamond: {
-    position: 'absolute',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.72)',
-    transform: [{ rotate: '45deg' }, { scaleY: 0.52 }],
-    borderRadius: 10,
-  },
-  floorTile: {
-    position: 'absolute',
-    borderWidth: 1,
-    transform: [{ rotate: '45deg' }, { scaleY: 0.52 }],
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  cornerLine: {
-    position: 'absolute',
-    width: 2,
-    backgroundColor: 'rgba(52, 94, 130, 0.34)',
   },
   decorLayer: {
     ...StyleSheet.absoluteFillObject,
@@ -885,22 +851,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#F1F6F3',
   },
-  gymCardioMat: {
-    position: 'absolute',
-    borderRadius: 4,
-    backgroundColor: '#E9C789',
-    borderWidth: 2,
-    borderColor: '#F2B72D',
-    transform: [{ rotate: '26deg' }, { scaleY: 0.6 }],
-    zIndex: 29,
-  },
-  gymMatStripe: {
-    position: 'absolute',
-    top: 4,
-    bottom: 4,
-    width: 2,
-    backgroundColor: 'rgba(255,255,255,0.38)',
-  },
   gymWeightTower: {
     position: 'absolute',
     zIndex: 32,
@@ -1073,202 +1023,6 @@ const styles = StyleSheet.create({
     height: 17,
     borderRadius: 4,
     backgroundColor: '#EAF1EE',
-  },
-  gymBike: {
-    position: 'absolute',
-    zIndex: 36,
-    transform: [{ scaleY: 0.92 }],
-  },
-  gymBikeWheel: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 5,
-    borderColor: '#EAF1EE',
-    backgroundColor: '#AAB5B2',
-  },
-  gymBikeBase: {
-    position: 'absolute',
-    left: 18,
-    right: 16,
-    bottom: 14,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EAF1EE',
-  },
-  gymBikeSeat: {
-    position: 'absolute',
-    left: '39%',
-    top: 12,
-    width: 26,
-    height: 9,
-    borderRadius: 4,
-    backgroundColor: '#2B3032',
-  },
-  gymBikeHandle: {
-    position: 'absolute',
-    right: 2,
-    top: 8,
-    width: 24,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EAF1EE',
-  },
-  gymWindowGroup: {
-    position: 'absolute',
-    flexDirection: 'row',
-    gap: 6,
-    transform: [{ skewY: '-24deg' }],
-    opacity: 0.9,
-  },
-  gymWindowPane: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: 'rgba(112, 214, 220, 0.58)',
-    backgroundColor: 'rgba(236, 255, 255, 0.82)',
-    overflow: 'hidden',
-  },
-  gymAirCon: {
-    position: 'absolute',
-    borderRadius: 5,
-    backgroundColor: '#F5F5F2',
-    borderWidth: 1,
-    borderColor: 'rgba(200,200,200,0.55)',
-    padding: 5,
-    transform: [{ skewY: '24deg' }],
-  },
-  gymAirConVent: {
-    height: 2,
-    marginBottom: 3,
-    backgroundColor: '#D8D8D8',
-  },
-  gymAirConLight: {
-    position: 'absolute',
-    right: 7,
-    bottom: 5,
-    width: 6,
-    height: 3,
-    backgroundColor: '#F5B621',
-  },
-  gymNoticeBoard: {
-    position: 'absolute',
-    borderRadius: 2,
-    backgroundColor: '#F5B91D',
-    borderWidth: 2,
-    borderColor: '#DF9F0F',
-    transform: [{ skewY: '24deg' }],
-  },
-  gymTv: {
-    position: 'absolute',
-    borderRadius: 2,
-    backgroundColor: '#20252A',
-    borderWidth: 4,
-    borderColor: '#3B4246',
-    transform: [{ skewY: '24deg' }],
-  },
-  gymMat: {
-    position: 'absolute',
-    borderRadius: 4,
-    backgroundColor: 'rgba(64, 202, 207, 0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(185,255,255,0.35)',
-    transform: [{ rotate: '26deg' }, { scaleY: 0.62 }],
-    zIndex: 28,
-  },
-  gymBench: {
-    position: 'absolute',
-    zIndex: 33,
-    transform: [{ rotate: '26deg' }],
-  },
-  gymBenchSeat: {
-    position: 'absolute',
-    left: 8,
-    right: 8,
-    height: 12,
-    borderRadius: 5,
-    backgroundColor: '#D91E2A',
-  },
-  gymBenchLeg: {
-    position: 'absolute',
-    top: 10,
-    width: 5,
-    height: 24,
-    backgroundColor: '#EEF2F0',
-  },
-  gymWeightRack: {
-    position: 'absolute',
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderBottomWidth: 5,
-    borderColor: '#EEF2F0',
-    zIndex: 32,
-    transform: [{ rotate: '26deg' }],
-  },
-  gymRackPlate: {
-    position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#676B6E',
-  },
-  gymTreadmill: {
-    position: 'absolute',
-    borderRadius: 5,
-    borderWidth: 3,
-    borderColor: '#F2B91F',
-    backgroundColor: '#E9EDEE',
-    zIndex: 31,
-    transform: [{ rotate: '26deg' }],
-  },
-  gymTreadmillBelt: {
-    position: 'absolute',
-    left: 10,
-    right: 18,
-    top: 6,
-    bottom: 6,
-    borderRadius: 3,
-    backgroundColor: '#55585A',
-  },
-  gymTreadmillConsole: {
-    position: 'absolute',
-    right: 3,
-    top: -12,
-    width: 20,
-    height: 13,
-    borderRadius: 2,
-    backgroundColor: '#30363A',
-  },
-  gymDumbbell: {
-    position: 'absolute',
-    zIndex: 35,
-    transform: [{ rotate: '26deg' }],
-  },
-  gymDumbbellPlateLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 1,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    backgroundColor: '#5E6366',
-  },
-  gymDumbbellPlateRight: {
-    position: 'absolute',
-    right: 0,
-    top: 1,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    backgroundColor: '#5E6366',
-  },
-  gymDumbbellBar: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    top: 6,
-    height: 4,
-    backgroundColor: '#EEF2F0',
   },
   anchor: {
     position: 'absolute',
