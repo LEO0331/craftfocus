@@ -52,12 +52,12 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
 }
 
 function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
-  const bed = projectIso(4.4, 3.5, tileWidth, tileHeight, originX, originY);
-  const dresser = projectIso(0.8, 3.8, tileWidth, tileHeight, originX, originY);
-  const sideBench = projectIso(1.6, 4.8, tileWidth, tileHeight, originX, originY);
-  const rug = projectIso(4.6, 4.45, tileWidth, tileHeight, originX, originY);
-  const chair = projectIso(3.0, 5.05, tileWidth, tileHeight, originX, originY);
-  const displayStack = projectIso(5.7, 4.1, tileWidth, tileHeight, originX, originY);
+  const bed = projectIso(3.55, 2.75, tileWidth, tileHeight, originX, originY);
+  const dresser = projectIso(0.8, 2.9, tileWidth, tileHeight, originX, originY);
+  const sideBench = projectIso(1.45, 3.55, tileWidth, tileHeight, originX, originY);
+  const rug = projectIso(3.8, 3.55, tileWidth, tileHeight, originX, originY);
+  const chair = projectIso(2.8, 4.05, tileWidth, tileHeight, originX, originY);
+  const displayStack = projectIso(5.25, 3.25, tileWidth, tileHeight, originX, originY);
 
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
