@@ -104,8 +104,7 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
 
 function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
   const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
-  const mat = projectIso(3.45, 5.4, tileWidth, tileHeight, originX, originY);
-  const bike = projectIso(5.6, 4.25, tileWidth, tileHeight, originX, originY);
+  const bike = projectIso(5.45, 4.65, tileWidth, tileHeight, originX, originY);
   const rack = projectIso(4.1, 3.0, tileWidth, tileHeight, originX, originY);
   const kettlebells = projectIso(5.25, 2.75, tileWidth, tileHeight, originX, originY);
   const dumbbellRack = projectIso(2.6, 3.1, tileWidth, tileHeight, originX, originY);
@@ -189,12 +188,6 @@ function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, ori
         ))}
       </View>
 
-      <View style={[styles.gymCardioMat, { left: mat.x - tileWidth * 1.12, top: mat.y - tileHeight * 0.3, width: tileWidth * 2.25, height: tileHeight * 0.86 }]}>
-        {[0, 1, 2, 3, 4].map((index) => (
-          <View key={index} style={[styles.gymMatStripe, { left: `${16 + index * 15}%` }]} />
-        ))}
-      </View>
-
       <View style={[styles.gymWeightTower, { left: rack.x - tileWidth * 0.48, top: rack.y - tileHeight * 0.92, width: tileWidth * 0.95, height: tileHeight * 2.05 }]}>
         <View style={[styles.gymTowerRail, { left: 4 }]} />
         <View style={[styles.gymTowerRail, { right: 4 }]} />
@@ -209,7 +202,7 @@ function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, ori
         ))}
       </View>
 
-      <View style={[styles.gymBike, { left: bike.x - tileWidth * 0.55, top: bike.y - tileHeight * 0.55, width: tileWidth * 1.35, height: tileHeight * 1.2 }]}>
+      <View style={[styles.gymBike, { left: bike.x - tileWidth * 0.58, top: bike.y - tileHeight * 0.9, width: tileWidth * 1.45, height: tileHeight * 1.45 }]}>
         <View style={[styles.gymBikeWheel, { left: 0, bottom: 0 }]} />
         <View style={[styles.gymBikeWheel, { right: 0, bottom: 0 }]} />
         <View style={styles.gymBikeBase} />
@@ -847,13 +840,13 @@ const styles = StyleSheet.create({
   gymBike: {
     position: 'absolute',
     zIndex: 36,
-    transform: [{ rotate: '26deg' }, { scaleY: 0.76 }],
+    transform: [{ scaleY: 0.92 }],
   },
   gymBikeWheel: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 5,
     borderColor: '#EAF1EE',
     backgroundColor: '#AAB5B2',
@@ -863,25 +856,25 @@ const styles = StyleSheet.create({
     left: 18,
     right: 16,
     bottom: 14,
-    height: 7,
+    height: 8,
     borderRadius: 4,
     backgroundColor: '#EAF1EE',
   },
   gymBikeSeat: {
     position: 'absolute',
-    left: '42%',
-    top: 8,
+    left: '39%',
+    top: 12,
     width: 26,
-    height: 8,
+    height: 9,
     borderRadius: 4,
     backgroundColor: '#2B3032',
   },
   gymBikeHandle: {
     position: 'absolute',
-    right: 4,
-    top: 4,
+    right: 2,
+    top: 8,
     width: 24,
-    height: 7,
+    height: 8,
     borderRadius: 4,
     backgroundColor: '#EAF1EE',
   },

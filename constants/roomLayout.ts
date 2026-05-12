@@ -24,9 +24,12 @@ export const ROOM_ANCHORS: Record<RoomType, RoomAnchor[]> = {
   ],
   gym: [
     { id: 'gym_floor_a', x: 1, y: 4, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'gym_floor_b', x: 3, y: 3, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'gym_floor_c', x: 5, y: 2, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'gym_floor_b', x: 2, y: 5, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'gym_floor_c', x: 3, y: 3, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'gym_floor_d', x: 4, y: 5, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'gym_floor_e', x: 5, y: 2, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
     { id: 'gym_wall_a', x: 1, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
-    { id: 'gym_wall_b', x: 5, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
+    { id: 'gym_wall_b', x: 3, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
+    { id: 'gym_wall_c', x: 5, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
   ],
 };
