@@ -104,7 +104,7 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
 
 function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
   const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
-  const bike = projectIso(5.45, 4.65, tileWidth, tileHeight, originX, originY);
+  const frontBench = projectIso(5.35, 4.95, tileWidth, tileHeight, originX, originY);
   const rack = projectIso(4.1, 3.0, tileWidth, tileHeight, originX, originY);
   const kettlebells = projectIso(5.25, 2.75, tileWidth, tileHeight, originX, originY);
   const dumbbellRack = projectIso(2.6, 3.1, tileWidth, tileHeight, originX, originY);
@@ -202,12 +202,11 @@ function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, ori
         ))}
       </View>
 
-      <View style={[styles.gymBike, { left: bike.x - tileWidth * 0.58, top: bike.y - tileHeight * 0.9, width: tileWidth * 1.45, height: tileHeight * 1.45 }]}>
-        <View style={[styles.gymBikeWheel, { left: 0, bottom: 0 }]} />
-        <View style={[styles.gymBikeWheel, { right: 0, bottom: 0 }]} />
-        <View style={styles.gymBikeBase} />
-        <View style={styles.gymBikeSeat} />
-        <View style={styles.gymBikeHandle} />
+      <View style={[styles.gymFrontBench, { left: frontBench.x - tileWidth * 0.74, top: frontBench.y - tileHeight * 0.36, width: tileWidth * 1.55, height: tileHeight * 0.78 }]}>
+        <View style={styles.gymFrontBenchBack} />
+        <View style={styles.gymFrontBenchSeat} />
+        <View style={[styles.gymFrontBenchLeg, { left: 10 }]} />
+        <View style={[styles.gymFrontBenchLeg, { right: 10 }]} />
       </View>
     </View>
   );
@@ -257,29 +256,33 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           },
         ]}
       />
-      <View
-        style={[
-          styles.floorShadow,
-          {
-            left: originX - floorWidth / 2 + 4,
-            top: originY - floorWidth / 2 + 8,
-            width: floorWidth,
-            height: floorWidth,
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.floorDiamond,
-          {
-            left: originX - floorWidth / 2,
-            top: originY - floorWidth / 2,
-            width: floorWidth,
-            height: floorWidth,
-            backgroundColor: themeColors.floor,
-          },
-        ]}
-      />
+      {isGym ? null : (
+        <>
+          <View
+            style={[
+              styles.floorShadow,
+              {
+                left: originX - floorWidth / 2 + 4,
+                top: originY - floorWidth / 2 + 8,
+                width: floorWidth,
+                height: floorWidth,
+              },
+            ]}
+          />
+          <View
+            style={[
+              styles.floorDiamond,
+              {
+                left: originX - floorWidth / 2,
+                top: originY - floorWidth / 2,
+                width: floorWidth,
+                height: floorWidth,
+                backgroundColor: themeColors.floor,
+              },
+            ]}
+          />
+        </>
+      )}
       {isGym
         ? null
         : Array.from({ length: ROOM_GRID_SIZE }).map((_, row) =>
@@ -303,7 +306,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
               );
             })
           )}
-      <View style={[styles.cornerLine, { left: originX - 1, top: originY - wallHeight + tileHeight * 0.6, height: wallHeight + tileHeight * 0.4 }]} />
+      {isGym ? null : <View style={[styles.cornerLine, { left: originX - 1, top: originY - wallHeight + tileHeight * 0.6, height: wallHeight + tileHeight * 0.4 }]} />}
       {isGym ? (
         <GymDecor
           sceneWidth={sceneWidth}
@@ -836,6 +839,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#4E5555',
     borderTopWidth: 4,
     borderTopColor: '#303737',
+  },
+  gymFrontBench: {
+    position: 'absolute',
+    zIndex: 36,
+  },
+  gymFrontBenchBack: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    top: 2,
+    height: 11,
+    borderRadius: 5,
+    backgroundColor: '#EAF1EE',
+  },
+  gymFrontBenchSeat: {
+    position: 'absolute',
+    left: 4,
+    right: 4,
+    bottom: 13,
+    height: 18,
+    borderRadius: 8,
+    backgroundColor: '#333A3B',
+    borderWidth: 2,
+    borderColor: '#EAF1EE',
+  },
+  gymFrontBenchLeg: {
+    position: 'absolute',
+    bottom: 0,
+    width: 7,
+    height: 17,
+    borderRadius: 4,
+    backgroundColor: '#EAF1EE',
   },
   gymBike: {
     position: 'absolute',

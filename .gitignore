@@ -55,5 +55,4 @@ test-results/
 # local orchestrator/runtime data
 .omx/
 supabase/.temp/
-/docs
 /supabase
