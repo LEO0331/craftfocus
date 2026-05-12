@@ -276,7 +276,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const tileWidth = sceneWidth / (isGym ? 10.8 : 9.5);
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
-  const originY = sceneHeight * (isGym ? 0.58 : 0.61);
+  const originY = sceneHeight * (isGym ? 0.58 : 0.4);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
   const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
@@ -343,7 +343,7 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
         const anchorSize = Math.max(30, tileWidth * 0.58);
         const itemSize = Math.max(34, tileWidth * 0.7);
         const left = projected.x - anchorSize / 2;
-        const top = isWall ? originY - wallHeight + tileHeight * 0.7 + anchor.y * tileHeight * 0.42 : projected.y - anchorSize / 2;
+        const top = isWall ? wallTop + wallHeight * 0.42 + anchor.y * tileHeight * 0.42 : projected.y - anchorSize / 2;
         const zIndex = isWall ? 20 + anchor.zIndex : 40 + Math.round(projected.y) + anchor.zIndex;
         return (
           <Pressable
