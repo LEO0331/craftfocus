@@ -52,14 +52,14 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
 }
 
 function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
-  const bed = projectIso(3.55, 2.75, tileWidth, tileHeight, originX, originY);
-  const dresser = projectIso(0.8, 2.9, tileWidth, tileHeight, originX, originY);
-  const sideBench = projectIso(1.45, 3.55, tileWidth, tileHeight, originX, originY);
-  const rug = projectIso(3.8, 3.55, tileWidth, tileHeight, originX, originY);
-  const chair = projectIso(2.8, 4.05, tileWidth, tileHeight, originX, originY);
-  const displayStack = projectIso(5.25, 3.25, tileWidth, tileHeight, originX, originY);
-  const armchair = projectIso(1.05, 4.75, tileWidth, tileHeight, originX, originY);
-  const lowShelf = projectIso(5.45, 4.25, tileWidth, tileHeight, originX, originY);
+  const bed = projectIso(3.45, 2.45, tileWidth, tileHeight, originX, originY);
+  const dresser = projectIso(0.55, 2.55, tileWidth, tileHeight, originX, originY);
+  const sideBench = projectIso(1.1, 3.25, tileWidth, tileHeight, originX, originY);
+  const rug = projectIso(3.65, 3.2, tileWidth, tileHeight, originX, originY);
+  const chair = projectIso(2.75, 3.65, tileWidth, tileHeight, originX, originY);
+  const displayStack = projectIso(5.45, 2.9, tileWidth, tileHeight, originX, originY);
+  const armchair = projectIso(0.25, 3.95, tileWidth, tileHeight, originX, originY);
+  const lowShelf = projectIso(5.8, 3.45, tileWidth, tileHeight, originX, originY);
 
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
