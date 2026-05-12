@@ -115,9 +115,11 @@ function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX,
 }
 
 function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
+  const leftDumbbell = projectIso(0.2, 4.35, tileWidth, tileHeight, originX, originY);
   const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
   const sideBench = projectIso(1.05, 5.55, tileWidth, tileHeight, originX, originY);
   const frontBench = projectIso(5.35, 4.95, tileWidth, tileHeight, originX, originY);
+  const rightBench = projectIso(5.2, 3.05, tileWidth, tileHeight, originX, originY);
   const rack = projectIso(4.1, 3.0, tileWidth, tileHeight, originX, originY);
   const kettlebells = projectIso(5.25, 2.75, tileWidth, tileHeight, originX, originY);
   const rightDumbbells = projectIso(5.85, 3.65, tileWidth, tileHeight, originX, originY);
@@ -214,6 +216,18 @@ function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, ori
         {[0, 1, 2].map((index) => (
           <View key={index} style={[styles.gymKettlebell, { left: tileWidth * (0.05 + index * 0.38) }]} />
         ))}
+      </View>
+
+      <View style={[styles.gymSingleDumbbell, { left: leftDumbbell.x - tileWidth * 0.42, top: leftDumbbell.y - tileHeight * 0.06, width: tileWidth * 0.9, height: tileHeight * 0.44 }]}>
+        <View style={styles.gymSingleDumbbellPlate} />
+        <View style={[styles.gymSingleDumbbellPlate, styles.gymSingleDumbbellRightPlate]} />
+        <View style={styles.gymSingleDumbbellBar} />
+      </View>
+
+      <View style={[styles.gymRightSmallBench, { left: rightBench.x - tileWidth * 0.75, top: rightBench.y - tileHeight * 0.25, width: tileWidth * 1.55, height: tileHeight * 0.56 }]}>
+        <View style={styles.gymRightSmallBenchPad} />
+        <View style={[styles.gymRightSmallBenchLeg, { left: tileWidth * 0.2 }]} />
+        <View style={[styles.gymRightSmallBenchLeg, { right: tileWidth * 0.2 }]} />
       </View>
 
       <View style={[styles.gymSideBench, { left: sideBench.x - tileWidth * 0.85, top: sideBench.y - tileHeight * 0.34, width: tileWidth * 1.7, height: tileHeight * 0.58 }]}>
@@ -907,6 +921,56 @@ const styles = StyleSheet.create({
     backgroundColor: '#4E5555',
     borderTopWidth: 4,
     borderTopColor: '#303737',
+  },
+  gymSingleDumbbell: {
+    position: 'absolute',
+    zIndex: 33,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.82 }],
+  },
+  gymSingleDumbbellPlate: {
+    position: 'absolute',
+    left: 0,
+    top: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#52595A',
+  },
+  gymSingleDumbbellRightPlate: {
+    left: 34,
+  },
+  gymSingleDumbbellBar: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    top: 7,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: '#EAF1EE',
+  },
+  gymRightSmallBench: {
+    position: 'absolute',
+    zIndex: 34,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.78 }],
+  },
+  gymRightSmallBenchPad: {
+    position: 'absolute',
+    left: 5,
+    right: 5,
+    top: 2,
+    height: 15,
+    borderRadius: 6,
+    backgroundColor: '#303738',
+    borderWidth: 2,
+    borderColor: '#EAF1EE',
+  },
+  gymRightSmallBenchLeg: {
+    position: 'absolute',
+    bottom: 0,
+    width: 5,
+    height: 18,
+    borderRadius: 3,
+    backgroundColor: '#EAF1EE',
   },
   gymSideBench: {
     position: 'absolute',
