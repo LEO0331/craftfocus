@@ -26,7 +26,7 @@ interface IsometricRoomProps {
   };
 }
 
-interface GymDecorProps {
+interface RoomDecorProps {
   sceneWidth: number;
   sceneHeight: number;
   tileWidth: number;
@@ -43,9 +43,6 @@ const MAX_SCENE_WIDTH = 560;
 const MIN_SCENE_WIDTH = 320;
 const TILE_ASPECT_RATIO = 0.52;
 const WALL_WIDTH_RATIO = 0.72;
-const WALL_HEIGHT_RATIO = 0.34;
-const WALL_TOP_OFFSET = 0.65;
-const FLOOR_ORIGIN_Y_RATIO = 0.38;
 
 function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight: number, originX: number, originY: number) {
   return {
@@ -54,108 +51,170 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
   };
 }
 
-function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: GymDecorProps) {
-  const mat = projectIso(2.8, 5.2, tileWidth, tileHeight, originX, originY);
-  const bench = projectIso(0.9, 4.6, tileWidth, tileHeight, originX, originY);
-  const treadmillA = projectIso(5.3, 3.7, tileWidth, tileHeight, originX, originY);
-  const treadmillB = projectIso(5.9, 4.6, tileWidth, tileHeight, originX, originY);
-  const rack = projectIso(1.3, 2.8, tileWidth, tileHeight, originX, originY);
-  const dumbbell = projectIso(3.5, 4.1, tileWidth, tileHeight, originX, originY);
+function BedroomDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
+  const bed = projectIso(4.4, 3.5, tileWidth, tileHeight, originX, originY);
+  const dresser = projectIso(0.8, 3.8, tileWidth, tileHeight, originX, originY);
+  const rug = projectIso(4.6, 5.2, tileWidth, tileHeight, originX, originY);
+  const chair = projectIso(3.0, 6.0, tileWidth, tileHeight, originX, originY);
+
+  return (
+    <View pointerEvents="none" style={styles.decorLayer}>
+      <View style={[styles.bedroomLeftWindow, { left: originX - wallWidth * 0.66, top: wallTop + wallHeight * 0.2, width: wallWidth * 0.34, height: wallHeight * 0.42 }]}>
+        <View style={styles.bedroomWindowRail} />
+      </View>
+      <View style={[styles.bedroomMirror, { left: originX - wallWidth * 0.96, top: wallTop + wallHeight * 0.35, width: wallWidth * 0.18, height: wallHeight * 0.48 }]} />
+      <View style={[styles.bedroomFrameLarge, { left: originX - wallWidth * 0.24, top: wallTop + wallHeight * 0.2, width: wallWidth * 0.18, height: wallHeight * 0.34 }]} />
+      {[0, 1, 2, 3].map((index) => (
+        <View
+          key={index}
+          style={[
+            styles.bedroomSmallFrame,
+            {
+              left: originX - wallWidth * (0.04 - (index % 2) * 0.16),
+              top: wallTop + wallHeight * (0.16 + Math.floor(index / 2) * 0.24),
+              width: wallWidth * 0.12,
+              height: wallHeight * 0.12,
+            },
+          ]}
+        />
+      ))}
+      <View style={[styles.bedroomRightWindow, { left: originX + wallWidth * 0.36, top: wallTop + wallHeight * 0.22, width: wallWidth * 0.34, height: wallHeight * 0.38 }]}>
+        <View style={styles.bedroomWindowRail} />
+      </View>
+
+      <View style={[styles.bedroomBed, { left: bed.x - tileWidth * 1.35, top: bed.y - tileHeight * 0.92, width: tileWidth * 2.9, height: tileHeight * 1.35 }]}>
+        <View style={styles.bedroomBlanket} />
+        <View style={styles.bedroomPillowA} />
+        <View style={styles.bedroomPillowB} />
+      </View>
+      <View style={[styles.bedroomDresser, { left: dresser.x - tileWidth * 0.75, top: dresser.y - tileHeight * 0.78, width: tileWidth * 1.45, height: tileHeight * 1.52 }]}>
+        {[0, 1, 2].map((index) => (
+          <View key={index} style={[styles.bedroomDrawer, { top: tileHeight * (0.3 + index * 0.34) }]} />
+        ))}
+      </View>
+      <View style={[styles.bedroomRug, { left: rug.x - tileWidth * 0.9, top: rug.y - tileHeight * 0.2, width: tileWidth * 1.8, height: tileHeight * 0.75 }]} />
+      <View style={[styles.bedroomChair, { left: chair.x - tileWidth * 0.7, top: chair.y - tileHeight * 0.28, width: tileWidth * 1.4, height: tileHeight * 0.82 }]} />
+      <View style={[styles.bedroomPlant, { left: originX - tileWidth * 0.1, top: wallTop + wallHeight * 0.55, width: tileWidth * 0.46, height: tileHeight * 1.1 }]}>
+        <View style={styles.bedroomPlantLeafA} />
+        <View style={styles.bedroomPlantLeafB} />
+      </View>
+    </View>
+  );
+}
+
+function GymDecor({ sceneWidth, sceneHeight, tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
+  const bench = projectIso(1.15, 3.8, tileWidth, tileHeight, originX, originY);
+  const mat = projectIso(3.45, 5.4, tileWidth, tileHeight, originX, originY);
+  const bike = projectIso(5.6, 4.25, tileWidth, tileHeight, originX, originY);
+  const rack = projectIso(4.1, 3.0, tileWidth, tileHeight, originX, originY);
+  const kettlebells = projectIso(5.25, 2.75, tileWidth, tileHeight, originX, originY);
+  const dumbbellRack = projectIso(2.6, 3.1, tileWidth, tileHeight, originX, originY);
 
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
       <View
         style={[
-          styles.gymWindowGroup,
+          styles.gymWindowWall,
           {
-            left: originX - wallWidth + sceneWidth * 0.04,
-            top: wallTop + sceneHeight * 0.04,
-            width: wallWidth * 0.76,
-            height: wallHeight * 0.64,
+            left: originX - wallWidth * 0.92,
+            top: wallTop + wallHeight * 0.13,
+            width: wallWidth * 0.7,
+            height: wallHeight * 0.48,
           },
         ]}
       >
-        {[0, 1, 2].map((index) => (
-          <View key={index} style={styles.gymWindowPane}>
-            <View style={styles.gymWindowGlare} />
-          </View>
+        <View style={styles.gymWindowGlare} />
+        <View style={[styles.gymWindowGlare, styles.gymWindowGlareSecond]} />
+      </View>
+
+      <View style={[styles.gymScoreboard, { left: originX + wallWidth * 0.18, top: wallTop + wallHeight * 0.08, width: wallWidth * 0.34, height: wallHeight * 0.22 }]}>
+        {[0, 1, 2, 3].map((index) => (
+          <View key={index} style={[styles.gymScoreLine, { top: 6 + index * 7, width: `${72 - index * 8}%` }]} />
         ))}
       </View>
-
-      <View
-        style={[
-          styles.gymAirCon,
-          {
-            left: originX + wallWidth * 0.16,
-            top: wallTop + wallHeight * 0.08,
-            width: wallWidth * 0.58,
-            height: wallHeight * 0.2,
-          },
-        ]}
-      >
-        <View style={styles.gymAirConVent} />
-        <View style={styles.gymAirConVent} />
-        <View style={styles.gymAirConLight} />
+      <View style={[styles.gymClock, { left: originX + wallWidth * 0.72, top: wallTop + wallHeight * 0.18, width: tileWidth * 0.64, height: tileWidth * 0.64 }]}>
+        <View style={styles.gymClockHand} />
       </View>
-      <View style={[styles.gymNoticeBoard, { left: originX + wallWidth * 0.18, top: wallTop + wallHeight * 0.42, width: wallWidth * 0.28, height: wallHeight * 0.28 }]} />
-      <View style={[styles.gymTv, { left: originX + wallWidth * 0.55, top: wallTop + wallHeight * 0.4, width: wallWidth * 0.36, height: wallHeight * 0.26 }]} />
-
-      <View
-        style={[
-          styles.gymMat,
-          {
-            left: mat.x - tileWidth * 1.45,
-            top: mat.y - tileHeight * 0.15,
-            width: tileWidth * 2.9,
-            height: tileHeight * 1.15,
-          },
-        ]}
-      />
-
-      <View
-        style={[
-          styles.gymBench,
-          {
-            left: bench.x - tileWidth * 1.05,
-            top: bench.y - tileHeight * 0.25,
-            width: tileWidth * 2.2,
-            height: tileHeight * 0.52,
-          },
-        ]}
-      >
-        <View style={styles.gymBenchSeat} />
-        <View style={[styles.gymBenchLeg, { left: tileWidth * 0.15 }]} />
-        <View style={[styles.gymBenchLeg, { right: tileWidth * 0.15 }]} />
+      <View style={[styles.gymPoster, { left: originX + wallWidth * 0.52, top: wallTop + wallHeight * 0.42, width: wallWidth * 0.32, height: wallHeight * 0.34 }]}>
+        <View style={styles.gymPosterTitle} />
+        <View style={styles.gymPosterBody} />
       </View>
 
-      <View style={[styles.gymWeightRack, { left: rack.x - tileWidth * 0.85, top: rack.y - tileHeight * 0.45, width: tileWidth * 2.1, height: tileHeight * 1.15 }]}>
-        {[0, 1, 2, 3, 4].map((index) => (
-          <View key={index} style={[styles.gymRackPlate, { left: tileWidth * (0.2 + index * 0.34), top: tileHeight * (0.2 + (index % 2) * 0.12) }]} />
-        ))}
-      </View>
-
-      {[treadmillA, treadmillB].map((point, index) => (
+      {[0, 1].map((index) => (
         <View
           key={index}
           style={[
-            styles.gymTreadmill,
+            styles.gymWallLadder,
             {
-              left: point.x - tileWidth * 0.85,
-              top: point.y - tileHeight * 0.25,
-              width: tileWidth * 1.9,
-              height: tileHeight * 0.66,
+              left: originX + wallWidth * (0.02 + index * 0.33),
+              top: wallTop + wallHeight * 0.38,
+              width: wallWidth * 0.18,
+              height: wallHeight * 0.52,
             },
           ]}
         >
-          <View style={styles.gymTreadmillBelt} />
-          <View style={styles.gymTreadmillConsole} />
+          <View style={[styles.gymLadderRail, { left: 0 }]} />
+          <View style={[styles.gymLadderRail, { right: 0 }]} />
+          {[0, 1, 2, 3].map((rung) => (
+            <View key={rung} style={[styles.gymLadderRung, { top: `${16 + rung * 19}%` }]} />
+          ))}
         </View>
       ))}
 
-      <View style={[styles.gymDumbbell, { left: dumbbell.x - tileWidth * 0.45, top: dumbbell.y - tileHeight * 0.1, width: tileWidth, height: tileHeight * 0.4 }]}>
-        <View style={styles.gymDumbbellPlateLeft} />
-        <View style={styles.gymDumbbellBar} />
-        <View style={styles.gymDumbbellPlateRight} />
+      <View
+        style={[
+          styles.gymBenchPress,
+          {
+            left: bench.x - tileWidth * 0.95,
+            top: bench.y - tileHeight * 0.44,
+            width: tileWidth * 2.4,
+            height: tileHeight * 1.55,
+          },
+        ]}
+      >
+        <View style={[styles.gymRackUpright, { left: tileWidth * 0.16 }]} />
+        <View style={[styles.gymRackUpright, { right: tileWidth * 0.22 }]} />
+        <View style={styles.gymBarbellBar} />
+        <View style={[styles.gymPlateYellow, { left: 0 }]} />
+        <View style={[styles.gymPlateYellow, { right: 0 }]} />
+        <View style={styles.gymBenchPad} />
+      </View>
+
+      <View style={[styles.gymDumbbellRack, { left: dumbbellRack.x - tileWidth * 0.45, top: dumbbellRack.y - tileHeight * 0.25, width: tileWidth * 1.3, height: tileHeight * 1.25 }]}>
+        {[0, 1, 2].map((shelf) => (
+          <View key={shelf} style={[styles.gymRackShelf, { top: tileHeight * (0.22 + shelf * 0.27) }]} />
+        ))}
+        {[0, 1, 2, 3, 4, 5].map((dot) => (
+          <View key={dot} style={[styles.gymDumbbellDot, { left: tileWidth * (0.18 + (dot % 3) * 0.28), top: tileHeight * (0.15 + Math.floor(dot / 3) * 0.38) }]} />
+        ))}
+      </View>
+
+      <View style={[styles.gymCardioMat, { left: mat.x - tileWidth * 1.12, top: mat.y - tileHeight * 0.3, width: tileWidth * 2.25, height: tileHeight * 0.86 }]}>
+        {[0, 1, 2, 3, 4].map((index) => (
+          <View key={index} style={[styles.gymMatStripe, { left: `${16 + index * 15}%` }]} />
+        ))}
+      </View>
+
+      <View style={[styles.gymWeightTower, { left: rack.x - tileWidth * 0.48, top: rack.y - tileHeight * 0.92, width: tileWidth * 0.95, height: tileHeight * 2.05 }]}>
+        <View style={[styles.gymTowerRail, { left: 4 }]} />
+        <View style={[styles.gymTowerRail, { right: 4 }]} />
+        {[0, 1, 2, 3].map((rung) => (
+          <View key={rung} style={[styles.gymTowerRung, { top: tileHeight * (0.32 + rung * 0.36) }]} />
+        ))}
+      </View>
+
+      <View style={[styles.gymKettlebellRow, { left: kettlebells.x - tileWidth * 0.4, top: kettlebells.y - tileHeight * 0.08, width: tileWidth * 1.3, height: tileHeight * 0.58 }]}>
+        {[0, 1, 2].map((index) => (
+          <View key={index} style={[styles.gymKettlebell, { left: tileWidth * (0.05 + index * 0.38) }]} />
+        ))}
+      </View>
+
+      <View style={[styles.gymBike, { left: bike.x - tileWidth * 0.55, top: bike.y - tileHeight * 0.55, width: tileWidth * 1.35, height: tileHeight * 1.2 }]}>
+        <View style={[styles.gymBikeWheel, { left: 0, bottom: 0 }]} />
+        <View style={[styles.gymBikeWheel, { right: 0, bottom: 0 }]} />
+        <View style={styles.gymBikeBase} />
+        <View style={styles.gymBikeSeat} />
+        <View style={styles.gymBikeHandle} />
       </View>
     </View>
   );
@@ -166,15 +225,15 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const anchors = ROOM_ANCHORS[roomType];
   const isGym = roomType === 'gym';
   const sceneWidth = Math.min(MAX_SCENE_WIDTH, Math.max(MIN_SCENE_WIDTH, width - 72));
-  const sceneHeight = Math.round(sceneWidth * (isGym ? 0.64 : 0.72));
-  const tileWidth = sceneWidth / 8.2;
+  const sceneHeight = Math.round(sceneWidth * (isGym ? 0.72 : 0.72));
+  const tileWidth = sceneWidth / (isGym ? 10.8 : 9.5);
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
-  const originY = sceneHeight * (isGym ? 0.6 : FLOOR_ORIGIN_Y_RATIO);
+  const originY = sceneHeight * (isGym ? 0.58 : 0.66);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
-  const wallHeight = sceneHeight * (isGym ? 0.42 : WALL_HEIGHT_RATIO);
-  const wallTop = isGym ? sceneHeight * 0.1 : originY - wallHeight + tileHeight * WALL_TOP_OFFSET;
+  const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
+  const wallTop = isGym ? sceneHeight * 0.08 : sceneHeight * 0.08;
   const themeColors = isGym ? gymColors : bedroomColors;
 
   return (
@@ -264,7 +323,19 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           wallHeight={wallHeight}
           wallTop={wallTop}
         />
-      ) : null}
+      ) : (
+        <BedroomDecor
+          sceneWidth={sceneWidth}
+          sceneHeight={sceneHeight}
+          tileWidth={tileWidth}
+          tileHeight={tileHeight}
+          originX={originX}
+          originY={originY}
+          wallWidth={wallWidth}
+          wallHeight={wallHeight}
+          wallTop={wallTop}
+        />
+      )}
       {anchors.map((anchor) => {
         const placed = placements.find((entry) => entry.anchor_id === anchor.id);
         const projected = projectIso(anchor.x, anchor.y, tileWidth, tileHeight, originX, originY);
@@ -310,19 +381,19 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
 }
 
 const bedroomColors = {
-  sky: '#25BFD4',
-  leftWall: '#9EC7EE',
-  rightWall: '#7FB0E5',
-  floor: '#D8F0EC',
-  grid: 'rgba(72, 141, 162, 0.24)',
+  sky: '#F8F5EF',
+  leftWall: '#8F8378',
+  rightWall: '#9B99D0',
+  floor: '#5F605D',
+  grid: 'rgba(255,255,255,0.08)',
 };
 
 const gymColors = {
-  sky: '#BDF3F4',
-  leftWall: '#D8FCFA',
-  rightWall: '#5DC8D0',
-  floor: '#A8B9BD',
-  grid: 'rgba(238, 252, 255, 0.22)',
+  sky: '#48B8B2',
+  leftWall: '#43ADA8',
+  rightWall: '#3EA8A3',
+  floor: '#319B98',
+  grid: 'rgba(238, 252, 255, 0.18)',
 };
 
 const styles = StyleSheet.create({
@@ -383,6 +454,437 @@ const styles = StyleSheet.create({
   decorLayer: {
     ...StyleSheet.absoluteFillObject,
   },
+  bedroomLeftWindow: {
+    position: 'absolute',
+    borderWidth: 5,
+    borderColor: '#25282B',
+    backgroundColor: '#F8FAF8',
+    transform: [{ skewY: '-24deg' }],
+    zIndex: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    shadowOffset: { width: 5, height: 5 },
+  },
+  bedroomRightWindow: {
+    position: 'absolute',
+    borderWidth: 5,
+    borderColor: '#25282B',
+    backgroundColor: '#FBFCFA',
+    transform: [{ skewY: '24deg' }],
+    zIndex: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 3,
+    shadowOffset: { width: -4, height: 5 },
+  },
+  bedroomWindowRail: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '48%',
+    height: 5,
+    backgroundColor: '#25282B',
+  },
+  bedroomMirror: {
+    position: 'absolute',
+    borderWidth: 4,
+    borderColor: '#7A421D',
+    backgroundColor: 'rgba(245,247,245,0.88)',
+    transform: [{ skewY: '-24deg' }],
+    zIndex: 19,
+  },
+  bedroomFrameLarge: {
+    position: 'absolute',
+    borderWidth: 4,
+    borderColor: '#7E351C',
+    backgroundColor: '#FFC754',
+    transform: [{ skewY: '-24deg' }],
+    zIndex: 19,
+  },
+  bedroomSmallFrame: {
+    position: 'absolute',
+    borderWidth: 3,
+    borderColor: '#7E351C',
+    backgroundColor: '#89C69B',
+    transform: [{ skewY: '-24deg' }],
+    zIndex: 19,
+  },
+  bedroomBed: {
+    position: 'absolute',
+    borderRadius: 8,
+    backgroundColor: '#252729',
+    borderWidth: 2,
+    borderColor: '#1B1D1F',
+    transform: [{ rotate: '26deg' }, { scaleY: 0.76 }],
+    zIndex: 34,
+    shadowColor: '#000',
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    shadowOffset: { width: 8, height: 8 },
+  },
+  bedroomBlanket: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    top: 10,
+    bottom: 8,
+    borderRadius: 6,
+    backgroundColor: '#665346',
+    borderTopWidth: 3,
+    borderTopColor: '#8B7668',
+  },
+  bedroomPillowA: {
+    position: 'absolute',
+    right: 18,
+    top: -8,
+    width: 42,
+    height: 24,
+    borderRadius: 5,
+    backgroundColor: '#BDA79B',
+  },
+  bedroomPillowB: {
+    position: 'absolute',
+    right: 62,
+    top: -4,
+    width: 38,
+    height: 22,
+    borderRadius: 5,
+    backgroundColor: '#B9A195',
+  },
+  bedroomDresser: {
+    position: 'absolute',
+    borderRadius: 4,
+    backgroundColor: '#8C4B18',
+    borderWidth: 2,
+    borderColor: '#67340E',
+    transform: [{ rotate: '26deg' }, { scaleY: 0.82 }],
+    zIndex: 33,
+    shadowColor: '#000',
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    shadowOffset: { width: 7, height: 6 },
+  },
+  bedroomDrawer: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    height: 2,
+    backgroundColor: '#5D2F0E',
+  },
+  bedroomRug: {
+    position: 'absolute',
+    borderRadius: 3,
+    backgroundColor: '#C7B6AA',
+    borderWidth: 1,
+    borderColor: '#E7DDD5',
+    transform: [{ rotate: '26deg' }, { scaleY: 0.62 }],
+    zIndex: 29,
+  },
+  bedroomChair: {
+    position: 'absolute',
+    borderRadius: 4,
+    backgroundColor: '#52B9A2',
+    borderLeftWidth: 9,
+    borderRightWidth: 9,
+    borderColor: '#8A4D21',
+    transform: [{ rotate: '26deg' }, { scaleY: 0.7 }],
+    zIndex: 32,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    shadowOffset: { width: 5, height: 5 },
+  },
+  bedroomPlant: {
+    position: 'absolute',
+    borderBottomWidth: 26,
+    borderLeftWidth: 13,
+    borderRightWidth: 13,
+    borderBottomColor: '#F3A83A',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    zIndex: 31,
+  },
+  bedroomPlantLeafA: {
+    position: 'absolute',
+    left: -5,
+    top: -38,
+    width: 6,
+    height: 44,
+    borderRadius: 5,
+    backgroundColor: '#A6CF79',
+    transform: [{ rotate: '-16deg' }],
+  },
+  bedroomPlantLeafB: {
+    position: 'absolute',
+    right: -5,
+    top: -42,
+    width: 6,
+    height: 46,
+    borderRadius: 5,
+    backgroundColor: '#8FC36C',
+    transform: [{ rotate: '18deg' }],
+  },
+  gymWindowWall: {
+    position: 'absolute',
+    borderWidth: 5,
+    borderColor: '#E9FFFF',
+    backgroundColor: '#40D8E4',
+    transform: [{ skewY: '-18deg' }],
+    zIndex: 18,
+    overflow: 'hidden',
+    shadowColor: '#0B5B5A',
+    shadowOpacity: 0.24,
+    shadowRadius: 4,
+    shadowOffset: { width: 8, height: 8 },
+  },
+  gymWindowGlare: {
+    position: 'absolute',
+    left: '52%',
+    top: '-18%',
+    width: 10,
+    height: '150%',
+    backgroundColor: 'rgba(255,255,255,0.36)',
+    transform: [{ rotate: '18deg' }],
+  },
+  gymWindowGlareSecond: {
+    left: '68%',
+    opacity: 0.45,
+  },
+  gymScoreboard: {
+    position: 'absolute',
+    borderRadius: 3,
+    backgroundColor: '#263A3C',
+    borderWidth: 3,
+    borderColor: '#46595C',
+    transform: [{ skewY: '18deg' }],
+    zIndex: 19,
+  },
+  gymScoreLine: {
+    position: 'absolute',
+    left: 9,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#F5CA26',
+  },
+  gymClock: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: '#FFFDF5',
+    borderWidth: 5,
+    borderColor: '#806E64',
+    transform: [{ skewY: '18deg' }],
+    zIndex: 19,
+  },
+  gymClockHand: {
+    position: 'absolute',
+    left: '48%',
+    top: '18%',
+    width: 2,
+    height: '36%',
+    backgroundColor: '#4B4F4F',
+    transform: [{ rotate: '-28deg' }],
+  },
+  gymPoster: {
+    position: 'absolute',
+    borderWidth: 4,
+    borderColor: '#E9FFFF',
+    backgroundColor: '#2CB9B3',
+    transform: [{ skewY: '18deg' }],
+    zIndex: 19,
+    padding: 6,
+  },
+  gymPosterTitle: {
+    height: 8,
+    width: '82%',
+    borderRadius: 3,
+    backgroundColor: '#FFC32B',
+    marginBottom: 7,
+  },
+  gymPosterBody: {
+    height: 26,
+    width: '64%',
+    borderRadius: 999,
+    backgroundColor: '#E44A2F',
+    alignSelf: 'center',
+  },
+  gymWallLadder: {
+    position: 'absolute',
+    transform: [{ skewY: '18deg' }],
+    zIndex: 20,
+  },
+  gymLadderRail: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 5,
+    borderRadius: 3,
+    backgroundColor: '#EAF4F1',
+  },
+  gymLadderRung: {
+    position: 'absolute',
+    left: 1,
+    right: 1,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: '#EAF4F1',
+  },
+  gymBenchPress: {
+    position: 'absolute',
+    zIndex: 34,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.76 }],
+  },
+  gymRackUpright: {
+    position: 'absolute',
+    top: 4,
+    bottom: 10,
+    width: 5,
+    borderRadius: 3,
+    backgroundColor: '#F3F5F2',
+  },
+  gymBarbellBar: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    top: 10,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#D3D8D4',
+  },
+  gymPlateYellow: {
+    position: 'absolute',
+    top: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#F1AD16',
+    borderWidth: 4,
+    borderColor: '#F7C84D',
+  },
+  gymBenchPad: {
+    position: 'absolute',
+    left: '26%',
+    right: '18%',
+    bottom: 14,
+    height: 18,
+    borderRadius: 4,
+    backgroundColor: '#2F3637',
+  },
+  gymDumbbellRack: {
+    position: 'absolute',
+    zIndex: 35,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.78 }],
+  },
+  gymRackShelf: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: '#F1F6F3',
+  },
+  gymDumbbellDot: {
+    position: 'absolute',
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    backgroundColor: '#E5482F',
+    borderWidth: 2,
+    borderColor: '#F1F6F3',
+  },
+  gymCardioMat: {
+    position: 'absolute',
+    borderRadius: 4,
+    backgroundColor: '#E9C789',
+    borderWidth: 2,
+    borderColor: '#F2B72D',
+    transform: [{ rotate: '26deg' }, { scaleY: 0.6 }],
+    zIndex: 29,
+  },
+  gymMatStripe: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    width: 2,
+    backgroundColor: 'rgba(255,255,255,0.38)',
+  },
+  gymWeightTower: {
+    position: 'absolute',
+    zIndex: 32,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.78 }],
+  },
+  gymTowerRail: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 5,
+    borderRadius: 3,
+    backgroundColor: '#F1F6F3',
+  },
+  gymTowerRung: {
+    position: 'absolute',
+    left: 5,
+    right: 5,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: '#F1F6F3',
+  },
+  gymKettlebellRow: {
+    position: 'absolute',
+    zIndex: 33,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.8 }],
+  },
+  gymKettlebell: {
+    position: 'absolute',
+    bottom: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#4E5555',
+    borderTopWidth: 4,
+    borderTopColor: '#303737',
+  },
+  gymBike: {
+    position: 'absolute',
+    zIndex: 36,
+    transform: [{ rotate: '26deg' }, { scaleY: 0.76 }],
+  },
+  gymBikeWheel: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 5,
+    borderColor: '#EAF1EE',
+    backgroundColor: '#AAB5B2',
+  },
+  gymBikeBase: {
+    position: 'absolute',
+    left: 18,
+    right: 16,
+    bottom: 14,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EAF1EE',
+  },
+  gymBikeSeat: {
+    position: 'absolute',
+    left: '42%',
+    top: 8,
+    width: 26,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2B3032',
+  },
+  gymBikeHandle: {
+    position: 'absolute',
+    right: 4,
+    top: 4,
+    width: 24,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EAF1EE',
+  },
   gymWindowGroup: {
     position: 'absolute',
     flexDirection: 'row',
@@ -396,15 +898,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(112, 214, 220, 0.58)',
     backgroundColor: 'rgba(236, 255, 255, 0.82)',
     overflow: 'hidden',
-  },
-  gymWindowGlare: {
-    position: 'absolute',
-    left: '46%',
-    top: '-20%',
-    width: 8,
-    height: '145%',
-    backgroundColor: 'rgba(255,255,255,0.76)',
-    transform: [{ rotate: '24deg' }],
   },
   gymAirCon: {
     position: 'absolute',
