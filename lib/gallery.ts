@@ -114,121 +114,17 @@ export async function upsertGalleryPlacement(listingId: string, x: number, y: nu
     throw new Error('Invalid gallery cell');
   }
 
-  await ensureCustomCollectibleOwnership(listingId);
-
   const { error } = await supabase.rpc('upsert_custom_gallery_placement', {
     p_listing_id: listingId,
     p_cell_x: x,
     p_cell_y: y,
   });
-  if (!error) return;
-
-  const code = (error as { code?: string }).code ?? '';
-  const message = (error as { message?: string }).message ?? '';
-  if (code === 'PGRST202' || code === '42883' || /Could not find the function/i.test(message)) {
-    await upsertGalleryPlacementFallback(listingId, x, y);
-    return;
-  }
-  throw error;
+  if (error) throw error;
 }
 
 export async function removeGalleryPlacement(listingId: string) {
   const { error } = await supabase.rpc('remove_custom_gallery_placement', {
     p_listing_id: listingId,
   });
-  if (!error) return;
-
-  const code = (error as { code?: string }).code ?? '';
-  const message = (error as { message?: string }).message ?? '';
-  if (code === 'PGRST202' || code === '42883' || /Could not find the function/i.test(message)) {
-    const userId = await requireUserId();
-    const { error: deleteError } = await supabase
-      .from('custom_gallery_placements')
-      .delete()
-      .eq('user_id', userId)
-      .eq('listing_id', listingId);
-    if (deleteError) throw deleteError;
-    return;
-  }
-  throw error;
-}
-
-async function requireUserId(): Promise<string> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) {
-    throw new Error('Not authenticated');
-  }
-  return user.id;
-}
-
-async function ensureCustomCollectibleOwnership(listingId: string) {
-  const userId = await requireUserId();
-
-  const { data: existing, error: existingError } = await supabase
-    .from('custom_collectibles')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('listing_id', listingId)
-    .maybeSingle();
-  if (existingError) throw existingError;
-  if (existing?.id) return;
-
-  const { data: claim, error: claimError } = await supabase
-    .from('listing_claims')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('listing_id', listingId)
-    .maybeSingle();
-  if (claimError) throw claimError;
-  if (!claim?.id) {
-    throw new Error('Collectible not owned');
-  }
-
-  const { data: post, error: postError } = await supabase
-    .from('craft_posts')
-    .select('id,image_url,pixel_image_url,listing_type')
-    .eq('id', listingId)
-    .maybeSingle();
-  if (postError) throw postError;
-  if (!post || post.listing_type !== 'custom') {
-    throw new Error('Collectible not owned');
-  }
-
-  const { error: insertError } = await supabase.from('custom_collectibles').insert({
-    user_id: userId,
-    listing_id: listingId,
-    image_url: post.image_url,
-    pixel_image_url: post.pixel_image_url,
-  });
-  if (insertError && (insertError as { code?: string }).code !== '23505') {
-    throw insertError;
-  }
-}
-
-async function upsertGalleryPlacementFallback(listingId: string, x: number, y: number) {
-  const userId = await requireUserId();
-
-  const { error: clearCellError } = await supabase
-    .from('custom_gallery_placements')
-    .delete()
-    .eq('user_id', userId)
-    .eq('cell_x', x)
-    .eq('cell_y', y)
-    .neq('listing_id', listingId);
-  if (clearCellError) throw clearCellError;
-
-  const { error: upsertError } = await supabase
-    .from('custom_gallery_placements')
-    .upsert(
-      {
-        user_id: userId,
-        listing_id: listingId,
-        cell_x: x,
-        cell_y: y,
-      },
-      { onConflict: 'user_id,listing_id' }
-    );
-  if (upsertError) throw upsertError;
+  if (error) throw error;
 }

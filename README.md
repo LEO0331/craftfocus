@@ -1,6 +1,6 @@
 # CraftFocus
 
-[![Deploy Web](https://github.com/LEO0331/craftfocus/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/LEO0331/craftfocus/actions/workflows/deploy-pages.yml) [![Lighthouse CI](https://github.com/LEO0331/craftfocus/actions/workflows/lighthouse.yml/badge.svg)](https://github.com/LEO0331/craftfocus/actions/workflows/lighthouse.yml) [![Coverage](https://img.shields.io/badge/coverage-85%25%2B-brightgreen)](./coverage)
+![Build](https://img.shields.io/badge/build-GitHub%20Actions-blue) ![Lighthouse](https://img.shields.io/badge/Lighthouse-reporting-blueviolet) ![Coverage](https://img.shields.io/badge/coverage-85%25%2B-brightgreen)
 
 CraftFocus is a focus-and-social app where deep work becomes seeds, room decorations, and collectible craft rewards.
 
@@ -161,9 +161,6 @@ npm run test:e2e
 
 Web deployment uses GitHub Pages via GitHub Actions. Live URL pattern:
 - `https://<github-username>.github.io/craftfocus/`
-
-Current deployment:
-- [CraftFocus Web](https://leo0331.github.io/craftfocus/)
 
 ## PWA Support (Web)
 
