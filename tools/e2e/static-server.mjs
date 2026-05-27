@@ -24,7 +24,8 @@ const contentTypes = {
 
 function resolvePath(requestPath) {
   const clean = (requestPath || '/').split('?')[0];
-  const rel = clean.replace(/^\/+/, '');
+  const routePath = clean === '/craftfocus' ? '/' : clean.replace(/^\/craftfocus(?=\/)/, '');
+  const rel = routePath.replace(/^\/+/, '');
   const candidate = path.join(root, rel);
   const hasFileExtension = path.extname(rel).length > 0;
 

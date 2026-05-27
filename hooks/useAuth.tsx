@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { theme } from '@/constants/theme';
 import { signInWithEmail, signOut, signUpWithEmail } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 interface AuthContextValue {
   session: Session | null;
@@ -24,6 +24,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!isSupabaseConfigured) {
+      setSession(null);
+      setIsLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     supabase.auth
       .getSession()

@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 90_000,
   use: {
-    baseURL: externalBaseURL || 'http://127.0.0.1:4173',
+    baseURL: externalBaseURL || 'http://127.0.0.1:4173/craftfocus',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
