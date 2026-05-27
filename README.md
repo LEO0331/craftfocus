@@ -2,41 +2,39 @@
 
 ![Build](https://img.shields.io/badge/build-GitHub%20Actions-blue) ![Lighthouse](https://img.shields.io/badge/Lighthouse-reporting-blueviolet) ![Coverage](https://img.shields.io/badge/coverage-85%25%2B-brightgreen)
 
-CraftFocus is a focus-and-social app where deep work becomes seeds, room decorations, and collectible craft rewards.
+CraftFocus is a cozy focus-and-social craft app where protected time becomes seeds, room decorations, custom collectibles, and friend-room visits.
 
-Runs from one codebase on **iOS / Android / Web**.
+One Expo React Native + TypeScript codebase runs on **iOS, Android, and Web**.
 
 ![CraftFocus How It Works](./assets/images/how-it-works.svg)
 
-## What You Can Do
-
-- Run focus sessions (`25 / 45 / 60`) and earn seeds
-- Build a personal pixel room and place inventory items
-- Place custom claimed collectibles in a 5×5 gallery board
-- Switch room themes (`Bedroom` / `Gym`)
-- Upload custom craft listings and claim with seeds
-- Keep custom claimed works as collectibles
-- Like/comment for social interaction
-- Unlock and set active animal companions
-- Use **My Claims** to track all official/custom claims in one filtered list
-
-## How It Works
-
-1. Sign up and log in.
-2. Start a session; companion activity is auto-randomized (`sewing` or `training`) and animation follows your active animal.
-3. Rewards: complete `25 -> 25`, `45 -> 50`, `60 -> 75`; stop -> `5` seeds.
-4. Spend seeds on listings, place earned catalog items in your room.
-5. Unlock more companions as completed focus minutes grow.
-
 ## For Players
 
-CraftFocus is designed to feel quick, calm, and rewarding:
-- Focus -> earn seeds
-- Claim -> grow room
-- Decorate -> express style
-- Share -> interact socially
+CraftFocus is built around a simple loop:
 
-### Quick Tour
+1. Start a focus session.
+2. Stay in the focus view until the timer ends.
+3. Earn seeds.
+4. Claim official room items or player-made pixel crafts.
+5. Decorate your room and collectible gallery.
+6. Visit friends and interact with their crafts.
+
+The login screen includes a lightweight animated preview of this loop so new players can understand the game before signing in.
+
+## What You Can Do
+
+- Run `25 / 45 / 60` minute focus sessions and earn seeds.
+- Auto-stop focus if the user leaves the focus screen, browser tab, or app foreground.
+- Claim official inventory items with seeds.
+- Upload custom craft listings with generated pixel previews.
+- Claim custom craft listings and place them in a 5x5 collectible gallery.
+- Decorate a 2.5D room using predefined placement anchors.
+- Switch room themes between `Bedroom` and `Gym`.
+- Like, comment, add friends, and visit public friend rooms.
+- Unlock animal companions and choose the active companion from Profile.
+- Track official and custom claim history in **My Claims**.
+
+## Quick Tour
 
 | Login | Home |
 |---|---|
@@ -46,33 +44,85 @@ CraftFocus is designed to feel quick, calm, and rewarding:
 |---|---|
 | ![Focus Complete](./docs/e2e/03-focus-complete.png) | ![Room](./docs/e2e/04-room.png) |
 
-| Craft Listing Detail | Friends |
+| Friends | My Claims |
 |---|---|
-| ![Craft Listing Detail](./docs/e2e/05-craft-detail.png) | ![Friends](./docs/e2e/06-friends.png) |
+| ![Friends](./docs/e2e/06-friends.png) | ![My Claims](./docs/e2e/07-exchanges.png) |
 
-| My Claims |
-|---|
-| ![Exchanges](./docs/e2e/07-exchanges.png) |
+## Product Scope
 
-## Product Notes
+Included:
 
-- MVP is low-cost (Supabase free-tier friendly)
-- No payments, full chat, or expensive AI generation
-- Pixel preview generation is local/browser-first and lightweight
-- Web routes include refresh-safe fallback navigation on key detail/create pages
-- Web now includes a lightweight PWA layer for installability and shell caching
+- Supabase email/password auth
+- Supabase Postgres, RLS, RPC, and Storage
+- Seed wallet economy
+- Focus timer and rewards
+- Official inventory exchange
+- Custom craft listing and claim flow
+- Pixel preview abstraction and palette/grid fallback renderer
+- Room placement and collectible gallery
+- PWA installability for web users
+- i18n for English and Traditional Chinese
+
+Intentionally excluded from MVP:
+
+- Real-money marketplace
+- Stripe/payments
+- Full chat
+- Realtime multiplayer
+- Video uploads
+- Expensive AI image generation
+- Offline Supabase data sync
+
+## Current Gameplay Rules
+
+- Completed `25` minute focus session: `25` seeds.
+- Completed `45` minute focus session: `50` seeds.
+- Completed `60` minute focus session: `75` seeds.
+- Manual stop or visibility auto-stop: `5` seeds.
+- Focus sessions auto-stop immediately when the focus view is left.
+- Creating custom craft listings does **not** cost seeds.
+- Custom craft publishing is limited to `10` new listings per user per day.
+- Custom craft title limit: `20` characters.
+- Custom craft description limit: `60` characters.
+- Custom craft seed cost range: `1-100`.
 
 ## V2 Canonical Model
 
 CraftFocus V2 uses these canonical gameplay tables:
-- `user_wallets` (seed balance)
-- `user_inventory` (official placeable items)
-- `listing_claims` (claimed listings)
-- `custom_collectibles` (claimed custom works)
-- `custom_gallery_placements` (5×5 collectible gallery placements)
-- `craft_posts.pixel_palette` + `craft_posts.pixel_grid` (V2.3 render fallback payload)
 
-Legacy tables like `user_items`, `room_items`, and `exchange_requests` are retained for backward compatibility but no longer drive core V2 UI flows.
+- `profiles`
+- `user_wallets`
+- `focus_sessions`
+- `animal_catalog`
+- `user_animals`
+- `item_catalog`
+- `user_inventory`
+- `rooms`
+- `room_placements`
+- `craft_posts`
+- `listing_claims`
+- `custom_collectibles`
+- `custom_gallery_placements`
+- `likes`
+- `comments`
+- `friendships`
+
+Legacy tables such as `user_items`, `room_items`, and `exchange_requests` are retained for safe backward compatibility but no longer drive the main V2 UI flows.
+
+## Architecture
+
+- **Frontend:** Expo React Native, TypeScript, Expo Router, React Native Web.
+- **State:** Lightweight hooks/context with Supabase as source of truth.
+- **Backend:** Supabase Auth, Postgres, Storage, RLS, and RPC.
+- **Web hosting:** GitHub Pages static export under `/craftfocus`.
+- **PWA:** Static shell caching only; no offline write sync.
+- **Images:** Supabase Storage for uploaded craft images; local/browser pixel conversion where supported; palette/grid fallback renderer for custom pixel display.
+
+More detail:
+
+- [Architecture Deep Dive (English)](./docs/ARCHITECTURE_DEEP_DIVE_EN.md)
+- [架構深度解析（繁體中文）](./docs/ARCHITECTURE_DEEP_DIVE_ZH-TW.md)
+- [E2E Test Report](./docs/E2E_REPORT.md)
 
 ## Quick Start
 
@@ -82,7 +132,7 @@ Legacy tables like `user_items`, `room_items`, and `exchange_requests` are retai
 npm install
 ```
 
-### 2) Environment Variables
+### 2) Configure Environment
 
 Create `.env`:
 
@@ -91,12 +141,13 @@ EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 3) Run
+Only use the public anon key in frontend code. Never commit service-role keys.
+
+### 3) Run Locally
 
 ```bash
 npx expo start
 npx expo start --web
-# optional
 npx expo start --ios
 npx expo start --android
 ```
@@ -109,82 +160,127 @@ npx expo start --android
 supabase db push
 ```
 
-### Seed item catalog
+If Supabase reports local migrations that should be inserted before the remote latest migration, review the migration history and run:
 
-Use Supabase SQL Editor or CLI query:
-
-```sql
--- paste file contents of:
--- supabase/seed_item_catalog.sql
+```bash
+supabase db push --include-all
 ```
 
-### Optional V2 showcase seed
+Only do this when those migration files are expected for the linked project.
+
+### Seed official items
+
+Use the Supabase SQL Editor or CLI query to run:
 
 ```sql
--- edit demo_user_id inside:
--- supabase/seed_v2_showcase.sql
+-- paste the contents of supabase/seed_item_catalog.sql
 ```
 
-### Required settings
+### Optional demo/showcase seeds
 
-- Enable Email/Password in Supabase Auth Providers
-- Add site URLs and redirect URLs for local + production domains
+Use only for development/demo projects:
+
+```sql
+-- edit demo_user_id inside supabase/seed_v2_showcase.sql first
+-- then run the file contents in Supabase SQL Editor
+```
+
+### Required Auth Settings
+
+In Supabase Dashboard:
+
+- Enable Email/Password provider.
+- Add local redirect URL, for example `http://localhost:8081` or your Expo dev URL.
+- Add production site URL: `https://<github-username>.github.io/craftfocus/`.
+- Add production redirect URL: `https://<github-username>.github.io/craftfocus/`.
 
 ## Storage Policy
 
-Current default (social-feed compatible):
-- Bucket: `craft-images` (`public-read`)
-- Read: public (feed/profile rendering)
-- Write/update/delete: authenticated owner prefix only (`<auth.uid()>/...`)
-- Upload constraints: max `10MB`, MIME allowlist (`jpeg/png/webp`), signature validation
+Current default for social feed images:
+
+- Bucket: `craft-images`.
+- Read: public, so feed/profile images can render without signed URLs.
+- Write/update/delete: authenticated owner prefix only (`<auth.uid()>/...`).
+- Upload constraints: max `10MB`, MIME allowlist (`jpeg/png/webp`), signature validation.
 
 ## Testing
 
-### Unit
+### Unit and Coverage
 
 ```bash
 npm test
 npm run test:coverage
 ```
 
-### E2E (Web)
+### Web E2E
 
 ```bash
-E2E_EMAIL=you@example.com
-E2E_PASSWORD=your_password
+npm run e2e:build
 npm run test:e2e
 ```
 
-(Tests skip automatically if E2E env vars are missing.)
+Credential-gated E2E specs skip automatically when credentials are not provided.
+
+To run authenticated E2E against a deployed app:
+
+```bash
+E2E_BASE_URL=https://<github-username>.github.io/craftfocus \
+E2E_EMAIL=you@example.com \
+E2E_PASSWORD=your_password \
+npm run test:e2e
+```
+
+### Lighthouse
+
+```bash
+npm run lighthouse:web
+```
+
+The Lighthouse workflow is useful for checking performance, accessibility, best-practices, and SEO on the static web export.
 
 ## Deployment
 
-Web deployment uses GitHub Pages via GitHub Actions. Live URL pattern:
-- `https://<github-username>.github.io/craftfocus/`
+Web deployment uses GitHub Pages via GitHub Actions.
 
-## PWA Support (Web)
+Expected public URL:
 
-CraftFocus web supports a secondary PWA channel on GitHub Pages:
-- Installable app metadata (`manifest.webmanifest`)
-- Service worker shell caching for faster reopen/offline shell access
-- Browser-native install flow (no custom in-app install prompt)
+```text
+https://<github-username>.github.io/craftfocus/
+```
 
-### Offline behavior (MVP)
-- Works offline for previously cached static shell/assets/routes.
-- Supabase-powered features still require network:
-  - auth/login
-  - feed/claims/wallet updates
-  - uploads/comments/friend actions
+Required GitHub repository secrets:
 
-### Install
-- **Chrome/Edge (Desktop/Android):** use browser install button (`Install app` in address bar/menu).
-- **Safari (iOS):** Share -> `Add to Home Screen`.
+```text
+EXPO_PUBLIC_SUPABASE_URL
+EXPO_PUBLIC_SUPABASE_ANON_KEY
+```
+
+The deploy workflow injects these at build time for the static Expo web export.
+
+## PWA Support
+
+CraftFocus web is installable as a secondary channel:
+
+- `manifest.webmanifest` provides install metadata.
+- `service-worker.js` caches the static shell and assets.
+- Browser-native install prompts are used; there is no custom install modal.
+
+Offline behavior:
+
+- Previously loaded static shell/routes can open offline.
+- Supabase-backed actions still require network, including login, wallet updates, claims, uploads, comments, and friend actions.
+
+Install paths:
+
+- Chrome/Edge desktop or Android: use the browser install action.
+- Safari iOS: Share -> Add to Home Screen.
 
 ## Privacy & Security
 
-- Never commit private credentials
-- Use env vars and GitHub Secrets for runtime config
-- Keep Supabase service-role keys out of frontend code
+- Do not commit private credentials, service-role keys, personal test passwords, or Supabase `.temp` metadata.
+- Use `.env` locally and GitHub Secrets in CI/deployment.
+- Frontend code should only receive `EXPO_PUBLIC_*` public values.
+- RLS and RPC functions enforce the important data boundaries; keep migrations reviewed.
 
 ## License
 

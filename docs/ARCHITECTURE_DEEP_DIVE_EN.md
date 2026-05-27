@@ -13,6 +13,7 @@
 - Backend: Supabase (Postgres + Auth + Storage + RLS + RPC).
 - Data authority: Postgres + RPC for transaction-sensitive operations.
 - Client fallback path: selected claim flows include client-first fallback to survive RPC drift/migration mismatch.
+- Startup UX: static/exported web pages render a branded loading shell and login game-flow preview before full data interactions complete.
 
 ### Key bounded contexts
 1. Auth/Profile
@@ -22,10 +23,11 @@
 2. Focus economy
 - Focus session writes through `award_seeds_for_session` RPC.
 - Seeds are wallet-backed (`user_wallets`) and unlock progression.
+- Visibility policy is strict: leaving the focus route, hiding the browser tab, or backgrounding the app auto-stops the session as `given_up`.
 
 3. Inventory + room placement
 - Official inventory claims increase `user_inventory.quantity`.
-- Isometric room uses anchor-based placement (`room_placements`).
+- 2.5D isometric room uses anchor-based placement (`room_placements`).
 - Custom collectible gallery uses fixed 5x5 cell placement (`custom_gallery_placements`).
 
 4. Craft marketplace/feed (seed claim model)
@@ -35,6 +37,10 @@
 5. Companion system
 - Animal catalog + user unlocks + active animal selection.
 - ASCII companion rendering in header/focus for lightweight cross-platform animation.
+
+6. Onboarding/marketing surface
+- Login page includes a lightweight animated game-loop preview built with React Native views and `Animated`.
+- No video or large marketing asset is loaded on first paint.
 
 ### Deployment topology
 - Web static export deployed to GitHub Pages `/craftfocus`.
@@ -137,11 +143,12 @@
 
 ## D6. Anchor-based isometric room, not free drag-drop
 **Chosen**
-- Room placements snap to predefined anchors.
+- Room placements snap to predefined anchors inside a 2.5D isometric scene.
 
 **Why this instead of fully free XY furniture editor**
 - Cross-platform reliability and deterministic rendering.
 - Easier collision rules and persistence model.
+- The rendered room can be art-directed without introducing a full canvas/physics editor.
 
 **Trade-offs**
 - Less creative freedom than free-form placement.
@@ -218,6 +225,42 @@
 
 **Why not now**
 - High complexity for conflict handling and wallet/claim correctness.
+
+## D11. Lightweight marketing animation on login
+**Chosen**
+- Login uses a React Native view/text animation showing focus -> seeds -> room -> friends.
+
+**Why this instead of video/Lottie/large sprite sheets**
+- Keeps first-load weight low on GitHub Pages.
+- Works consistently on web/native through existing RN primitives.
+- Marketing value is gained without adding asset hosting or animation dependencies.
+
+**Trade-offs**
+- Less cinematic than rendered video.
+- Motion vocabulary is intentionally simple.
+
+**Alternative considered**
+- MP4/WebM hero video or Lottie animation.
+
+**Why not now**
+- More bytes on first load, more cross-platform handling, and higher risk of slowing the unauthenticated landing path.
+
+## D12. Branded loading shell during startup
+**Chosen**
+- App shows a branded CraftFocus loading shell while fonts/auth boot.
+
+**Why this instead of returning `null` or only a spinner**
+- Prevents the GitHub Pages first load from appearing broken or blank.
+- Gives users a stable app identity while Supabase/session bootstraps.
+
+**Trade-offs**
+- A slow backend can still delay authenticated data, but the page no longer looks empty.
+
+**Alternative considered**
+- Wait indefinitely for auth session resolution before rendering any route.
+
+**Why not now**
+- Bad perceived performance and poor failure mode when network/auth is slow.
 
 ---
 

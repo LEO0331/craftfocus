@@ -13,6 +13,7 @@
 - 後端：Supabase（Postgres + Auth + Storage + RLS + RPC）。
 - 資料權威來源：Postgres + RPC（交易敏感流程優先走伺服器）。
 - 客戶端備援：在部分 claim 流程加上 client-first fallback，降低 migration 不一致造成的中斷。
+- 啟動體驗：Web static export 會先顯示品牌 loading shell；登入頁也有輕量遊戲流程動畫，避免首屏像是空白或卡住。
 
 ### 關鍵邊界（bounded contexts）
 1. 身分與個人檔案
@@ -22,10 +23,11 @@
 2. 專注經濟系統
 - 專注結算透過 `award_seeds_for_session` RPC。
 - 種子由 `user_wallets` 管理，驅動後續兌換與成長。
+- 可見性策略嚴格：離開 Focus route、切換瀏覽器分頁或 App 進入背景，都會自動停止並以 `given_up` 結算。
 
 3. 物品與房間佈置
 - 官方物品兌換後累加 `user_inventory.quantity`。
-- 等角房間以 anchor 方式放置（`room_placements`）。
+- 2.5D 等角房間以 anchor 方式放置（`room_placements`）。
 - 自訂收藏品放在 5x5 收藏牆（`custom_gallery_placements`）。
 
 4. 手作清單/社群牆
@@ -35,6 +37,10 @@
 5. 夥伴動物系統
 - `animal_catalog` + `user_animals` + `active_animal_id`。
 - 以 ASCII 動畫呈現，降低跨平台渲染成本。
+
+6. 登入前導/行銷展示
+- 登入頁用 React Native view 與 `Animated` 呈現「專注 -> 種子 -> 房間 -> 好友」流程。
+- 不載入影片或大型行銷圖，避免影響首屏速度。
 
 ### 部署拓樸
 - Web 由 static export 部署到 GitHub Pages `/craftfocus`。
@@ -129,10 +135,11 @@
 
 ## D6. 房間採 anchor 吸附，不做自由拖曳
 **採用做法**
-- 物件放在預定 anchor。
+- 物件放在 2.5D 等角場景中的預定 anchor。
 
 **為什麼不做 free XY 拖放**
 - 跨平台穩定、規則可控、存取模型簡單。
+- 可以持續調整房間美術構圖，而不需要引入完整 canvas/物理編輯器。
 
 **取捨**
 - 自由度較低。
@@ -206,6 +213,42 @@
 
 **暫不採用原因**
 - 錢包與 claim 一致性風險高。
+
+## D11. 登入頁採輕量行銷動畫
+**採用做法**
+- 登入頁用 React Native view/text 動畫展示 focus -> seeds -> room -> friends。
+
+**為什麼不用影片、Lottie 或大型 sprite sheet**
+- GitHub Pages 首次載入更輕。
+- 直接沿用 RN primitives，Web/Native 行為一致。
+- 不增加資產 hosting 或動畫套件依賴。
+
+**取捨**
+- 視覺不像影片那麼華麗。
+- 動態語言刻意保持簡單。
+
+**替代方案**
+- MP4/WebM hero video 或 Lottie 動畫。
+
+**暫不採用原因**
+- 首屏 bytes 增加、跨平台處理變複雜，也可能拖慢未登入入口。
+
+## D12. 啟動時顯示品牌 loading shell
+**採用做法**
+- 字型/Auth 啟動期間顯示 CraftFocus 品牌 loading shell。
+
+**為什麼不回傳 `null` 或只有 spinner**
+- 避免 GitHub Pages 首次載入看起來壞掉或空白。
+- Supabase/session 啟動期間仍保有穩定品牌識別。
+
+**取捨**
+- 後端很慢時資料仍會延遲，但畫面不再像是無內容。
+
+**替代方案**
+- 無限等待 auth session 完成後才渲染 route。
+
+**暫不採用原因**
+- 感知效能差，且網路/auth 慢時失敗狀態不清楚。
 
 ---
 

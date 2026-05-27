@@ -1,0 +1,48 @@
+{
+  "features": [
+    {
+      "id": "feat-001",
+      "name": "Agent harness baseline",
+      "description": "Maintain AGENTS.md, feature_list.json, progress.md, init.sh, and session-handoff.md so future agents can start, verify, and resume safely.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "Harness files created/tailored for CraftFocus on 2026-05-27; validate-harness scored 100/100; npm test passed with 32 tests."
+    },
+    {
+      "id": "feat-002",
+      "name": "Web startup and login onboarding",
+      "description": "Branded startup loading shell and animated login game-flow preview for GitHub Pages web users.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "Implemented AppLoading and LoginGamePreview; verified previously with typecheck, unit tests, web export, E2E smoke, and browser smoke."
+    },
+    {
+      "id": "feat-003",
+      "name": "V2 gameplay and room systems",
+      "description": "Seed wallet economy, focus auto-stop, official/custom claims, 2.5D room placement, and custom collectible gallery.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "Current app/docs describe V2 canonical model; tests cover core pure logic and web smoke. Supabase behavior requires configured backend for full validation."
+    },
+    {
+      "id": "feat-004",
+      "name": "Documentation refresh",
+      "description": "README and architecture/E2E documentation aligned with current V2/PWA/login-preview behavior.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "README.md, docs/ARCHITECTURE_DEEP_DIVE_EN.md, docs/ARCHITECTURE_DEEP_DIVE_ZH-TW.md, and docs/E2E_REPORT.md updated on 2026-05-27; local doc links checked; npm test passed."
+    },
+    {
+      "id": "feat-005",
+      "name": "Future production verification",
+      "description": "Run authenticated deployed E2E and Lighthouse against the live GitHub Pages URL after the latest deploy.",
+      "dependencies": [
+        "feat-002",
+        "feat-003",
+        "feat-004"
+      ],
+      "status": "not-started",
+      "evidence": "Needs deployed app URL with Supabase env and E2E credentials."
+    }
+  ]
+}
