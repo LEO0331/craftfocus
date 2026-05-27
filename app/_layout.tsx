@@ -4,8 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import 'react-native-reanimated';
-
+import { AppLoading } from '@/components/AppLoading';
 import { theme } from '@/constants/theme';
 import { AuthProvider, RequireAuth } from '@/hooks/useAuth';
 import { I18nProvider, useI18n } from '@/hooks/useI18n';
@@ -13,7 +12,9 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 
 export { ErrorBoundary } from 'expo-router';
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -28,7 +29,7 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && Platform.OS !== 'web') {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
@@ -62,7 +63,7 @@ export default function RootLayout() {
   }, []);
 
   if (!loaded) {
-    return null;
+    return <AppLoading />;
   }
 
   return (

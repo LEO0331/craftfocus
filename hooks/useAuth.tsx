@@ -1,9 +1,8 @@
 import type { Session, User } from '@supabase/supabase-js';
 import { Redirect, useSegments } from 'expo-router';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { theme } from '@/constants/theme';
+import { AppLoading } from '@/components/AppLoading';
 import { signInWithEmail, signOut, signUpWithEmail } from '@/lib/auth';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
@@ -17,6 +16,7 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AUTH_BOOT_TIMEOUT_MS = 4000;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let resolved = false;
 
     if (!isSupabaseConfigured) {
       setSession(null);
@@ -33,6 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
+    const timeout = setTimeout(() => {
+      if (mounted && !resolved) {
+        setIsLoading(false);
+      }
+    }, AUTH_BOOT_TIMEOUT_MS);
+
     supabase.auth
       .getSession()
       .then(({ data }) => {
@@ -41,6 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .finally(() => {
+        resolved = true;
+        clearTimeout(timeout);
         if (mounted) {
           setIsLoading(false);
         }
@@ -53,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       subscription.subscription.unsubscribe();
     };
   }, []);
@@ -101,11 +111,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const inAuthGroup = segments[0] === 'auth';
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+    return <AppLoading message="Checking your session..." />;
   }
 
   if (!session && !inAuthGroup) {
@@ -118,12 +124,3 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-
-const styles = StyleSheet.create({
-  loadingWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background,
-  },
-});
