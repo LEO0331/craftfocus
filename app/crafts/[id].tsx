@@ -8,7 +8,7 @@ import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
-import { addComment, claimListingWithSeeds, getCraftPostDetail, toggleLike, type CraftPostDetail } from '@/lib/crafts';
+import { addComment, claimListingWithSeeds, getCraftPostDetail, setPostLike, type CraftPostDetail } from '@/lib/crafts';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { sanitizeText } from '@/lib/validation';
 import { ensureWallet, getWalletBalance } from '@/lib/wallet';
@@ -41,7 +41,7 @@ export default function CraftDetailScreen() {
   const handleToggleLike = async () => {
     if (!user?.id || !postId) return;
     try {
-      await toggleLike(postId, user.id);
+      await setPostLike(postId, user.id, !post?.liked_by_me);
       await loadPost();
     } catch (error) {
       Alert.alert(t('craft.detail.like'), error instanceof Error ? error.message : t('common.unknownError'));

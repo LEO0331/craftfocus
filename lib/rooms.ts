@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { ROOM_ANCHORS } from '@/constants/roomLayout';
+import { API_LIMITS } from '@/lib/api';
 import type { RoomType } from '@/types/models';
 
 export interface RoomPlacement {
@@ -33,7 +34,8 @@ export async function listMyRoom(userId: string): Promise<{ roomId: string; room
     .from('room_placements')
     .select('id,anchor_id,item_id')
     .eq('room_id', room.id)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(API_LIMITS.roomPlacementsDefault);
   if (error) throw error;
   return { roomId: room.id, roomType: room.room_type, placements: (data ?? []).map((row) => ({ id: row.id, anchor_id: row.anchor_id, item_id: row.item_id })) };
 }
@@ -42,7 +44,11 @@ export async function listPublicRoomLayout(userId: string): Promise<{ roomType: 
   const { data: room, error } = await supabase.from('rooms').select('id,room_type').eq('user_id', userId).maybeSingle();
   if (error || !room?.id) return { roomType: 'bedroom', placements: [] };
 
-  const { data, error: pError } = await supabase.from('room_placements').select('id,anchor_id,item_id').eq('room_id', room.id);
+  const { data, error: pError } = await supabase
+    .from('room_placements')
+    .select('id,anchor_id,item_id')
+    .eq('room_id', room.id)
+    .limit(API_LIMITS.roomPlacementsDefault);
   if (pError) throw pError;
 
   return { roomType: room.room_type ?? 'bedroom', placements: (data ?? []).map((row) => ({ id: row.id, anchor_id: row.anchor_id, item_id: row.item_id })) };

@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-import { claimListingWithSeeds, claimOfficialInventoryItem } from '@/lib/crafts';
+import { claimListingWithSeeds, claimOfficialInventoryItem, setPostLike } from '@/lib/crafts';
 
 describe('craft claim APIs', () => {
   beforeEach(() => {
@@ -45,5 +45,31 @@ describe('craft claim APIs', () => {
 
     await expect(claimListingWithSeeds('listing-1')).rejects.toThrow('Not enough seeds');
     expect(mocks.from).not.toHaveBeenCalled();
+  });
+
+  it('sets likes idempotently instead of toggling on retry', async () => {
+    const upsert = vi.fn().mockResolvedValueOnce({ error: null });
+    mocks.from.mockReturnValueOnce({ upsert });
+
+    await expect(setPostLike('post-1', 'user-1', true)).resolves.toEqual({ liked: true });
+
+    expect(mocks.from).toHaveBeenCalledWith('likes');
+    expect(upsert).toHaveBeenCalledWith(
+      { user_id: 'user-1', craft_post_id: 'post-1' },
+      { onConflict: 'user_id,craft_post_id', ignoreDuplicates: true },
+    );
+  });
+
+  it('unsets likes idempotently by user and post', async () => {
+    const secondEq = vi.fn().mockResolvedValueOnce({ error: null });
+    const firstEq = vi.fn().mockReturnValueOnce({ eq: secondEq });
+    const deleteFn = vi.fn().mockReturnValueOnce({ eq: firstEq });
+    mocks.from.mockReturnValueOnce({ delete: deleteFn });
+
+    await expect(setPostLike('post-1', 'user-1', false)).resolves.toEqual({ liked: false });
+
+    expect(deleteFn).toHaveBeenCalled();
+    expect(firstEq).toHaveBeenCalledWith('craft_post_id', 'post-1');
+    expect(secondEq).toHaveBeenCalledWith('user_id', 'user-1');
   });
 });

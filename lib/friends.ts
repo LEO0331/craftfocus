@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { API_LIMITS } from '@/lib/api';
 import type { TableRow } from '@/types/database';
 
 type ProfileRow = TableRow<'profiles'>;
@@ -120,7 +121,8 @@ export async function listFriendships(currentUserId: string): Promise<FriendList
     .from('friendships')
     .select('id,requester_id,addressee_id,status,created_at')
     .or(`requester_id.eq.${currentUserId},addressee_id.eq.${currentUserId}`)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(API_LIMITS.friendshipsDefault);
 
   if (error) {
     throw error;

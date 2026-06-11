@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { isValidGalleryCell } from '@/lib/galleryUtils';
+import { API_LIMITS } from '@/lib/api';
 import type { TableRow } from '@/types/database';
 import type { CustomGalleryPlacement, GalleryItem } from '@/types/models';
 
@@ -23,7 +24,8 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
     .from('custom_collectibles')
     .select('listing_id,image_url,pixel_image_url')
     .eq('user_id', userId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(API_LIMITS.galleryDefault);
   if (collectiblesError) throw collectiblesError;
 
   const ownedFromCollectibles = new Set((collectibles ?? []).map((entry) => entry.listing_id));
@@ -32,7 +34,8 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
   const { data: claims, error: claimsError } = await supabase
     .from('listing_claims')
     .select('listing_id')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .limit(API_LIMITS.galleryDefault);
   if (claimsError) throw claimsError;
 
   const claimListingIds = (claims ?? []).map((entry: Pick<ListingClaimRow, 'listing_id'>) => entry.listing_id);
@@ -79,7 +82,8 @@ export async function listGalleryPlacements(userId: string): Promise<CustomGalle
     .from('custom_gallery_placements')
     .select('id,user_id,listing_id,cell_x,cell_y')
     .eq('user_id', userId)
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .limit(API_LIMITS.galleryDefault);
   if (error) throw error;
   return (data ?? []).map((row) => mapPlacement(row as CustomGalleryPlacementRow));
 }

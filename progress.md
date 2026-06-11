@@ -60,3 +60,19 @@
 ## Notes for Next Session
 
 Start by reading `AGENTS.md`, then `feature_list.json`, then this file. Do not rely on chat history for feature state.
+
+## 2026-06-11 API Review Pass
+
+- Applied Stripe-style API review to the internal Supabase service layer.
+- Added shared API helpers for list limits and Supabase error formatting.
+- Added idempotent `setPostLike(postId, userId, liked)` and switched craft detail UI away from retry-unsafe toggle behavior.
+- Added explicit limits to room, gallery, friendship, comment, and craft-feed reads.
+- Added `docs/API_DESIGN_REVIEW.md` and linked it from README.
+
+Evidence:
+
+- `npx tsc --noEmit` passed.
+- `npm test` passed: 11 files / 36 tests.
+- `npm run e2e:build` passed after API review changes.
+- `npm run test:e2e` passed: 2 passed / 2 skipped credential-gated specs.
+- README/API doc links resolved.

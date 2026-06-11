@@ -122,6 +122,7 @@ More detail:
 
 - [Architecture Deep Dive (English)](./docs/ARCHITECTURE_DEEP_DIVE_EN.md)
 - [架構深度解析（繁體中文）](./docs/ARCHITECTURE_DEEP_DIVE_ZH-TW.md)
+- [API Design Review](./docs/API_DESIGN_REVIEW.md)
 - [E2E Test Report](./docs/E2E_REPORT.md)
 
 ## Quick Start

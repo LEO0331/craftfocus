@@ -43,6 +43,16 @@
       ],
       "status": "not-started",
       "evidence": "Needs deployed app URL with Supabase env and E2E credentials."
+    },
+    {
+      "id": "feat-006",
+      "name": "Stripe-style API safety review",
+      "description": "Review internal Supabase service API surface for retry safety, list bounds, error consistency, and documentation.",
+      "dependencies": [
+        "feat-001"
+      ],
+      "status": "done",
+      "evidence": "Added lib/api.ts helpers, idempotent setPostLike, explicit service list limits, API design review doc; npx tsc --noEmit, npm test (36 tests), npm run e2e:build, and npm run test:e2e (2 passed / 2 skipped) passed on 2026-06-11."
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { TableRow } from '@/types/database';
 import { sanitizeText } from '@/lib/validation';
+import { API_LIMITS, mutationError, normalizeListLimit } from '@/lib/api';
 
 type ProfileRow = TableRow<'profiles'>;
 type CraftPostRow = TableRow<'craft_posts'>;
@@ -53,20 +54,14 @@ function countByPostId<T extends { craft_post_id: string }>(rows: T[]) {
   return map;
 }
 
-function formatSupabaseError(input: unknown): string {
-  const e = input as { message?: string; details?: string; hint?: string; code?: string };
-  const parts = [e.message, e.details, e.hint].filter((v): v is string => Boolean(v && v.trim()));
-  const suffix = e.code ? ` [${e.code}]` : '';
-  return `${parts.join(' | ') || 'Unknown error'}${suffix}`;
-}
-
-export async function listCraftPosts(currentUserId?: string): Promise<CraftFeedItem[]> {
+export async function listCraftPosts(currentUserId?: string, options?: { limit?: number }): Promise<CraftFeedItem[]> {
+  const limit = normalizeListLimit(options?.limit, API_LIMITS.craftFeedDefault, API_LIMITS.craftFeedMax);
   const { data: posts, error: postsError } = await supabase
     .from('craft_posts')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
-    .limit(40);
+    .limit(limit);
 
   if (postsError) throw postsError;
   if (!posts?.length) return [];
@@ -161,7 +156,12 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
     currentUserId
       ? supabase.from('likes').select('id').eq('craft_post_id', postId).eq('user_id', currentUserId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    supabase.from('comments').select('*').eq('craft_post_id', postId).order('created_at', { ascending: true }),
+    supabase
+      .from('comments')
+      .select('*')
+      .eq('craft_post_id', postId)
+      .order('created_at', { ascending: true })
+      .limit(API_LIMITS.commentsDefault),
     currentUserId
       ? supabase.from('listing_claims').select('id').eq('listing_id', postId).eq('user_id', currentUserId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -208,15 +208,29 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
 export async function claimListingWithSeeds(listingId: string) {
   const { error } = await supabase.rpc('claim_listing_with_seeds', { p_listing_id: listingId });
   if (error) {
-    throw new Error(`Listing claim failed. ${formatSupabaseError(error)}`);
+    throw mutationError('Listing claim failed', error);
   }
 }
 
 export async function claimOfficialInventoryItem(itemId: string) {
   const { error } = await supabase.rpc('claim_official_inventory_item_v2', { p_item_id: itemId });
   if (error) {
-    throw new Error(`Official claim failed. ${formatSupabaseError(error)}`);
+    throw mutationError('Official claim failed', error);
   }
+}
+
+export async function setPostLike(postId: string, userId: string, liked: boolean) {
+  if (liked) {
+    const { error } = await supabase
+      .from('likes')
+      .upsert({ user_id: userId, craft_post_id: postId }, { onConflict: 'user_id,craft_post_id', ignoreDuplicates: true });
+    if (error) throw error;
+    return { liked: true };
+  }
+
+  const { error } = await supabase.from('likes').delete().eq('craft_post_id', postId).eq('user_id', userId);
+  if (error) throw error;
+  return { liked: false };
 }
 
 export async function toggleLike(postId: string, userId: string) {
