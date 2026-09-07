@@ -1,5 +1,6 @@
+import { Alert } from '@/lib/alert';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';

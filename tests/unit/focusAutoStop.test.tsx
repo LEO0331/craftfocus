@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => {
   const platform = { OS: 'web' as 'web' | 'ios' | 'android' };
   const alertMock = vi.fn();
+  const startFocusSessionMock = vi.fn(async () => 'session-1');
   const emitTopStatusRefreshMock = vi.fn();
   const submitFocusSessionMock = vi.fn(async (input: { status: string }) => ({
     coins: input.status === 'given_up' ? 5 : 25,
@@ -16,6 +17,7 @@ const mocks = vi.hoisted(() => {
   return {
     platform,
     alertMock,
+    startFocusSessionMock,
     emitTopStatusRefreshMock,
     submitFocusSessionMock,
     navigationAddListenerMock,
@@ -86,6 +88,7 @@ vi.mock('@/hooks/useProfile', () => ({
 
 vi.mock('@/hooks/useFocusSession', () => ({
   useFocusSession: () => ({
+    startFocusSession: mocks.startFocusSessionMock,
     submitFocusSession: mocks.submitFocusSessionMock,
     isSaving: false,
   }),
@@ -302,5 +305,35 @@ describe('Focus auto-stop policy', () => {
     });
 
     expect(mocks.submitFocusSessionMock).toHaveBeenCalledTimes(0);
+  });
+
+  it('cancels a server session when navigation leaves while start is pending', async () => {
+    let resolveStart!: (id: string) => void;
+    mocks.startFocusSessionMock.mockImplementationOnce(() => new Promise<string>((resolve) => { resolveStart = resolve; }));
+    let renderer: any;
+    await act(async () => { renderer = TestRenderer.create(<FocusScreen />); });
+    await act(async () => { findButtonByLabel(renderer.root, 'Start Focus')?.props.onPress(); });
+    expect(renderer.root.findAllByType('FocusTimer')).toHaveLength(0);
+    await act(async () => { blurHandler?.(); resolveStart('late-session'); await flush(); });
+    expect(mocks.submitFocusSessionMock).toHaveBeenCalledWith({ sessionId: 'late-session', status: 'given_up' });
+    expect(renderer.root.findAllByType('FocusTimer')).toHaveLength(0);
+  });
+
+  it('retries a failed completion with the same session ID and status', async () => {
+    let renderer: any;
+    await act(async () => { renderer = TestRenderer.create(<FocusScreen />); });
+    await act(async () => { findButtonByLabel(renderer.root, 'Start Focus')?.props.onPress(); await flush(); });
+    mocks.submitFocusSessionMock.mockRejectedValueOnce(new Error('Offline'));
+    await act(async () => { renderer.root.findByType('FocusTimer').props.onCompleted(); await flush(); });
+    expect(findButtonByLabel(renderer.root, 'Start Focus').props.disabled).toBe(true);
+    const retry = findButtonByLabel(renderer.root, 'focus.retrySave');
+    expect(retry).toBeDefined();
+    await act(async () => { retry.props.onPress(); await flush(); });
+    expect(mocks.submitFocusSessionMock.mock.calls.map(([input]) => input)).toEqual([
+      { sessionId: 'session-1', status: 'completed' },
+      { sessionId: 'session-1', status: 'completed' },
+    ]);
+    expect(findButtonByLabel(renderer.root, 'focus.retrySave')).toBeUndefined();
+    expect(findButtonByLabel(renderer.root, 'Start Focus').props.disabled).toBe(false);
   });
 });

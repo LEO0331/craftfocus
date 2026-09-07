@@ -22,11 +22,20 @@ const contentTypes = {
   '.ttf': 'font/ttf',
 };
 
-function resolvePath(requestPath) {
-  const clean = (requestPath || '/').split('?')[0];
+export function resolvePath(requestPath) {
+  let clean;
+  try {
+    clean = decodeURIComponent((requestPath || '/').split('?')[0]);
+  } catch {
+    return { filePath: null, status: 400 };
+  }
   const routePath = clean === '/craftfocus' ? '/' : clean.replace(/^\/craftfocus(?=\/)/, '');
   const rel = routePath.replace(/^\/+/, '');
   const candidate = path.join(root, rel);
+  const relative = path.relative(root, candidate);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative) || clean.includes('\\') || clean.includes('\0')) {
+    return { filePath: null, status: 403 };
+  }
   const hasFileExtension = path.extname(rel).length > 0;
 
   if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
@@ -40,6 +49,11 @@ function resolvePath(requestPath) {
 
   if (hasFileExtension) {
     return { filePath: null, status: 404 };
+  }
+
+  const exportedPage = `${candidate}.html`;
+  if (fs.existsSync(exportedPage) && fs.statSync(exportedPage).isFile()) {
+    return { filePath: exportedPage, status: 200 };
   }
 
   return { filePath: path.join(root, 'index.html'), status: 200 };
@@ -67,6 +81,8 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(port, host, () => {
-  console.log(`Static server running at http://${host}:${port}`);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === url.fileURLToPath(import.meta.url)) {
+  server.listen(port, host, () => {
+    console.log(`Static server running at http://${host}:${port}`);
+  });
+}

@@ -10,8 +10,8 @@ const text = {
   focusHeading: /Focus Session|專注/, 
   focusInProgress: /Focus In Progress|專注進行中/,
   dontInterrupt: /Do not interrupt me|請勿打擾我/,
-  devComplete: /Dev: Complete Now|開發：立即完成/,
-  greatFocus: /Great focus\.|專注完成/, 
+  stopFocus: /Stop Focus|停止專注/,
+  stoppedFocus: /Focus stopped\.|已停止，/,
   roomHeading: /My Focus Room|我的專注房間/,
   roomGallery: /Collectible Gallery|收藏展牆/,
   noCollectibles: /No custom collectibles yet\.|目前沒有自訂收藏。/,
@@ -47,8 +47,8 @@ test('v2.2 flow: header status, focus timer, official claim, gallery surface', a
   const after = (await timer.textContent()) ?? '';
   expect(after).not.toEqual(before);
 
-  await page.getByRole('button', { name: text.devComplete }).click();
-  await expect(page.getByText(text.greatFocus)).toBeVisible({ timeout: 15000 });
+  await page.getByRole('button', { name: text.stopFocus }).click();
+  await expect(page.getByText(text.stoppedFocus)).toBeVisible({ timeout: 15000 });
 
   await page.goto('crafts');
   await expect(page.getByText(text.craftsHeading)).toBeVisible();

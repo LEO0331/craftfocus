@@ -15,7 +15,6 @@ interface FocusTimerProps {
   title: string;
   subtitle: string;
   stopLabel: string;
-  devCompleteLabel: string;
 }
 
 export function FocusTimer({
@@ -27,7 +26,6 @@ export function FocusTimer({
   title,
   subtitle,
   stopLabel,
-  devCompleteLabel,
 }: FocusTimerProps) {
   const [remaining, setRemaining] = useState(totalSeconds);
   const [hourglassFrame, setHourglassFrame] = useState(0);
@@ -102,7 +100,6 @@ export function FocusTimer({
         <Button label={stopLabel} onPress={onStop} variant="danger" />
       </View>
 
-      <Button label={devCompleteLabel} onPress={onCompleted} />
     </Card>
   );
 }

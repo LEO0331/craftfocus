@@ -1,12 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
 const externalBaseURL = process.env.E2E_BASE_URL;
+const localOrigin = `http://127.0.0.1:${process.env.PORT || 4173}`;
 
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 90_000,
   use: {
-    baseURL: externalBaseURL || 'http://127.0.0.1:4173/craftfocus',
+    baseURL: `${(externalBaseURL || `${localOrigin}/craftfocus`).replace(/\/+$/, '')}/`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -14,9 +15,9 @@ export default defineConfig({
     ? undefined
     : {
         command: 'npm run e2e:serve',
-        url: 'http://127.0.0.1:4173',
+        url: localOrigin,
         timeout: 120_000,
-        reuseExistingServer: true,
+        reuseExistingServer: false,
       },
   projects: [
     {

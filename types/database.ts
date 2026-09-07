@@ -289,8 +289,12 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       award_seeds_for_session: {
-        Args: { p_duration_minutes: number; p_status: string; p_mode?: Database['public']['Enums']['focus_mode'] };
+        Args: { p_session_id: string; p_status: string };
         Returns: { coins: number; seeds_balance: number }[];
+      };
+      start_focus_session: {
+        Args: { p_duration_minutes: number; p_mode: Database['public']['Enums']['focus_mode'] };
+        Returns: string;
       };
       claim_listing_with_seeds: {
         Args: { p_listing_id: string };

@@ -1,5 +1,6 @@
+import { Alert } from '@/lib/alert';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { AppState, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { Button } from '@/components/Button';
@@ -22,16 +23,24 @@ export default function FocusScreen() {
   const { profile } = useProfile();
   const navigation = useNavigation();
   const [duration, setDuration] = useState<(typeof FOCUS_DURATIONS)[number]>(25);
+  const [startedDuration, setStartedDuration] = useState(25);
   const [activityMode, setActivityMode] = useState<'sewing' | 'training'>('sewing');
   const [isRunning, setIsRunning] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [resultText, setResultText] = useState<string | null>(null);
+  const [pendingFinish, setPendingFinish] = useState<{ status: 'completed' | 'given_up'; reason: 'manual' | 'left_focus' } | null>(null);
   const [animalSpecies, setAnimalSpecies] = useState<'cat' | 'dog' | 'rabbit' | 'fox'>('cat');
   const [animFrame, setAnimFrame] = useState(0);
   const isRunningRef = useRef(false);
   const isStoppingRef = useRef(false);
   const hasEndedRef = useRef(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const startingRef = useRef(false);
+  const canceledStartRef = useRef(false);
 
-  const { submitFocusSession, isSaving } = useFocusSession();
+  const { startFocusSession, submitFocusSession, isSaving } = useFocusSession();
+
+  useEffect(() => () => { canceledStartRef.current = true; }, []);
 
   const loadAnimalSpecies = useCallback(async () => {
     if (!user?.id) {
@@ -73,7 +82,7 @@ export default function FocusScreen() {
     return () => clearInterval(timer);
   }, [isRunning]);
 
-  const durationSeconds = useMemo(() => duration * 60, [duration]);
+  const durationSeconds = useMemo(() => startedDuration * 60, [startedDuration]);
   const asciiArt = useMemo(
     () => resolveAsciiAnimalFrame(animalSpecies, activityMode, animFrame),
     [animalSpecies, activityMode, animFrame]
@@ -94,7 +103,7 @@ export default function FocusScreen() {
   );
 
   const handleFinish = useCallback(async (status: 'completed' | 'given_up', reason: 'manual' | 'left_focus' = 'manual') => {
-    if (hasEndedRef.current || isStoppingRef.current) {
+    if (hasEndedRef.current || isStoppingRef.current || !sessionIdRef.current) {
       return;
     }
     hasEndedRef.current = true;
@@ -102,8 +111,7 @@ export default function FocusScreen() {
 
     try {
       const reward = await submitFocusSession({
-        durationMinutes: duration,
-        mode: activityMode === 'sewing' ? 'sewing' : 'crafting',
+        sessionId: sessionIdRef.current,
         status,
       });
 
@@ -113,9 +121,12 @@ export default function FocusScreen() {
           : t('focus.result.stopped', { coins: reward.coins, balance: reward.seedsBalance });
       const detail = status === 'given_up' && reason === 'left_focus' ? t('focus.result.autoStoppedHint') : null;
       setResultText(detail ? `${summary}\n${detail}` : summary);
+      setPendingFinish(null);
       emitTopStatusRefresh();
       setIsRunning(false);
     } catch (error) {
+      hasEndedRef.current = false;
+      setPendingFinish({ status, reason });
       Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : t('common.unknownError'));
       setIsRunning(false);
     } finally {
@@ -124,6 +135,10 @@ export default function FocusScreen() {
   }, [activityMode, duration, submitFocusSession, t]);
 
   const autoStopSession = useCallback((reason: 'left_focus') => {
+    if (startingRef.current) {
+      canceledStartRef.current = true;
+      return;
+    }
     if (!isRunningRef.current || hasEndedRef.current || isStoppingRef.current) {
       return;
     }
@@ -131,7 +146,7 @@ export default function FocusScreen() {
   }, [handleFinish]);
 
   useEffect(() => {
-    if (!isRunning) {
+    if (!isRunning && !isStarting) {
       return;
     }
 
@@ -140,10 +155,10 @@ export default function FocusScreen() {
     });
 
     return unsubscribeBlur;
-  }, [autoStopSession, isRunning, navigation]);
+  }, [autoStopSession, isRunning, isStarting, navigation]);
 
   useEffect(() => {
-    if (!isRunning || Platform.OS !== 'web' || typeof document === 'undefined') {
+    if ((!isRunning && !isStarting) || Platform.OS !== 'web' || typeof document === 'undefined') {
       return;
     }
 
@@ -155,10 +170,10 @@ export default function FocusScreen() {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, [autoStopSession, isRunning]);
+  }, [autoStopSession, isRunning, isStarting]);
 
   useEffect(() => {
-    if (!isRunning || Platform.OS === 'web') {
+    if ((!isRunning && !isStarting) || Platform.OS === 'web') {
       return;
     }
 
@@ -169,7 +184,35 @@ export default function FocusScreen() {
     });
 
     return () => subscription.remove();
-  }, [autoStopSession, isRunning]);
+  }, [autoStopSession, isRunning, isStarting]);
+
+  const handleStart = async () => {
+    if (startingRef.current || isRunningRef.current || isSaving || pendingFinish) return;
+    startingRef.current = true;
+    canceledStartRef.current = false;
+    setIsStarting(true);
+    setStartedDuration(duration);
+    setResultText(null);
+    const nextMode = Math.random() > 0.5 ? 'sewing' : 'training';
+    try {
+      const sessionId = await startFocusSession(duration, nextMode === 'sewing' ? 'sewing' : 'crafting');
+      if (canceledStartRef.current || (Platform.OS === 'web' && typeof document !== 'undefined' && document.hidden)) {
+        await submitFocusSession({ sessionId, status: 'given_up' });
+        return;
+      }
+      sessionIdRef.current = sessionId;
+      hasEndedRef.current = false;
+      isStoppingRef.current = false;
+      setActivityMode(nextMode);
+      isRunningRef.current = true;
+      setIsRunning(true);
+    } catch (error) {
+      Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      startingRef.current = false;
+      setIsStarting(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -186,14 +229,13 @@ export default function FocusScreen() {
 
           <Button
             label={t('focus.start')}
-            onPress={() => {
-              hasEndedRef.current = false;
-              isStoppingRef.current = false;
-              setActivityMode(Math.random() > 0.5 ? 'sewing' : 'training');
-              setIsRunning(true);
-            }}
-            disabled={isSaving}
+            onPress={() => { void handleStart(); }}
+            disabled={isSaving || isStarting || Boolean(pendingFinish)}
           />
+          {pendingFinish ? (
+            <Button label={t('focus.retrySave')} disabled={isSaving}
+              onPress={() => { void handleFinish(pendingFinish.status, pendingFinish.reason); }} />
+          ) : null}
           {resultText ? <Text style={styles.result}>{resultText}</Text> : null}
         </Card>
       ) : (
@@ -204,7 +246,6 @@ export default function FocusScreen() {
           title={t('focus.timer.title')}
           subtitle={t('focus.timer.subtitle')}
           stopLabel={t('focus.timer.stop')}
-          devCompleteLabel={t('focus.timer.devComplete')}
           onCompleted={() => {
             void handleFinish('completed');
           }}

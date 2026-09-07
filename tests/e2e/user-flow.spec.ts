@@ -29,8 +29,8 @@ test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) =>
   await page.getByRole('button', { name: 'Start Focus' }).click();
   await expect(page.getByText(/Focus In Progress|專注進行中/)).toBeVisible();
   await expect(page.getByText(/Do not interrupt me|請勿打擾我/)).toBeVisible();
-  await page.getByRole('button', { name: /Dev: Complete Now|開發：立即完成/ }).click();
-  await expect(page.getByText(/Great focus\./)).toBeVisible();
+  await page.getByRole('button', { name: /Stop Focus|停止專注/ }).click();
+  await expect(page.getByText(/Focus stopped\.|已停止，/)).toBeVisible();
   await snap(page, 'v2-02-focus.png');
 
   await page.goto('profile');

@@ -1,8 +1,9 @@
+import { Alert } from '@/lib/alert';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, router, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';

@@ -26,8 +26,8 @@ export async function pixelizeImage(inputUri: string): Promise<string> {
 
         const baseSize = 48;
         const ratio = img.width / img.height || 1;
-        const tinyWidth = Math.max(16, Math.round(baseSize * ratio));
-        const tinyHeight = Math.max(16, Math.round(baseSize / ratio));
+        const tinyWidth = Math.max(1, Math.round(baseSize * Math.min(1, ratio)));
+        const tinyHeight = Math.max(1, Math.round(baseSize * Math.min(1, 1 / ratio)));
 
         tinyCanvas.width = tinyWidth;
         tinyCanvas.height = tinyHeight;
