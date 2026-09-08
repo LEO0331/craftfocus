@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   eyebrow: {
-    color: theme.colors.primary,
+    color: theme.colors.primaryDark,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1.6,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     borderColor: '#9FBD7E',
   },
   seedText: {
-    color: theme.colors.accent,
+    color: '#326A48',
     fontSize: 15,
     fontWeight: '900',
     fontFamily: theme.typography.body,

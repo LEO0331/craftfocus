@@ -62,7 +62,7 @@ export default function LoginScreen() {
               style={styles.input}
               accessibilityLabel={t('auth.password')}
               textContentType="password"
-              autoComplete="password"
+              autoComplete="current-password"
             />
 
             <Button label={t('auth.login')} onPress={handleLogin} disabled={submitting || isLoading} />

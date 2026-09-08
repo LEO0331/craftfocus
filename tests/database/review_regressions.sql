@@ -2,6 +2,8 @@
 begin;
 insert into public.item_catalog(id,name,category) values ('plant','Plant','decor'),('desk_lamp','Lamp','decor'),('bookshelf','Shelf','decor') on conflict do nothing;
 insert into auth.users(id) values ('10000000-0000-0000-0000-000000000001'),('20000000-0000-0000-0000-000000000002');
+insert into public.craft_posts(user_id,title,description,category,image_url)
+values('20000000-0000-0000-0000-000000000002','Exchange','','craft','https://example.com/b');
 insert into public.user_inventory(user_id,item_id,quantity) values
 ('10000000-0000-0000-0000-000000000001','plant',2),('10000000-0000-0000-0000-000000000001','desk_lamp',1)
 on conflict (user_id,item_id) do update set quantity=excluded.quantity;
@@ -14,7 +16,7 @@ begin
 end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
-do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; begin
+do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange_id uuid; begin
   select id into r from public.rooms where user_id = auth.uid();
   perform public.place_inventory_at_anchor(r,'plant','test-anchor');
   perform public.place_inventory_at_anchor(r,'desk_lamp','test-anchor');
@@ -34,6 +36,19 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; begin
   perform pg_temp.expect_error($q$insert into public.craft_posts(user_id,title,description,category,image_url,listing_type,reward_item_id,seed_cost) values(auth.uid(),'Forged','','craft','https://example.com/a','catalog','plant',1)$q$);
   insert into public.craft_posts(user_id,title,description,category,image_url) values(auth.uid(),'Custom','','craft','https://example.com/a');
   perform pg_temp.expect_error($q$update public.craft_posts set listing_type='catalog',reward_item_id='plant' where user_id=auth.uid()$q$);
+  update public.user_animals set animal_id='dog' where user_id=auth.uid();
+  assert not exists(select 1 from public.user_animals where user_id=auth.uid() and animal_id='dog'),
+    'Direct companion ownership mutation must affect no rows';
+  perform pg_temp.expect_error($q$update public.profiles set active_animal_id='dog' where id=auth.uid()$q$);
+  perform public.set_active_animal('cat');
+  select id into post_id from public.craft_posts
+  where user_id='20000000-0000-0000-0000-000000000002' and title='Exchange';
+  perform pg_temp.expect_error(format(
+    'insert into public.exchange_requests(requester_id,owner_id,craft_post_id,status) values(auth.uid(),%L,%L,%L)',
+    '20000000-0000-0000-0000-000000000002',post_id,'accepted'));
+  insert into public.exchange_requests(requester_id,owner_id,craft_post_id,status)
+  values(auth.uid(),'20000000-0000-0000-0000-000000000002',post_id,'pending') returning id into exchange_id;
+  perform pg_temp.expect_error(format('update public.exchange_requests set status=%L where id=%L','accepted',exchange_id));
   perform pg_temp.expect_error($q$insert into public.focus_sessions(user_id,duration_minutes,status) values(auth.uid(),60,'completed')$q$);
   perform pg_temp.expect_error($q$select public.award_seeds_for_session(60,'completed','general')$q$);
   s := public.start_focus_session(25,'general');
@@ -49,8 +64,10 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; begin
 end $$;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000002',true);
 update public.friendships set status='accepted' where addressee_id=auth.uid();
+update public.exchange_requests set status='accepted' where owner_id=auth.uid();
 do $$ begin
   assert exists(select 1 from public.friendships where addressee_id=auth.uid() and status='accepted'), 'Recipient can accept';
+  assert exists(select 1 from public.exchange_requests where owner_id=auth.uid() and status='accepted'), 'Craft owner can accept';
   perform pg_temp.expect_error($q$select public.remove_room_placement('00000000-0000-0000-0000-000000000000')$q$);
 end $$;
 reset role;

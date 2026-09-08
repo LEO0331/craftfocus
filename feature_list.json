@@ -53,6 +53,17 @@
       ],
       "status": "done",
       "evidence": "Added lib/api.ts helpers, idempotent setPostLike, explicit service list limits, API design review doc; npx tsc --noEmit, npm test (36 tests), npm run e2e:build, and npm run test:e2e (2 passed / 2 skipped) passed on 2026-06-11."
+    },
+    {
+      "id": "feat-007",
+      "name": "Whole-project correctness and security review",
+      "description": "Review frontend, service, database, PWA, test, and build paths; repair confirmed correctness, authorization, retry, and cross-platform issues.",
+      "dependencies": [
+        "feat-003",
+        "feat-006"
+      ],
+      "status": "done",
+      "evidence": "Review passes on 2026-09-07/08 fixed focus reward authority/retry, room inventory races, forged catalog listings, friendship/exchange consent, companion authority, web alerts, pixel preview bounds, preview-server traversal, isolated E2E ports, and Windows Lighthouse execution. TypeScript, 55 unit tests, web export, browser smoke, fresh PostgreSQL migrations/regressions, concurrency checks, and Lighthouse completed."
     }
   ]
 }
