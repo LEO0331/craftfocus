@@ -72,8 +72,8 @@
       "dependencies": [
         "feat-007"
       ],
-      "status": "in-progress",
-      "evidence": "Live GitHub Pages returned HTTP 200, but its deployed Supabase hostname zhiuvtldfgbqmydgrksh.supabase.co returned DNS NXDOMAIN on 2026-09-08. Added actionable auth outage errors, deployment health preflight, tests, and recovery instructions. A valid Supabase project URL/public key are still required."
+      "status": "done",
+      "evidence": "Recovered on 2026-09-08 using healthy project dotbjffrepidvlmokhgl. Applied all 25 migrations, saved the GitHub Pages Auth site/redirect URLs, replaced both GitHub Actions secrets, and completed deployment #72 successfully. The live bundle contains the new project and not the dead one; Auth health returned 200, email signup is enabled, and the signup endpoint returned normal validation rather than a network failure."
     }
   ]
 }

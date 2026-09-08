@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Local fixes complete; live backend recovery requires Supabase project access.
+- Current status: Complete, including live backend recovery and GitHub Pages deployment #72.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session
@@ -52,4 +52,4 @@
 
 ## Recommended Next Step
 
-- Follow `docs/SUPABASE_DEPLOYMENT_RECOVERY.md`: recover or create the Supabase project, apply migrations, replace both GitHub Actions secrets, redeploy, then run authenticated signup/E2E.
+- Confirm a real signup using an inbox you control, then run the credential-gated authenticated E2E suite.

@@ -3,8 +3,8 @@
 ## Current State
 
 **Last Updated:** 2026-09-08 Asia/Taipei
-**Active Feature:** feat-008 - Production signup backend recovery
-**Last Completed Feature:** feat-007 - Whole-project correctness and security review
+**Active Feature:** none
+**Last Completed Feature:** feat-008 - Production signup backend recovery
 
 ## What's Done
 
@@ -106,9 +106,13 @@ Evidence:
 - `npm run e2e:build` passed: 21 static routes.
 - `PORT=4195 npm run test:e2e` passed: 2 smoke tests / 2 credential-gated tests skipped.
 
-Blocker:
+Recovery completed:
 
-- Restoring live signup requires access to a valid Supabase project and updating the repository's two GitHub Actions secrets before redeployment.
+- Project `dotbjffrepidvlmokhgl` is healthy and all 25 migrations were applied successfully in one transaction. Critical REST tables return HTTP 200.
+- Saved Supabase Auth Site URL and redirect URL as `https://leo0331.github.io/craftfocus/`.
+- Replaced both GitHub Actions Supabase secrets and completed Pages deployment #72 successfully.
+- Verified the live HTTP 200 bundle contains the new project URL and no reference to the deleted project.
+- Verified Auth health HTTP 200, email signup enabled, signup enabled globally, and normal signup validation responses.
 
 ## 2026-06-11 API Review Pass
 

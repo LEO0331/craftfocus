@@ -1,9 +1,10 @@
 # Supabase Deployment Recovery
 
-The GitHub Pages app is static and currently loads correctly. Account creation
-depends on a separate Supabase project. The previously deployed project URL,
-`https://zhiuvtldfgbqmydgrksh.supabase.co`, no longer resolves in DNS, so login
-and signup cannot reach Supabase Auth.
+The September 8, 2026 signup outage was caused by a deleted or obsolete
+Supabase project URL. Recovery completed using project `dotbjffrepidvlmokhgl`,
+with all migrations applied, Auth URLs configured, GitHub secrets replaced, and
+GitHub Pages deployment #72 verified. Keep this procedure as the recovery
+runbook for future backend replacements.
 
 ## Restore the backend
 
