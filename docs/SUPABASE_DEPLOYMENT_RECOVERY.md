@@ -6,6 +6,11 @@ with all migrations applied, Auth URLs configured, GitHub secrets replaced, and
 GitHub Pages deployment #72 verified. Keep this procedure as the recovery
 runbook for future backend replacements.
 
+The first recovery attempt exposed a missing catalog seed: new-user creation
+grants a starter `plant`, but that row previously lived only in the optional
+manual seed file. Migration `20260908120000_seed_required_item_catalog.sql`
+now installs all required official items during every fresh deployment.
+
 ## Restore the backend
 
 1. Create or recover a Supabase project.

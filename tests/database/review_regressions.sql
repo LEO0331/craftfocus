@@ -1,5 +1,9 @@
 -- Run after all migrations in a disposable database: psql -v ON_ERROR_STOP=1 -f this-file.
 begin;
+do $$ begin
+  assert exists(select 1 from public.item_catalog where id='plant'),
+    'Fresh migrations must seed the starter plant required by signup';
+end $$;
 insert into public.item_catalog(id,name,category) values ('plant','Plant','decor'),('desk_lamp','Lamp','decor'),('bookshelf','Shelf','decor') on conflict do nothing;
 insert into auth.users(id) values ('10000000-0000-0000-0000-000000000001'),('20000000-0000-0000-0000-000000000002');
 insert into public.craft_posts(user_id,title,description,category,image_url)
