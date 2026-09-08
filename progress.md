@@ -70,23 +70,25 @@ Start by reading `AGENTS.md`, then `feature_list.json`, then this file. Do not r
 - Bounded extreme-aspect-ratio pixel previews and hardened the static preview server against traversal and unrelated-port reuse.
 - Made the Lighthouse command cross-platform and fixed reported login autocomplete and preview contrast failures.
 - Applied compatible dependency patches; the remaining audit findings require an Expo SDK major upgrade.
+- Added deployment hardening: one-minute minimum abandonment reward, immutable/atomic daily upload accounting, and quarantine plus explicit provenance for historical catalog rows.
+- Aligned Async Storage and Secure Store with Expo SDK 54 and enabled the Secure Store config plugin.
 
 Evidence:
 
 - `npx tsc --noEmit` passed.
-- `npm test` passed: 16 files / 55 tests.
+- `npm test` passed: 16 files / 56 tests.
 - `npm run e2e:build` passed: 21 static routes under `/craftfocus`.
-- `PORT=4187 npm run test:e2e` passed: 2 smoke tests / 2 credential-gated tests skipped.
-- All migrations applied from scratch to disposable PostgreSQL 18; database regression and two-client concurrency scripts passed.
+- `PORT=4194 npm run test:e2e` passed: 2 smoke tests / 2 credential-gated tests skipped.
+- All migrations applied from scratch to disposable PostgreSQL 18; database regression and two-client concurrency scripts passed, including concurrent upload quota enforcement.
+- `npx expo-doctor` passed all 18 checks; `npx expo install --check` reports dependencies compatible with SDK 54.
 - `PORT=4191 npm run lighthouse:web` completed and wrote JSON/HTML reports: performance 67, accessibility 100, best practices 100, SEO 100.
 - `npm audit`: 0 critical, 8 high, 17 moderate; all remaining fixes proposed by npm require a breaking Expo SDK upgrade.
 
 Remaining risks:
 
 - Hosted Supabase/PostgREST and authenticated deployed E2E still require project configuration and credentials.
-- The specified five-seed immediate-abandon reward can still be farmed by repeated start/stop actions.
-- Historical forged catalog rows cannot be distinguished reliably from legitimate administrative rows and require a data review.
-- The daily craft upload limit relies on mutable timestamps and is not a serialized abuse-resistant quota.
+- Quarantined catalog rows must be reviewed before legitimate historical rows are reactivated with `official_source = true`.
+- Server elapsed time cannot prove that a user remained focused during the session.
 
 ## 2026-06-11 API Review Pass
 

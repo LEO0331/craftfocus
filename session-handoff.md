@@ -19,18 +19,20 @@
 |---|---|---|---|
 | Docs links | custom Node link check | PASS | README/docs local links resolved before harness creation. |
 | TypeScript | `npx tsc --noEmit` | PASS | No type errors. |
-| Unit tests | `npm test` | PASS | 16 files / 55 tests passed. |
+| Unit tests | `npm test` | PASS | 16 files / 56 tests passed. |
 | Web export | `npm run e2e:build` | PASS | 21 static routes. |
-| Browser smoke | `PORT=4187 npm run test:e2e` | PASS | 2 passed / 2 credential-gated skipped. |
+| Browser smoke | `PORT=4194 npm run test:e2e` | PASS | 2 passed / 2 credential-gated skipped. |
 | Database | disposable PostgreSQL 18 scripts | PASS | Fresh migrations, regressions, and concurrency checks. |
 | Lighthouse | `PORT=4191 npm run lighthouse:web` | PASS | Performance 67; accessibility, best practices, and SEO 100. |
+| Expo compatibility | `npx expo-doctor` | PASS | 18/18 checks passed after SDK package alignment. |
 
 ## Files Changed
 
 - Application focus/auth screens, focus hook/timer, alert and pixel utilities.
-- Three additive `supabase/migrations/202609*.sql` migrations.
+- Four additive `supabase/migrations/202609*.sql` migrations.
 - Unit, browser, and disposable database regression tests.
 - Static preview/Lighthouse tooling and dependency lockfile.
+- Expo SDK-compatible native storage packages and Secure Store config plugin.
 - `docs/PROJECT_REVIEW_BACKEND.md`
 - `feature_list.json`
 - `progress.md`
@@ -46,8 +48,8 @@
 
 - Authenticated deployed E2E and hosted Supabase verification require valid project credentials.
 - Remaining npm advisories require a breaking Expo SDK upgrade.
-- Immediate abandonment still awards five seeds by product rule and can be farmed.
+- Quarantined historical catalog rows need administrative provenance review before reactivation.
 
 ## Recommended Next Step
 
-- Apply the three additive 2026-09 migrations with the updated client, then run `feat-005` against the deployed app.
+- Apply the four additive 2026-09 migrations with the updated client, review quarantined catalog rows, then run `feat-005` against the deployed app.

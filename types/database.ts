@@ -172,6 +172,7 @@ export type Database = {
           seed_cost: number;
           listing_type: Database['public']['Enums']['listing_type'];
           reward_item_id: string | null;
+          official_source: boolean;
           is_active: boolean;
           created_at: string;
         };
@@ -190,6 +191,7 @@ export type Database = {
           seed_cost?: number;
           listing_type?: Database['public']['Enums']['listing_type'];
           reward_item_id?: string | null;
+          official_source?: boolean;
           is_active?: boolean;
           created_at?: string;
         };
@@ -208,6 +210,7 @@ export type Database = {
           seed_cost?: number;
           listing_type?: Database['public']['Enums']['listing_type'];
           reward_item_id?: string | null;
+          official_source?: boolean;
           is_active?: boolean;
           created_at?: string;
         };

@@ -30,6 +30,24 @@ end $$;
 -- Drain the asynchronous command terminators before reusing connections.
 select * from dblink_get_result('a',false) as result(value text);
 select * from dblink_get_result('b',false) as result(value text);
+insert into public.craft_posts(user_id,title,category,image_url)
+select auth.uid(),'Concurrent quota ' || quota.value,'craft','https://example.com/quota'
+from generate_series(1,9) as quota(value);
+select dblink_send_query('a',$$insert into public.craft_posts(user_id,title,category,image_url)
+  values(auth.uid(),'Concurrent quota A','craft','https://example.com/quota') returning title$$);
+select dblink_send_query('b',$$insert into public.craft_posts(user_id,title,category,image_url)
+  values(auth.uid(),'Concurrent quota B','craft','https://example.com/quota') returning title$$);
+select * from dblink_get_result('a',false) as result(title text);
+select * from dblink_get_result('b',false) as result(title text);
+do $$ begin
+  assert (select count(*) from public.craft_posts where user_id=auth.uid() and title like 'Concurrent quota%')=10,
+    'Two simultaneous inserts at count nine must admit exactly one';
+  assert (select upload_count from public.craft_post_daily_uploads
+    where user_id=auth.uid() and upload_day=(clock_timestamp() at time zone 'UTC')::date)=10,
+    'Concurrent daily quota counter must stop at ten';
+end $$;
+select * from dblink_get_result('a',false) as result(value text);
+select * from dblink_get_result('b',false) as result(value text);
 select public.start_focus_session(60,'general') as run_id \gset
 update public.focus_session_runs set started_at=clock_timestamp()-interval '61 minutes' where id=:'run_id';
 begin;

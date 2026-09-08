@@ -78,7 +78,7 @@ Intentionally excluded from MVP:
 - Completed `25` minute focus session: `25` seeds.
 - Completed `45` minute focus session: `50` seeds.
 - Completed `60` minute focus session: `75` seeds.
-- Manual stop or visibility auto-stop: `5` seeds.
+- Manual stop or visibility auto-stop after at least one minute: `5` seeds; shorter sessions earn `0`.
 - Focus sessions auto-stop immediately when the focus view is left.
 - Creating custom craft listings does **not** cost seeds.
 - Custom craft publishing is limited to `10` new listings per user per day.

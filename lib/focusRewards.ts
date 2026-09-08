@@ -6,9 +6,10 @@ const COMPLETE_REWARDS: Record<number, number> = {
   60: 75,
 };
 
-export function getFocusReward(durationMinutes: number, status: FocusStatus): FocusReward {
+export function getFocusReward(durationMinutes: number, status: FocusStatus, elapsedSeconds = Number.POSITIVE_INFINITY): FocusReward {
   if (status === 'given_up') {
-    return { coins: 5, seedsBalance: 5 };
+    const coins = elapsedSeconds >= 60 ? 5 : 0;
+    return { coins, seedsBalance: coins };
   }
 
   const coins = COMPLETE_REWARDS[durationMinutes] ?? durationMinutes;

@@ -13,8 +13,12 @@ describe('getFocusReward', () => {
     expect(getFocusReward(30, 'completed')).toEqual({ coins: 30, seedsBalance: 30 });
   });
 
-  it('returns given up reward regardless of duration', () => {
+  it('returns the given-up reward after one minute', () => {
     expect(getFocusReward(25, 'given_up')).toEqual({ coins: 5, seedsBalance: 5 });
-    expect(getFocusReward(999, 'given_up')).toEqual({ coins: 5, seedsBalance: 5 });
+    expect(getFocusReward(999, 'given_up', 60)).toEqual({ coins: 5, seedsBalance: 5 });
+  });
+
+  it('does not reward instant abandonment', () => {
+    expect(getFocusReward(25, 'given_up', 59)).toEqual({ coins: 0, seedsBalance: 0 });
   });
 });
