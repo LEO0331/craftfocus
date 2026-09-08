@@ -64,6 +64,16 @@
       ],
       "status": "done",
       "evidence": "Review passes on 2026-09-07/08 fixed focus reward authority/retry and instant farming, room inventory races, catalog provenance, atomic upload quotas, friendship/exchange consent, companion authority, web alerts, pixel preview bounds, preview-server traversal, isolated E2E ports, Windows Lighthouse execution, and Expo SDK storage-package mismatches. TypeScript, unit tests, web export, browser smoke, fresh PostgreSQL migrations/regressions, concurrency checks, Expo Doctor, and Lighthouse completed."
+    },
+    {
+      "id": "feat-008",
+      "name": "Production signup backend recovery",
+      "description": "Restore GitHub Pages signup by replacing the deleted or unreachable Supabase project configuration and redeploying.",
+      "dependencies": [
+        "feat-007"
+      ],
+      "status": "in-progress",
+      "evidence": "Live GitHub Pages returned HTTP 200, but its deployed Supabase hostname zhiuvtldfgbqmydgrksh.supabase.co returned DNS NXDOMAIN on 2026-09-08. Added actionable auth outage errors, deployment health preflight, tests, and recovery instructions. A valid Supabase project URL/public key are still required."
     }
   ]
 }

@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-09-08 Asia/Taipei
-**Active Feature:** none
+**Active Feature:** feat-008 - Production signup backend recovery
 **Last Completed Feature:** feat-007 - Whole-project correctness and security review
 
 ## What's Done
@@ -89,6 +89,26 @@ Remaining risks:
 - Hosted Supabase/PostgREST and authenticated deployed E2E still require project configuration and credentials.
 - Quarantined catalog rows must be reviewed before legitimate historical rows are reactivated with `official_source = true`.
 - Server elapsed time cannot prove that a user remained focused during the session.
+
+## 2026-09-08 Production Signup Diagnosis
+
+- Confirmed `https://leo0331.github.io/craftfocus/auth/signup` and its JavaScript bundle return HTTP 200.
+- Confirmed the deployed bundle uses `https://zhiuvtldfgbqmydgrksh.supabase.co`.
+- That Supabase hostname returns DNS NXDOMAIN, which causes the browser's `Failed to fetch` signup error.
+- No replacement Supabase URL or public key is configured in the local workspace.
+- Added localized backend-unavailable errors and a deployment preflight that refuses to publish when Supabase Auth is missing or unreachable.
+- Added `docs/SUPABASE_DEPLOYMENT_RECOVERY.md` with the remaining recovery procedure.
+
+Evidence:
+
+- `npx tsc --noEmit` passed.
+- `npm test` passed: 18 files / 63 tests.
+- `npm run e2e:build` passed: 21 static routes.
+- `PORT=4195 npm run test:e2e` passed: 2 smoke tests / 2 credential-gated tests skipped.
+
+Blocker:
+
+- Restoring live signup requires access to a valid Supabase project and updating the repository's two GitHub Actions secrets before redeployment.
 
 ## 2026-06-11 API Review Pass
 

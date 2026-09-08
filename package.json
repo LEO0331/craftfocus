@@ -12,6 +12,7 @@
     "e2e:build": "expo export --platform web",
     "e2e:serve": "npm run e2e:build && node tools/e2e/static-server.mjs",
     "test:e2e": "playwright test",
+    "verify:deployment-env": "node tools/verify-deployment-env.mjs",
     "lighthouse:web": "node tools/e2e/lighthouse.mjs"
   },
   "dependencies": {

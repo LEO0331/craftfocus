@@ -9,6 +9,7 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { validateEmail, validatePassword } from '@/lib/validation';
+import { formatAuthError } from '@/lib/authError';
 
 export default function SignupScreen() {
   const { signUp, isLoading } = useAuth();
@@ -26,7 +27,7 @@ export default function SignupScreen() {
       Alert.alert(t('auth.checkEmailTitle'), t('auth.checkEmailBody'));
       router.replace('/auth/login');
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('auth.retry');
+      const message = formatAuthError(error, t('auth.retry'), t('auth.backendUnavailable'));
       setAuthError(message);
       Alert.alert(t('auth.signupFailed'), message);
     } finally {

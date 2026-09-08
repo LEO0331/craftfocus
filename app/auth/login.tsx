@@ -10,6 +10,7 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { validateEmail, validatePassword } from '@/lib/validation';
+import { formatAuthError } from '@/lib/authError';
 
 export default function LoginScreen() {
   const { signIn, isLoading } = useAuth();
@@ -26,7 +27,7 @@ export default function LoginScreen() {
       await signIn(validateEmail(email), validatePassword(password));
       router.replace('/(tabs)/home');
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('auth.retry');
+      const message = formatAuthError(error, t('auth.retry'), t('auth.backendUnavailable'));
       setAuthError(message);
       Alert.alert(t('auth.loginFailed'), message);
     } finally {

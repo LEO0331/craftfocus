@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete.
+- Current status: Local fixes complete; live backend recovery requires Supabase project access.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session
@@ -52,4 +52,4 @@
 
 ## Recommended Next Step
 
-- Apply the four additive 2026-09 migrations with the updated client, review quarantined catalog rows, then run `feat-005` against the deployed app.
+- Follow `docs/SUPABASE_DEPLOYMENT_RECOVERY.md`: recover or create the Supabase project, apply migrations, replace both GitHub Actions secrets, redeploy, then run authenticated signup/E2E.
