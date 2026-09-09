@@ -3,6 +3,10 @@ begin;
 do $$ begin
   assert exists(select 1 from public.item_catalog where id='plant'),
     'Fresh migrations must seed the starter plant required by signup';
+  assert public.v23_is_valid_pixel_grid(array_fill('................'::text,array[16])),
+    'Detailed 16x16 pixel grids must be accepted';
+  assert not public.v23_is_valid_pixel_grid(array_fill('...............'::text,array[16])),
+    'Pixel grids must remain square';
 end $$;
 insert into public.item_catalog(id,name,category) values ('plant','Plant','decor'),('desk_lamp','Lamp','decor'),('bookshelf','Shelf','decor') on conflict do nothing;
 insert into auth.users(id) values ('10000000-0000-0000-0000-000000000001'),('20000000-0000-0000-0000-000000000002');

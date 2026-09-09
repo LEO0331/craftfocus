@@ -23,17 +23,23 @@ export default function CraftDetailScreen() {
   const [post, setPost] = useState<CraftPostDetail | null>(null);
   const [comment, setComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<'like' | 'claim' | 'comment' | null>(null);
 
   const loadPost = useCallback(async () => {
     if (!postId) return;
     setIsLoading(true);
+    setLoadError(null);
+    setPost(null);
     try {
       const detail = await getCraftPostDetail(postId, user?.id);
       setPost(detail);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsLoading(false);
     }
-  }, [postId, user?.id]);
+  }, [postId, t, user?.id]);
 
   useEffect(() => {
     loadPost();
@@ -41,16 +47,22 @@ export default function CraftDetailScreen() {
 
   const handleToggleLike = async () => {
     if (!user?.id || !postId) return;
+    if (pendingAction) return;
+    setPendingAction('like');
     try {
       await setPostLike(postId, user.id, !post?.liked_by_me);
       await loadPost();
     } catch (error) {
       Alert.alert(t('craft.detail.like'), error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const handleClaim = async () => {
     if (!user?.id || !postId || !post) return;
+    if (pendingAction) return;
+    setPendingAction('claim');
     try {
       await ensureWallet(user.id);
       const requiredSeeds = Math.max(1, Number(post.seed_cost ?? 0));
@@ -65,17 +77,22 @@ export default function CraftDetailScreen() {
       emitTopStatusRefresh();
     } catch (error) {
       Alert.alert(t('craft.detail.claim'), error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const handleAddComment = async () => {
-    if (!user?.id || !postId) return;
+    if (!user?.id || !postId || !comment.trim() || pendingAction) return;
+    setPendingAction('comment');
     try {
       await addComment(postId, user.id, sanitizeText(comment, 240));
       setComment('');
       await loadPost();
     } catch (error) {
       Alert.alert(t('craft.detail.comments'), error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -109,16 +126,19 @@ export default function CraftDetailScreen() {
         />
       ) : (
         <Card>
-          <Text style={styles.text}>{isLoading ? t('common.loading') : t('craft.detail.notFound')}</Text>
+          <Text style={loadError ? styles.errorText : styles.text}>
+            {isLoading ? t('common.loading') : loadError ?? t('craft.detail.notFound')}
+          </Text>
+          {loadError ? <Button label={t('craft.detail.retry')} onPress={() => void loadPost()} /> : null}
         </Card>
       )}
 
       {post ? (
         <Card>
           <View style={styles.actionsRow}>
-            <Button label={post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} />
+            <Button label={pendingAction === 'like' ? t('common.saving') : post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} disabled={Boolean(pendingAction)} />
             <Button label={t('craft.detail.visitRoom')} onPress={() => router.push(`/users/${post.user_id}/room`)} variant="secondary" />
-            {!post.claimed_by_me ? <Button label={t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} /> : null}
+            {!post.claimed_by_me ? <Button label={pendingAction === 'claim' ? t('common.saving') : t('craft.detail.claim', { count: post.seed_cost ?? 0 })} onPress={handleClaim} disabled={Boolean(pendingAction)} /> : null}
           </View>
         </Card>
       ) : null}
@@ -134,7 +154,7 @@ export default function CraftDetailScreen() {
             multiline
             accessibilityLabel={t('craft.detail.commentPlaceholder')}
           />
-          <Button label={t('craft.detail.postComment')} onPress={handleAddComment} />
+          <Button label={pendingAction === 'comment' ? t('common.saving') : t('craft.detail.postComment')} onPress={handleAddComment} disabled={!comment.trim() || Boolean(pendingAction)} />
           {post.comments.map((entry) => (
             <View key={entry.id} style={styles.commentRow}>
               <Text style={styles.commentAuthor}>{entry.author_name}</Text>
@@ -152,6 +172,7 @@ const styles = StyleSheet.create({
   content: { padding: theme.spacing.lg, gap: theme.spacing.md, maxWidth: 960, width: '100%', alignSelf: 'center' },
   heading: { fontSize: 24, fontWeight: '800', color: theme.colors.text },
   text: { color: theme.colors.muted },
+  errorText: { color: theme.colors.danger, fontWeight: '700' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.background },
   label: { color: theme.colors.text, fontWeight: '700' },
   input: {

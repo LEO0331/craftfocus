@@ -28,6 +28,7 @@ export function useRoom() {
   const [collectibles, setCollectibles] = useState<GalleryItem[]>([]);
   const [galleryPlacements, setGalleryPlacements] = useState<CustomGalleryPlacement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const refreshRoom = useCallback(async () => {
     if (!user?.id) {
@@ -37,6 +38,8 @@ export function useRoom() {
       setInventory([]);
       setCollectibles([]);
       setGalleryPlacements([]);
+      setIsLoading(false);
+      setHasLoaded(true);
       return;
     }
 
@@ -56,6 +59,7 @@ export function useRoom() {
       setGalleryPlacements(ownedPlacements);
     } finally {
       setIsLoading(false);
+      setHasLoaded(true);
     }
   }, [user?.id]);
 
@@ -99,10 +103,17 @@ export function useRoom() {
       if (!user?.id) {
         return;
       }
-      await persistRoomType(user.id, next);
-      await refreshRoom();
+      const previous = roomType;
+      setRoomType(next);
+      try {
+        await persistRoomType(user.id, next);
+        await refreshRoom();
+      } catch (error) {
+        setRoomType(previous);
+        throw error;
+      }
     },
-    [refreshRoom, user?.id]
+    [refreshRoom, roomType, user?.id]
   );
 
   const placeCollectibleAtCell = useCallback(
@@ -130,6 +141,7 @@ export function useRoom() {
     collectibles,
     galleryPlacements,
     isLoading,
+    hasLoaded,
     refreshRoom,
     placeAtAnchor,
     removePlacementAtAnchor,

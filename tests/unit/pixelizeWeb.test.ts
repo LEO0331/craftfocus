@@ -22,7 +22,7 @@ describe('web pixel preview dimensions', () => {
       },
     });
     await pixelizeImage('blob:test');
-    expect(Math.max(canvases[0].width, canvases[0].height)).toBe(48);
+    expect(Math.max(canvases[0].width, canvases[0].height)).toBe(96);
     expect(Math.max(canvases[1].width, canvases[1].height)).toBe(384);
     if (width / height < 48 && height / width < 48) {
       expect(canvases[0].width / canvases[0].height).toBeCloseTo(width / height);

@@ -90,8 +90,8 @@ export default function HomeScreen() {
 
       <Card>
         <Text style={styles.title}>{t('home.quickActions')}</Text>
-        <Button label="Start Focus Session" onPress={() => router.push('/(tabs)/focus')} />
-        <Button label="Upload Craft Work" onPress={() => router.push('/crafts/new')} variant="secondary" />
+        <Button label={t('home.startFocus')} onPress={() => router.navigate('/(tabs)/focus')} />
+        <Button label={t('home.uploadCraft')} onPress={() => router.push('/crafts/new')} variant="secondary" />
       </Card>
 
       <Card>

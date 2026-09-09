@@ -24,7 +24,7 @@ export async function pixelizeImage(inputUri: string): Promise<string> {
         const tinyCanvas = document.createElement('canvas');
         const outputCanvas = document.createElement('canvas');
 
-        const baseSize = 48;
+        const baseSize = 96;
         const ratio = img.width / img.height || 1;
         const tinyWidth = Math.max(1, Math.round(baseSize * Math.min(1, ratio)));
         const tinyHeight = Math.max(1, Math.round(baseSize * Math.min(1, 1 / ratio)));
@@ -41,8 +41,8 @@ export async function pixelizeImage(inputUri: string): Promise<string> {
         tinyCtx.imageSmoothingEnabled = false;
         tinyCtx.drawImage(img, 0, 0, tinyWidth, tinyHeight);
 
-        outputCanvas.width = tinyWidth * 8;
-        outputCanvas.height = tinyHeight * 8;
+        outputCanvas.width = tinyWidth * 4;
+        outputCanvas.height = tinyHeight * 4;
 
         const outputCtx = outputCanvas.getContext('2d');
         if (!outputCtx) {
@@ -63,7 +63,7 @@ export async function pixelizeImage(inputUri: string): Promise<string> {
   });
 }
 
-const PIXEL_TOKENS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const PIXEL_TOKENS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'];
 
 function toHex(value: number) {
   return value.toString(16).padStart(2, '0');
@@ -74,7 +74,7 @@ function rgbToHex(r: number, g: number, b: number) {
 }
 
 function quantize(value: number) {
-  return Math.max(0, Math.min(255, Math.round(value / 51) * 51));
+  return Math.max(0, Math.min(255, Math.round(value / 32) * 32));
 }
 
 function pickPaletteBuckets(imageData: Uint8ClampedArray, maxColors: number) {
@@ -118,7 +118,7 @@ function nearestPaletteToken(r: number, g: number, b: number, colors: Array<{ to
 }
 
 /**
- * Converts an image to a compact 8x8 palette+grid sprite payload.
+ * Converts an image to a compact 16x16 palette+grid sprite payload.
  * Used as persistent fallback when image URLs are unavailable.
  */
 export async function convertImageToPixelSprite(inputUri: string): Promise<PixelGridSpriteData | null> {
@@ -131,7 +131,7 @@ export async function convertImageToPixelSprite(inputUri: string): Promise<Pixel
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
-        const size = 8;
+        const size = 16;
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;

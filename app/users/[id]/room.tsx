@@ -1,7 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { AppLoading } from '@/components/AppLoading';
+import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CollectibleGalleryBoard } from '@/components/CollectibleGalleryBoard';
 import { IsometricRoom } from '@/components/IsometricRoom';
@@ -19,25 +21,59 @@ export default function UserRoomScreen() {
   const [placements, setPlacements] = useState<RoomPlacement[]>([]);
   const [galleryPlacements, setGalleryPlacements] = useState<CustomGalleryPlacement[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const load = useCallback(async () => {
     if (!userId) {
+      setIsLoading(false);
+      setLoadError(t('userRoom.invalid'));
       return;
     }
-    const data = await listPublicRoomLayout(userId);
-    const [publicGalleryPlacements, publicGalleryItems] = await Promise.all([
-      listPublicGalleryPlacements(userId),
-      listPublicGalleryItems(userId),
-    ]);
-    setRoomType(data.roomType);
-    setPlacements(data.placements);
-    setGalleryPlacements(publicGalleryPlacements);
-    setGalleryItems(publicGalleryItems);
-  }, [userId]);
+    const requestId = ++requestIdRef.current;
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const [data, publicGalleryPlacements, publicGalleryItems] = await Promise.all([
+        listPublicRoomLayout(userId),
+        listPublicGalleryPlacements(userId),
+        listPublicGalleryItems(userId),
+      ]);
+      if (requestId !== requestIdRef.current) return;
+      setRoomType(data.roomType);
+      setPlacements(data.placements);
+      setGalleryPlacements(publicGalleryPlacements);
+      setGalleryItems(publicGalleryItems);
+    } catch (error) {
+      if (requestId !== requestIdRef.current) return;
+      setLoadError(error instanceof Error ? error.message : t('common.unknownError'));
+    } finally {
+      if (requestId === requestIdRef.current) setIsLoading(false);
+    }
+  }, [t, userId]);
 
   useEffect(() => {
-    load();
+    void load();
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [load]);
+
+  if (isLoading) {
+    return <AppLoading message={t('userRoom.loading')} />;
+  }
+
+  if (loadError) {
+    return (
+      <View style={styles.center}>
+        <Card>
+          <Text style={styles.errorText}>{loadError}</Text>
+          <Button label={t('userRoom.retry')} onPress={() => void load()} />
+        </Card>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -89,4 +125,6 @@ const styles = StyleSheet.create({
   },
   heading: { fontSize: 30, fontWeight: '800', color: theme.colors.text, fontFamily: theme.typography.display },
   label: { color: theme.colors.muted, fontFamily: theme.typography.body },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.lg, backgroundColor: theme.colors.background },
+  errorText: { color: theme.colors.danger, fontFamily: theme.typography.body, fontWeight: '700' },
 });

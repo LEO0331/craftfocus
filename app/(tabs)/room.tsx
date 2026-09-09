@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { AppLoading } from '@/components/AppLoading';
 import { Card } from '@/components/Card';
 import { CollectibleGalleryBoard } from '@/components/CollectibleGalleryBoard';
 import { IsometricRoom } from '@/components/IsometricRoom';
@@ -28,6 +29,8 @@ export default function RoomScreen() {
     inventoryByItem,
     collectibles,
     galleryPlacements,
+    hasLoaded,
+    isLoading,
     placeAtAnchor,
     removePlacementAtAnchor,
     switchRoomType,
@@ -80,6 +83,10 @@ export default function RoomScreen() {
     }
   }, [collectiblePage, collectibleTotalPages]);
 
+  if (!hasLoaded) {
+    return <AppLoading message={t('room.loading')} />;
+  }
+
   const handlePlace = async () => {
     if (!selectedAnchorId) {
       return;
@@ -88,6 +95,15 @@ export default function RoomScreen() {
       await placeAtAnchor(selectedItemId, selectedAnchorId);
     } catch (error) {
       Alert.alert(t('room.placeFailed'), error instanceof Error ? error.message : t('common.unknownError'));
+    }
+  };
+
+  const handleSwitchRoomType = async (next: RoomType) => {
+    if (next === roomType || isLoading) return;
+    try {
+      await switchRoomType(next);
+    } catch (error) {
+      Alert.alert(t('room.switchFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     }
   };
 
@@ -137,7 +153,8 @@ export default function RoomScreen() {
             <Button
               key={entry}
               label={entry === roomType ? `${entry} ✓` : entry}
-              onPress={() => switchRoomType(entry)}
+              onPress={() => void handleSwitchRoomType(entry)}
+              disabled={isLoading}
               variant={entry === roomType ? 'primary' : 'secondary'}
             />
           ))}
@@ -210,9 +227,9 @@ export default function RoomScreen() {
         <Button
           label={t('room.place', { count: quantity })}
           onPress={handlePlace}
-          disabled={!selectedAnchorId || quantity <= 0}
+          disabled={!selectedAnchorId || quantity <= 0 || isLoading}
         />
-        <Button label={t('room.remove')} onPress={handleRemove} variant="danger" disabled={!selectedPlacement} />
+        <Button label={t('room.remove')} onPress={handleRemove} variant="danger" disabled={!selectedPlacement || isLoading} />
       </Card>
 
       <Card>

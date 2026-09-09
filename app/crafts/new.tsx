@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack, router, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -30,6 +30,8 @@ export default function NewCraftPostScreen() {
   const { t } = useI18n();
   const navigation = useNavigation();
   const route = useRouter();
+  const { width } = useWindowDimensions();
+  const splitPreview = width >= 760;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [seedCost, setSeedCost] = useState('25');
@@ -38,6 +40,8 @@ export default function NewCraftPostScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPixelizing, setIsPixelizing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [publishStatus, setPublishStatus] = useState<string | null>(null);
+  const [pixelStatus, setPixelStatus] = useState<string | null>(null);
   const [pixelSpriteData, setPixelSpriteData] = useState<PixelGridSpriteData | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -55,18 +59,24 @@ export default function NewCraftPostScreen() {
     setImageUri(result.assets[0].uri);
     setPixelPreviewUri(null);
     setPixelSpriteData(null);
+    setPixelStatus(null);
+    setSaveError(null);
     setFieldErrors((prev) => ({ ...prev, image: undefined }));
   };
 
   const handlePixelize = async () => {
     if (!imageUri) return;
     setIsPixelizing(true);
+    setPixelStatus(null);
     try {
       const nextPixelPreviewUri = await pixelizeImage(imageUri);
       setPixelPreviewUri(nextPixelPreviewUri);
       setPixelSpriteData(await convertImageToPixelSprite(nextPixelPreviewUri));
+      setPixelStatus(t('craft.new.pixelReady'));
     } catch (error) {
-      Alert.alert(t('craft.new.genPixel'), error instanceof Error ? error.message : t('common.unknownError'));
+      const message = error instanceof Error ? error.message : t('common.unknownError');
+      setPixelStatus(message);
+      Alert.alert(t('craft.new.genPixel'), message);
     } finally {
       setIsPixelizing(false);
     }
@@ -95,7 +105,7 @@ export default function NewCraftPostScreen() {
     if (!user?.id) return Alert.alert(t('craft.new.notSignedIn'), t('craft.new.signInAgain'));
     const validation = validateForm();
     if (!validation.valid) {
-      setSaveError(t('craft.new.publishFailed'));
+      setSaveError(null);
       return;
     }
     const parsedSeedCost = validation.parsedSeedCost;
@@ -106,6 +116,7 @@ export default function NewCraftPostScreen() {
     }
 
     setIsSaving(true);
+    setPublishStatus(t('craft.new.preparing'));
     try {
       setSaveError(null);
       await ensureProfileRow(user.id, user.email);
@@ -129,12 +140,14 @@ export default function NewCraftPostScreen() {
       const safeDescription = description ? sanitizeText(description, DESCRIPTION_MAX) : '';
       const timestamp = Date.now();
       const imagePath = `${user.id}/${timestamp}-original.jpg`;
+      setPublishStatus(t('craft.new.uploadingOriginal'));
       const uploadedImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: imagePath, uri: imageUriToUpload });
 
       let pixelImageUrl: string | null = null;
       if (pixelPreviewUri) {
         try {
           const pixelPath = `${user.id}/${timestamp}-pixel.png`;
+          setPublishStatus(t('craft.new.uploadingPixel'));
           pixelImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: pixelPath, uri: pixelPreviewUri });
         } catch {
           pixelImageUrl = null;
@@ -143,6 +156,7 @@ export default function NewCraftPostScreen() {
 
       const spriteData = pixelSpriteData ?? (await convertImageToPixelSprite(pixelPreviewUri ?? imageUriToUpload));
 
+      setPublishStatus(t('craft.new.creatingListing'));
       const id = await createCraftPost({
         userId: user.id,
         title: safeTitle,
@@ -161,13 +175,14 @@ export default function NewCraftPostScreen() {
       if (!id) {
         throw new Error(t('craft.new.publishFailed'));
       }
-      router.push(`/crafts/${id}`);
+      router.replace(`/crafts/${id}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : t('common.unknownError');
       setSaveError(message);
       Alert.alert(t('craft.new.publish'), message);
     } finally {
       setIsSaving(false);
+      setPublishStatus(null);
     }
   };
 
@@ -199,6 +214,7 @@ export default function NewCraftPostScreen() {
             if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
           }}
           maxLength={TITLE_MAX}
+          editable={!isSaving}
           style={[styles.input, fieldErrors.title ? styles.inputError : null]}
           accessibilityLabel={t('craft.new.fieldTitle')}
         />
@@ -214,6 +230,7 @@ export default function NewCraftPostScreen() {
             if (fieldErrors.description) setFieldErrors((prev) => ({ ...prev, description: undefined }));
           }}
           maxLength={DESCRIPTION_MAX}
+          editable={!isSaving}
           style={[styles.input, styles.textarea, fieldErrors.description ? styles.inputError : null]}
           multiline
           accessibilityLabel={t('craft.new.fieldDescription')}
@@ -226,6 +243,7 @@ export default function NewCraftPostScreen() {
           placeholder={t('craft.new.seedCost')}
           keyboardType="number-pad"
           value={seedCost}
+          editable={!isSaving}
           onChangeText={(value) => {
             setSeedCost(value);
             if (fieldErrors.seedCost) setFieldErrors((prev) => ({ ...prev, seedCost: undefined }));
@@ -236,15 +254,40 @@ export default function NewCraftPostScreen() {
         {fieldErrors.seedCost ? <Text style={styles.errorText}>{fieldErrors.seedCost}</Text> : null}
         <Text style={styles.helperText}>{t('craft.new.seedCostLimitHint', { min: SEED_MIN, max: SEED_MAX })}</Text>
 
-        <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} />
+        <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} disabled={isSaving || isPixelizing} />
         {fieldErrors.image ? <Text style={styles.errorText}>{fieldErrors.image}</Text> : null}
-        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} accessibilityLabel={t('craft.new.originalImage')} /> : null}
+        <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing || isSaving} variant="secondary" />
+        {pixelStatus ? <Text accessibilityRole="alert" style={pixelPreviewUri ? styles.successText : styles.errorText}>{pixelStatus}</Text> : null}
 
-        <Button label={isPixelizing ? t('craft.new.genPixeling') : t('craft.new.genPixel')} onPress={handlePixelize} disabled={!imageUri || isPixelizing} variant="secondary" />
-
-        {pixelPreviewUri ? <Image source={{ uri: pixelPreviewUri }} style={styles.preview} accessibilityLabel={t('craft.new.pixelPreview')} /> : null}
+        {imageUri ? (
+          <View style={[styles.previewGrid, splitPreview ? styles.previewGridRow : styles.previewGridColumn]}>
+            <View style={styles.previewPane}>
+              <View style={styles.previewHeadingRow}>
+                <Text style={styles.previewLabel}>{t('craft.new.originalLabel')}</Text>
+                <Text style={styles.previewBadge}>{t('craft.new.sourceBadge')}</Text>
+              </View>
+              <View style={styles.previewFrame}>
+                <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="contain" accessibilityLabel={t('craft.new.originalImage')} />
+              </View>
+            </View>
+            <View style={styles.previewPane}>
+              <View style={styles.previewHeadingRow}>
+                <Text style={styles.previewLabel}>{t('craft.new.pixelLabel')}</Text>
+                <Text style={[styles.previewBadge, styles.pixelBadge]}>{t('craft.new.pixelDetailBadge')}</Text>
+              </View>
+              <View style={[styles.previewFrame, styles.pixelPreviewFrame]}>
+                {pixelPreviewUri ? (
+                  <Image source={{ uri: pixelPreviewUri }} style={styles.preview} resizeMode="contain" accessibilityLabel={t('craft.new.pixelPreview')} />
+                ) : (
+                  <Text style={styles.previewPlaceholder}>{t('craft.new.pixelPlaceholder')}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+        ) : null}
 
         <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
+        {publishStatus ? <Text style={styles.statusText}>{publishStatus}</Text> : null}
         {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         </Card>
       </ScrollView>
@@ -284,7 +327,45 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
-  preview: { width: '100%', aspectRatio: 1.2, borderRadius: theme.radius.md, backgroundColor: '#E5DFD1' },
+  previewGrid: { gap: 12 },
+  previewGridRow: { flexDirection: 'row' },
+  previewGridColumn: { flexDirection: 'column' },
+  previewPane: { flex: 1, minWidth: 0, gap: 7 },
+  previewHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  previewLabel: { color: theme.colors.text, fontWeight: '800', fontFamily: theme.typography.body },
+  previewBadge: {
+    color: theme.colors.muted,
+    backgroundColor: '#EFE6D6',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  pixelBadge: { color: theme.colors.primaryDark, backgroundColor: '#F7DFC7' },
+  previewFrame: {
+    width: '100%',
+    aspectRatio: 1,
+    maxHeight: 420,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    overflow: 'hidden',
+    backgroundColor: '#E5DFD1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pixelPreviewFrame: { backgroundColor: '#2D281F', borderColor: '#6D5B45' },
+  preview: { width: '100%', height: '100%' },
+  previewPlaceholder: {
+    color: '#E9DCC9',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
   helperText: { color: theme.colors.muted, fontSize: 12, fontWeight: '600' },
   errorText: { color: theme.colors.danger, fontWeight: '700' },
+  successText: { color: theme.colors.accent, fontWeight: '700' },
+  statusText: { color: theme.colors.info, fontWeight: '700', textAlign: 'center' },
 });
