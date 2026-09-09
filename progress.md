@@ -113,6 +113,11 @@ Recovery completed:
 - Replaced both GitHub Actions Supabase secrets and completed Pages deployment #72 successfully.
 - Verified the live HTTP 200 bundle contains the new project URL and no reference to the deleted project.
 - Verified Auth health HTTP 200, email signup enabled, signup enabled globally, and normal signup validation responses.
+- Diagnosed the subsequent `Database error saving new user` from PostgreSQL logs: the new-user trigger granted `plant`, but `item_catalog` did not contain that manually seeded row.
+- Added and deployed `20260908120000_seed_required_item_catalog.sql`, then applied the catalog repair to the hosted project.
+- Ran a hosted signup-trigger simulation inside `BEGIN`/`ROLLBACK`; profile, room, wallet, starter plant, and cat creation all passed without leaving a test account.
+- GitHub Pages deployment #74 for commit `02e2380` completed successfully.
+- Reapplied all migrations from scratch in disposable PostgreSQL 18 and passed the complete database regression suite with the required-item assertion enabled.
 
 ## 2026-06-11 API Review Pass
 

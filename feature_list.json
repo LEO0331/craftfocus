@@ -73,7 +73,7 @@
         "feat-007"
       ],
       "status": "done",
-      "evidence": "Recovered on 2026-09-08 using healthy project dotbjffrepidvlmokhgl. Applied all 25 migrations, saved the GitHub Pages Auth site/redirect URLs, replaced both GitHub Actions secrets, and completed deployment #72 successfully. The live bundle contains the new project and not the dead one; Auth health returned 200, email signup is enabled, and the signup endpoint returned normal validation rather than a network failure."
+      "evidence": "Recovered using healthy project dotbjffrepidvlmokhgl. Applied the schema, saved Auth URLs, replaced GitHub secrets, and deployed successfully. A follow-up signup trigger failure was traced to the starter plant existing only in a manual seed file; migration 20260908120000 now seeds every required item. The live catalog repair and a rolled-back full new-user trigger simulation passed, and deployment #74 for commit 02e2380 succeeded."
     }
   ]
 }
