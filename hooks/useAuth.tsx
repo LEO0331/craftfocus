@@ -11,7 +11,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ requiresEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
 }
 
@@ -79,10 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
       signUp: async (email, password) => {
-        const { error } = await signUpWithEmail(email, password);
+        const { data, error } = await signUpWithEmail(email, password);
         if (error) {
           throw error;
         }
+        return { requiresEmailConfirmation: !data.session };
       },
       logout: async () => {
         const { error } = await signOut();

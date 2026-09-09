@@ -23,11 +23,20 @@ export default function SignupScreen() {
     try {
       setSubmitting(true);
       setAuthError(null);
-      await signUp(validateEmail(email), validatePassword(password));
-      Alert.alert(t('auth.checkEmailTitle'), t('auth.checkEmailBody'));
-      router.replace('/auth/login');
+      const { requiresEmailConfirmation } = await signUp(validateEmail(email), validatePassword(password));
+      if (requiresEmailConfirmation) {
+        Alert.alert(t('auth.checkEmailTitle'), t('auth.checkEmailBody'));
+        router.replace('/auth/login');
+      } else {
+        router.replace('/(tabs)/home');
+      }
     } catch (error) {
-      const message = formatAuthError(error, t('auth.retry'), t('auth.backendUnavailable'));
+      const message = formatAuthError(
+        error,
+        t('auth.retry'),
+        t('auth.backendUnavailable'),
+        t('auth.emailRateLimited'),
+      );
       setAuthError(message);
       Alert.alert(t('auth.signupFailed'), message);
     } finally {

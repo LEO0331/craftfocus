@@ -14,6 +14,15 @@ describe('formatAuthError', () => {
     expect(formatAuthError(new Error('User already registered'), 'Retry.', 'Backend unavailable.')).toBe('User already registered');
   });
 
+  it('turns the email quota error into actionable guidance', () => {
+    expect(formatAuthError(
+      new Error('email rate limit exceeded'),
+      'Retry.',
+      'Backend unavailable.',
+      'Wait an hour.',
+    )).toBe('Wait an hour.');
+  });
+
   it('uses the fallback for unknown failures', () => {
     expect(formatAuthError(null, 'Retry.', 'Backend unavailable.')).toBe('Retry.');
   });
