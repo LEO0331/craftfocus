@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete, including live backend recovery, required item seed repair, hosted trigger verification, and successful deployment #74 for `02e2380`.
+- Current status: Complete, including backend recovery, required item seed repair, hosted trigger verification, immediate signup without the limited test mailer, and successful deployment #76 for `1b90aa8`.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session

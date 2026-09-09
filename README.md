@@ -191,6 +191,7 @@ Use only for development/demo projects:
 In Supabase Dashboard:
 
 - Enable Email/Password provider.
+- Keep **Confirm email** disabled while using Supabase's built-in test mailer. Re-enable it only after configuring production SMTP.
 - Add local redirect URL, for example `http://localhost:8081` or your Expo dev URL.
 - Add production site URL: `https://<github-username>.github.io/craftfocus/`.
 - Add production redirect URL: `https://<github-username>.github.io/craftfocus/`.

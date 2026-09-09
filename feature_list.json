@@ -73,7 +73,7 @@
         "feat-007"
       ],
       "status": "done",
-      "evidence": "Recovered using healthy project dotbjffrepidvlmokhgl. Applied the schema, saved Auth URLs, replaced GitHub secrets, and deployed successfully. A follow-up signup trigger failure was traced to the starter plant existing only in a manual seed file; migration 20260908120000 now seeds every required item. The live catalog repair and a rolled-back full new-user trigger simulation passed, and deployment #74 for commit 02e2380 succeeded."
+      "evidence": "Recovered using healthy project dotbjffrepidvlmokhgl. Applied the schema, saved Auth URLs, replaced GitHub secrets, and deployed successfully. Fixed the missing starter catalog migration and verified the full hosted signup trigger. Supabase's two-email-per-hour built-in mail limit was resolved by disabling Confirm email until production SMTP is available; commit 1b90aa8 handles immediate sessions correctly and deployment #76 passed."
     }
   ]
 }

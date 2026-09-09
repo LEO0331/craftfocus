@@ -50,36 +50,16 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
 }
 
 function BedroomDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
-  const bed = projectIso(3.45, 2.45, tileWidth, tileHeight, originX, originY);
-  const dresser = projectIso(0.55, 2.55, tileWidth, tileHeight, originX, originY);
-  const sideBench = projectIso(1.1, 3.25, tileWidth, tileHeight, originX, originY);
-  const rug = projectIso(3.65, 3.2, tileWidth, tileHeight, originX, originY);
-  const chair = projectIso(2.75, 3.65, tileWidth, tileHeight, originX, originY);
-  const displayStack = projectIso(5.45, 2.9, tileWidth, tileHeight, originX, originY);
-  const armchair = projectIso(0.25, 3.95, tileWidth, tileHeight, originX, originY);
-  const lowShelf = projectIso(5.8, 3.45, tileWidth, tileHeight, originX, originY);
+  const bed = projectIso(4.35, 2.35, tileWidth, tileHeight, originX, originY);
+  const dresser = projectIso(1.15, 2.4, tileWidth, tileHeight, originX, originY);
+  const rug = projectIso(3.45, 4.15, tileWidth, tileHeight, originX, originY);
 
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
       <View style={[styles.bedroomLeftWindow, { left: originX - wallWidth * 0.66, top: wallTop + wallHeight * 0.2, width: wallWidth * 0.34, height: wallHeight * 0.42 }]}>
         <View style={styles.bedroomWindowRail} />
       </View>
-      <View style={[styles.bedroomMirror, { left: originX - wallWidth * 0.96, top: wallTop + wallHeight * 0.35, width: wallWidth * 0.18, height: wallHeight * 0.48 }]} />
       <View style={[styles.bedroomFrameLarge, { left: originX - wallWidth * 0.24, top: wallTop + wallHeight * 0.2, width: wallWidth * 0.18, height: wallHeight * 0.34 }]} />
-      {[0, 1, 2, 3].map((index) => (
-        <View
-          key={index}
-          style={[
-            styles.bedroomSmallFrame,
-            {
-              left: originX - wallWidth * (0.04 - (index % 2) * 0.16),
-              top: wallTop + wallHeight * (0.16 + Math.floor(index / 2) * 0.24),
-              width: wallWidth * 0.12,
-              height: wallHeight * 0.12,
-            },
-          ]}
-        />
-      ))}
       <View style={[styles.bedroomRightWindow, { left: originX + wallWidth * 0.36, top: wallTop + wallHeight * 0.22, width: wallWidth * 0.34, height: wallHeight * 0.38 }]}>
         <View style={styles.bedroomWindowRail} />
       </View>
@@ -94,27 +74,7 @@ function BedroomDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wall
           <View key={index} style={[styles.bedroomDrawer, { top: tileHeight * (0.3 + index * 0.34) }]} />
         ))}
       </View>
-      <View style={[styles.bedroomSideBench, { left: sideBench.x - tileWidth * 0.8, top: sideBench.y - tileHeight * 0.32, width: tileWidth * 1.65, height: tileHeight * 0.62 }]}>
-        <View style={styles.bedroomSideBenchTop} />
-        <View style={[styles.bedroomSideBenchLeg, { left: tileWidth * 0.18 }]} />
-        <View style={[styles.bedroomSideBenchLeg, { right: tileWidth * 0.18 }]} />
-      </View>
       <View style={[styles.bedroomRug, { left: rug.x - tileWidth * 0.9, top: rug.y - tileHeight * 0.2, width: tileWidth * 1.8, height: tileHeight * 0.75 }]} />
-      <View style={[styles.bedroomChair, { left: chair.x - tileWidth * 0.7, top: chair.y - tileHeight * 0.28, width: tileWidth * 1.4, height: tileHeight * 0.82 }]} />
-      <View style={[styles.bedroomDisplayStack, { left: displayStack.x - tileWidth * 0.32, top: displayStack.y - tileHeight * 0.5, width: tileWidth * 0.72, height: tileHeight * 1.18 }]}>
-        {[0, 1, 2].map((index) => (
-          <View key={index} style={[styles.bedroomDisplayBook, { bottom: tileHeight * (0.1 + index * 0.2), backgroundColor: ['#F6E7CE', '#A7C8D8', '#E6B85B'][index] }]} />
-        ))}
-      </View>
-      <View style={[styles.bedroomArmchair, { left: armchair.x - tileWidth * 0.48, top: armchair.y - tileHeight * 0.38, width: tileWidth * 1.04, height: tileHeight * 0.82 }]}>
-        <View style={styles.bedroomArmchairBack} />
-        <View style={styles.bedroomArmchairSeat} />
-      </View>
-      <View style={[styles.bedroomLowShelf, { left: lowShelf.x - tileWidth * 0.6, top: lowShelf.y - tileHeight * 0.3, width: tileWidth * 1.25, height: tileHeight * 0.78 }]}>
-        <View style={styles.bedroomLowShelfTop} />
-        <View style={styles.bedroomLowShelfBook} />
-        <View style={[styles.bedroomLowShelfBook, styles.bedroomLowShelfBookSecond]} />
-      </View>
       <View style={[styles.bedroomPlant, { left: originX - tileWidth * 0.1, top: wallTop + wallHeight * 0.55, width: tileWidth * 0.46, height: tileHeight * 1.1 }]}>
         <View style={styles.bedroomPlantLeafA} />
         <View style={styles.bedroomPlantLeafB} />
@@ -270,19 +230,54 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const anchors = ROOM_ANCHORS[roomType];
   const isGym = roomType === 'gym';
   const sceneWidth = Math.min(MAX_SCENE_WIDTH, Math.max(MIN_SCENE_WIDTH, width - 72));
-  const sceneHeight = Math.round(sceneWidth * 0.72);
+  const sceneHeight = Math.round(sceneWidth * 0.68);
   const tileWidth = sceneWidth / (isGym ? 10.8 : 9.5);
   const tileHeight = tileWidth * TILE_ASPECT_RATIO;
   const originX = sceneWidth / 2;
-  const originY = sceneHeight * (isGym ? 0.58 : 0.4);
+  const originY = sceneHeight * (isGym ? 0.48 : 0.39);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
   const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
   const wallTop = sceneHeight * 0.08;
   const themeColors = isGym ? gymColors : bedroomColors;
+  const floorCenterY = originY + (floorWidth * TILE_ASPECT_RATIO) / 2;
 
   return (
     <View style={[styles.scene, { width: sceneWidth, height: sceneHeight, backgroundColor: themeColors.sky }]}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.floorShadow,
+          {
+            left: originX - floorWidth / 2 + 8,
+            top: floorCenterY - floorWidth / 2 + 12,
+            width: floorWidth,
+            height: floorWidth,
+            transform: [{ rotate: '45deg' }, { scaleY: TILE_ASPECT_RATIO }],
+          },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.floorPlane,
+          {
+            left: originX - floorWidth / 2,
+            top: floorCenterY - floorWidth / 2,
+            width: floorWidth,
+            height: floorWidth,
+            backgroundColor: themeColors.floor,
+            transform: [{ rotate: '45deg' }, { scaleY: TILE_ASPECT_RATIO }],
+          },
+        ]}
+      >
+        {Array.from({ length: ROOM_GRID_SIZE - 1 }).map((_, index) => (
+          <View key={`floor-v-${index}`} style={[styles.floorGridLineVertical, { left: `${((index + 1) / ROOM_GRID_SIZE) * 100}%` }]} />
+        ))}
+        {Array.from({ length: ROOM_GRID_SIZE - 1 }).map((_, index) => (
+          <View key={`floor-h-${index}`} style={[styles.floorGridLineHorizontal, { top: `${((index + 1) / ROOM_GRID_SIZE) * 100}%` }]} />
+        ))}
+      </View>
       <View
         style={[
           styles.leftWall,
@@ -334,8 +329,8 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
         const placed = placements.find((entry) => entry.anchor_id === anchor.id);
         const projected = projectIso(anchor.x, anchor.y, tileWidth, tileHeight, originX, originY);
         const isWall = anchor.slotType === 'wall';
-        const anchorSize = Math.max(30, tileWidth * 0.58);
-        const itemSize = Math.max(34, tileWidth * 0.7);
+        const anchorSize = Math.max(24, tileWidth * 0.46);
+        const itemSize = Math.max(38, tileWidth * 0.76);
         const left = projected.x - anchorSize / 2;
         const top = isWall ? wallTop + wallHeight * 0.42 + anchor.y * tileHeight * 0.42 : projected.y - anchorSize / 2;
         const zIndex = isWall ? 20 + anchor.zIndex : 40 + Math.round(projected.y) + anchor.zIndex;
@@ -363,10 +358,17 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
                 zIndex,
               },
               isWall ? styles.wallAnchor : null,
+              placed ? styles.anchorFilled : styles.anchorEmpty,
               selectedAnchorId === anchor.id ? styles.anchorSelected : null,
             ]}
           >
-            {placed ? <PixelSprite spriteId={resolveSpriteId(placed.item_id)} size={itemSize} /> : <Text style={styles.plus}>+</Text>}
+            {placed ? (
+              <View style={styles.placedSprite}>
+                <PixelSprite spriteId={resolveSpriteId(placed.item_id)} size={itemSize} />
+              </View>
+            ) : (
+              <Text style={styles.plus}>＋</Text>
+            )}
           </Pressable>
         );
       })}
@@ -375,37 +377,69 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
 }
 
 const bedroomColors = {
-  sky: '#F8F5EF',
-  leftWall: '#8F8378',
-  rightWall: '#9B99D0',
+  sky: '#F6EFE4',
+  floor: '#DDBF91',
+  leftWall: '#C9A981',
+  rightWall: '#E5CDA8',
 };
 
 const gymColors = {
   sky: '#48B8B2',
+  floor: '#BFD8CF',
   leftWall: '#43ADA8',
   rightWall: '#3EA8A3',
 };
 
 const styles = StyleSheet.create({
   scene: {
-    borderRadius: 18,
+    borderRadius: 24,
     overflow: 'hidden',
     alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#D6EDF2',
+    borderColor: '#E3CDAE',
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  floorShadow: {
+    position: 'absolute',
+    backgroundColor: 'rgba(70, 47, 30, 0.16)',
+    borderRadius: 14,
+    zIndex: 2,
+  },
+  floorPlane: {
+    position: 'absolute',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(92, 61, 38, 0.22)',
+    overflow: 'hidden',
+    zIndex: 3,
+  },
+  floorGridLineVertical: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: 'rgba(92, 61, 38, 0.1)',
+  },
+  floorGridLineHorizontal: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(92, 61, 38, 0.1)',
   },
   leftWall: {
     position: 'absolute',
+    zIndex: 5,
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 8,
     transform: [{ skewY: '-24deg' }],
   },
   rightWall: {
     position: 'absolute',
+    zIndex: 5,
     borderTopRightRadius: 10,
     borderBottomRightRadius: 8,
     transform: [{ skewY: '24deg' }],
@@ -1026,26 +1060,36 @@ const styles = StyleSheet.create({
   },
   anchor: {
     position: 'absolute',
-    borderWidth: 1,
-    borderColor: '#86A9C4',
-    backgroundColor: 'rgba(255,255,255,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.16,
-    shadowRadius: 7,
-    shadowOffset: { width: 0, height: 4 },
+  },
+  anchorEmpty: {
+    backgroundColor: 'rgba(255, 249, 238, 0.82)',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(106, 87, 71, 0.55)',
+  },
+  anchorFilled: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   wallAnchor: {
-    backgroundColor: 'rgba(255,255,255,0.62)',
+    backgroundColor: 'rgba(255,249,238,0.72)',
   },
   anchorSelected: {
     borderColor: theme.colors.primary,
     borderWidth: 2,
-    backgroundColor: '#FFF3DF',
+    borderStyle: 'solid',
+    backgroundColor: 'rgba(255,243,223,0.9)',
+  },
+  placedSprite: {
+    padding: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.24)',
   },
   plus: {
-    color: '#7293AA',
+    color: 'rgba(78,59,44,0.7)',
     fontWeight: '700',
+    fontSize: 13,
   },
 });

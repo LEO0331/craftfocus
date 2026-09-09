@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
-    maxWidth: 960,
+    maxWidth: 1180,
     width: '100%',
     alignSelf: 'center',
   },
@@ -308,8 +308,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sceneWrapRow: {
-    flex: 1,
-    minWidth: 430,
+    flexBasis: 580,
+    flexGrow: 1,
+    minWidth: 560,
   },
   sceneWrapColumn: {
     width: '100%',
@@ -320,8 +321,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   galleryWrapRow: {
-    flex: 1,
-    minWidth: 360,
+    flexBasis: 340,
+    flexGrow: 0,
+    minWidth: 330,
     justifyContent: 'center',
   },
   galleryWrapColumn: {

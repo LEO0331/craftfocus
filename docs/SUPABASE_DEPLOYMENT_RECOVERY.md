@@ -11,6 +11,10 @@ grants a starter `plant`, but that row previously lived only in the optional
 manual seed file. Migration `20260908120000_seed_required_item_catalog.sql`
 now installs all required official items during every fresh deployment.
 
+The project currently uses immediate signup because Supabase's built-in test
+mailer is limited to two emails per hour. **Confirm email** is disabled until a
+production SMTP provider is configured.
+
 ## Restore the backend
 
 1. Create or recover a Supabase project.

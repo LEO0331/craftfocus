@@ -118,6 +118,10 @@ Recovery completed:
 - Ran a hosted signup-trigger simulation inside `BEGIN`/`ROLLBACK`; profile, room, wallet, starter plant, and cat creation all passed without leaving a test account.
 - GitHub Pages deployment #74 for commit `02e2380` completed successfully.
 - Reapplied all migrations from scratch in disposable PostgreSQL 18 and passed the complete database regression suite with the required-item assertion enabled.
+- Diagnosed `email rate limit exceeded` as Supabase's built-in mailer quota of two messages per hour.
+- Disabled **Confirm email** until production SMTP is configured, avoiding the built-in mailer for signup.
+- Updated signup to route auto-confirmed sessions directly into the app and added localized mail-quota guidance.
+- Deployment #76 for commit `1b90aa8` passed; live verification confirmed `AUTO_CONFIRM=true`, signup enabled, the new bundle active, and the starter plant present.
 
 ## 2026-06-11 API Review Pass
 

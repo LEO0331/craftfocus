@@ -72,7 +72,7 @@ export function CollectibleGalleryBoard({
                     <PixelGridSprite palette={collectible.pixelPalette} grid={collectible.pixelGrid} size={40} />
                   </View>
                 ) : (
-                  <Text style={styles.dot}>·</Text>
+                  <View style={styles.emptyCellMark} />
                 )}
               </Pressable>
             );
@@ -86,6 +86,15 @@ export function CollectibleGalleryBoard({
 const styles = StyleSheet.create({
   wrap: {
     alignSelf: 'center',
+    padding: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#C89E72',
+    backgroundColor: '#E2C49E',
+    shadowColor: '#4F2A1D',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
   },
   row: {
     flexDirection: 'row',
@@ -93,10 +102,10 @@ const styles = StyleSheet.create({
   cell: {
     width: 54,
     height: 54,
-    borderRadius: 10,
+    borderRadius: 9,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF9EE',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -118,9 +127,10 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#F4E8D4',
   },
-  dot: {
-    color: theme.colors.muted,
-    fontSize: 18,
-    lineHeight: 22,
+  emptyCellMark: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(106,87,71,0.2)',
   },
 });
