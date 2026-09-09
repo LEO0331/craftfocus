@@ -4,7 +4,7 @@
 
 **Last Updated:** 2026-09-08 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-008 - Production signup backend recovery
+**Last Completed Feature:** feat-009 - Isometric room visual redesign
 
 ## What's Done
 
@@ -122,6 +122,21 @@ Recovery completed:
 - Disabled **Confirm email** until production SMTP is configured, avoiding the built-in mailer for signup.
 - Updated signup to route auto-confirmed sessions directly into the app and added localized mail-quota guidance.
 - Deployment #76 for commit `1b90aa8` passed; live verification confirmed `AUTO_CONFIRM=true`, signup enabled, the new bundle active, and the starter plant present.
+
+## 2026-09-09 Isometric Room Redesign
+
+- Added a continuous diamond floor, subtle tile grid, floor shadow, and warm bedroom palette.
+- Removed built-in floor furniture collisions so player-owned items define the editable room contents.
+- Kept theme character in wall fixtures while separating gym equipment from placement anchors.
+- Reduced empty-anchor size and contrast, enlarged placed sprites, and redistributed bedroom placement zones.
+- Framed the collectible gallery and widened desktop scene/gallery proportions while retaining the stacked mobile layout.
+
+Evidence:
+
+- Visual-verdict: 92 / pass after bedroom desktop, bedroom 390px mobile, and gym desktop renders.
+- `npx tsc --noEmit` passed.
+- `npm test` passed: 18 files / 64 tests.
+- `npm run e2e:build` passed: 21 static routes.
 
 ## 2026-06-11 API Review Pass
 

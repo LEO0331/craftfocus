@@ -14,13 +14,13 @@ export interface RoomAnchor {
 
 export const ROOM_ANCHORS: Record<RoomType, RoomAnchor[]> = {
   bedroom: [
-    { id: 'bed_left', x: 3.0, y: 2.2, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'desk_left', x: 0.55, y: 2.95, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'desk_center', x: 1.35, y: 3.65, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
-    { id: 'drawer_right', x: 4.9, y: 2.55, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
-    { id: 'chair_front', x: 3.35, y: 3.35, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
-    { id: 'lounge_left', x: 0.15, y: 4.0, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
-    { id: 'shelf_right', x: 5.85, y: 3.25, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'bed_left', x: 4.5, y: 2.15, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'desk_left', x: 1.0, y: 2.0, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'desk_center', x: 2.15, y: 3.25, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'drawer_right', x: 5.65, y: 2.8, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 5 },
+    { id: 'chair_front', x: 3.7, y: 4.35, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'lounge_left', x: 0.75, y: 4.75, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
+    { id: 'shelf_right', x: 6.0, y: 4.25, slotType: 'floor', footprintW: 2, footprintH: 2, zIndex: 6 },
     { id: 'wall_left', x: 0, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_center', x: 3, y: 0, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },
     { id: 'wall_right', x: 6, y: 1, slotType: 'wall', footprintW: 1, footprintH: 1, zIndex: 2 },

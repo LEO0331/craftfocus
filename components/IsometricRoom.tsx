@@ -50,10 +50,6 @@ function projectIso(gridX: number, gridY: number, tileWidth: number, tileHeight:
 }
 
 function BedroomDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeight, wallTop }: RoomDecorProps) {
-  const bed = projectIso(4.35, 2.35, tileWidth, tileHeight, originX, originY);
-  const dresser = projectIso(1.15, 2.4, tileWidth, tileHeight, originX, originY);
-  const rug = projectIso(3.45, 4.15, tileWidth, tileHeight, originX, originY);
-
   return (
     <View pointerEvents="none" style={styles.decorLayer}>
       <View style={[styles.bedroomLeftWindow, { left: originX - wallWidth * 0.66, top: wallTop + wallHeight * 0.2, width: wallWidth * 0.34, height: wallHeight * 0.42 }]}>
@@ -64,21 +60,6 @@ function BedroomDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wall
         <View style={styles.bedroomWindowRail} />
       </View>
 
-      <View style={[styles.bedroomBed, { left: bed.x - tileWidth * 1.35, top: bed.y - tileHeight * 0.92, width: tileWidth * 2.9, height: tileHeight * 1.35 }]}>
-        <View style={styles.bedroomBlanket} />
-        <View style={styles.bedroomPillowA} />
-        <View style={styles.bedroomPillowB} />
-      </View>
-      <View style={[styles.bedroomDresser, { left: dresser.x - tileWidth * 0.75, top: dresser.y - tileHeight * 0.78, width: tileWidth * 1.45, height: tileHeight * 1.52 }]}>
-        {[0, 1, 2].map((index) => (
-          <View key={index} style={[styles.bedroomDrawer, { top: tileHeight * (0.3 + index * 0.34) }]} />
-        ))}
-      </View>
-      <View style={[styles.bedroomRug, { left: rug.x - tileWidth * 0.9, top: rug.y - tileHeight * 0.2, width: tileWidth * 1.8, height: tileHeight * 0.75 }]} />
-      <View style={[styles.bedroomPlant, { left: originX - tileWidth * 0.1, top: wallTop + wallHeight * 0.55, width: tileWidth * 0.46, height: tileHeight * 1.1 }]}>
-        <View style={styles.bedroomPlantLeafA} />
-        <View style={styles.bedroomPlantLeafB} />
-      </View>
     </View>
   );
 }
@@ -148,6 +129,7 @@ function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeig
       <View
         style={[
           styles.gymBenchPress,
+          styles.gymFloorScenery,
           {
             left: bench.x - tileWidth * 0.95,
             top: bench.y - tileHeight * 0.44,
@@ -164,7 +146,7 @@ function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeig
         <View style={styles.gymBenchPad} />
       </View>
 
-      <View style={[styles.gymDumbbellRack, { left: dumbbellRack.x - tileWidth * 0.45, top: dumbbellRack.y - tileHeight * 0.25, width: tileWidth * 1.3, height: tileHeight * 1.25 }]}>
+      <View style={[styles.gymDumbbellRack, styles.gymFloorScenery, { left: dumbbellRack.x - tileWidth * 0.45, top: dumbbellRack.y - tileHeight * 0.25, width: tileWidth * 1.3, height: tileHeight * 1.25 }]}>
         {[0, 1, 2].map((shelf) => (
           <View key={shelf} style={[styles.gymRackShelf, { top: tileHeight * (0.22 + shelf * 0.27) }]} />
         ))}
@@ -173,7 +155,7 @@ function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeig
         ))}
       </View>
 
-      <View style={[styles.gymWeightTower, { left: rack.x - tileWidth * 0.48, top: rack.y - tileHeight * 0.92, width: tileWidth * 0.95, height: tileHeight * 2.05 }]}>
+      <View style={[styles.gymWeightTower, styles.gymFloorScenery, { left: rack.x - tileWidth * 0.48, top: rack.y - tileHeight * 0.92, width: tileWidth * 0.95, height: tileHeight * 2.05 }]}>
         <View style={[styles.gymTowerRail, { left: 4 }]} />
         <View style={[styles.gymTowerRail, { right: 4 }]} />
         {[0, 1, 2, 3].map((rung) => (
@@ -181,31 +163,31 @@ function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeig
         ))}
       </View>
 
-      <View style={[styles.gymKettlebellRow, { left: kettlebells.x - tileWidth * 0.4, top: kettlebells.y - tileHeight * 0.08, width: tileWidth * 1.3, height: tileHeight * 0.58 }]}>
+      <View style={[styles.gymKettlebellRow, styles.gymFloorScenery, { left: kettlebells.x - tileWidth * 0.4, top: kettlebells.y - tileHeight * 0.08, width: tileWidth * 1.3, height: tileHeight * 0.58 }]}>
         {[0, 1, 2].map((index) => (
           <View key={index} style={[styles.gymKettlebell, { left: tileWidth * (0.05 + index * 0.38) }]} />
         ))}
       </View>
 
-      <View style={[styles.gymSingleDumbbell, { left: leftDumbbell.x - tileWidth * 0.42, top: leftDumbbell.y - tileHeight * 0.06, width: tileWidth * 0.9, height: tileHeight * 0.44 }]}>
+      <View style={[styles.gymSingleDumbbell, styles.gymFloorScenery, { left: leftDumbbell.x - tileWidth * 0.42, top: leftDumbbell.y - tileHeight * 0.06, width: tileWidth * 0.9, height: tileHeight * 0.44 }]}>
         <View style={styles.gymSingleDumbbellPlate} />
         <View style={[styles.gymSingleDumbbellPlate, styles.gymSingleDumbbellRightPlate]} />
         <View style={styles.gymSingleDumbbellBar} />
       </View>
 
-      <View style={[styles.gymRightSmallBench, { left: rightBench.x - tileWidth * 0.75, top: rightBench.y - tileHeight * 0.25, width: tileWidth * 1.55, height: tileHeight * 0.56 }]}>
+      <View style={[styles.gymRightSmallBench, styles.gymFloorScenery, { left: rightBench.x - tileWidth * 0.75, top: rightBench.y - tileHeight * 0.25, width: tileWidth * 1.55, height: tileHeight * 0.56 }]}>
         <View style={styles.gymRightSmallBenchPad} />
         <View style={[styles.gymRightSmallBenchLeg, { left: tileWidth * 0.2 }]} />
         <View style={[styles.gymRightSmallBenchLeg, { right: tileWidth * 0.2 }]} />
       </View>
 
-      <View style={[styles.gymSideBench, { left: sideBench.x - tileWidth * 0.85, top: sideBench.y - tileHeight * 0.34, width: tileWidth * 1.7, height: tileHeight * 0.58 }]}>
+      <View style={[styles.gymSideBench, styles.gymFloorScenery, { left: sideBench.x - tileWidth * 0.85, top: sideBench.y - tileHeight * 0.34, width: tileWidth * 1.7, height: tileHeight * 0.58 }]}>
         <View style={styles.gymSideBenchPad} />
         <View style={[styles.gymSideBenchLeg, { left: tileWidth * 0.18 }]} />
         <View style={[styles.gymSideBenchLeg, { right: tileWidth * 0.18 }]} />
       </View>
 
-      <View style={[styles.gymLooseDumbbells, { left: rightDumbbells.x - tileWidth * 0.52, top: rightDumbbells.y - tileHeight * 0.1, width: tileWidth * 1.15, height: tileHeight * 0.72 }]}>
+      <View style={[styles.gymLooseDumbbells, styles.gymFloorScenery, { left: rightDumbbells.x - tileWidth * 0.52, top: rightDumbbells.y - tileHeight * 0.1, width: tileWidth * 1.15, height: tileHeight * 0.72 }]}>
         {[0, 1, 2].map((index) => (
           <View key={index} style={[styles.gymLooseDumbbell, { left: tileWidth * (0.02 + index * 0.34), top: tileHeight * (0.08 + (index % 2) * 0.18) }]}>
             <View style={styles.gymLooseDumbbellPlate} />
@@ -215,7 +197,7 @@ function GymDecor({ tileWidth, tileHeight, originX, originY, wallWidth, wallHeig
         ))}
       </View>
 
-      <View style={[styles.gymFrontBench, { left: frontBench.x - tileWidth * 0.74, top: frontBench.y - tileHeight * 0.36, width: tileWidth * 1.55, height: tileHeight * 0.78 }]}>
+      <View style={[styles.gymFrontBench, styles.gymFloorScenery, { left: frontBench.x - tileWidth * 0.74, top: frontBench.y - tileHeight * 0.36, width: tileWidth * 1.55, height: tileHeight * 0.78 }]}>
         <View style={styles.gymFrontBenchBack} />
         <View style={styles.gymFrontBenchSeat} />
         <View style={[styles.gymFrontBenchLeg, { left: 10 }]} />
@@ -237,13 +219,20 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const originY = sceneHeight * (isGym ? 0.48 : 0.39);
   const floorWidth = tileWidth * ROOM_GRID_SIZE;
   const wallWidth = floorWidth * WALL_WIDTH_RATIO;
-  const wallHeight = sceneHeight * (isGym ? 0.4 : 0.46);
+  const wallHeight = sceneHeight * (isGym ? 0.31 : 0.34);
   const wallTop = sceneHeight * 0.08;
   const themeColors = isGym ? gymColors : bedroomColors;
   const floorCenterY = originY + (floorWidth * TILE_ASPECT_RATIO) / 2;
 
   return (
-    <View style={[styles.scene, { width: sceneWidth, height: sceneHeight, backgroundColor: themeColors.sky }]}>
+    <View style={[styles.scene, { width: sceneWidth, height: sceneHeight, backgroundColor: themeColors.floor }]}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.skyBackdrop,
+          { height: originY, backgroundColor: themeColors.sky },
+        ]}
+      />
       <View
         pointerEvents="none"
         style={[
@@ -408,6 +397,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     zIndex: 2,
   },
+  skyBackdrop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    zIndex: 1,
+  },
   floorPlane: {
     position: 'absolute',
     borderRadius: 10,
@@ -453,6 +449,7 @@ const styles = StyleSheet.create({
   },
   decorLayer: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
   },
   bedroomLeftWindow: {
     position: 'absolute',
@@ -1062,6 +1059,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  gymFloorScenery: {
+    display: 'none',
   },
   anchorEmpty: {
     backgroundColor: 'rgba(255, 249, 238, 0.82)',

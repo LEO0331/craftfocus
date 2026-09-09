@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete, including backend recovery, required item seed repair, hosted trigger verification, immediate signup without the limited test mailer, and successful deployment #76 for `1b90aa8`.
+- Current status: Complete through feat-009, including the responsive bedroom/gym isometric-room redesign.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session
