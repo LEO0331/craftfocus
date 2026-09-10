@@ -21,3 +21,19 @@ test('signup page renders and links back without backend env', async ({ page }) 
   await expect(page.getByPlaceholder(/Password|密碼/)).toBeVisible();
   await expect(page.getByText(/Log In|登入/)).toBeVisible();
 });
+
+test('auth forward and back navigation preserves the expected screen', async ({ page }) => {
+  await page.goto('auth/login');
+  await page.getByRole('link', { name: /Create account|建立帳號/ }).click();
+  await expect(page).toHaveURL(/\/auth\/signup/);
+  await expect(page.getByRole('button', { name: /Sign Up|註冊/ })).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/auth\/login/);
+  await expect(page.getByRole('button', { name: /Log In|登入/ })).toBeVisible();
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\/auth\/signup/);
+  await page.getByRole('link', { name: /Log In|登入/ }).click();
+  await expect(page).toHaveURL(/\/auth\/login/);
+});

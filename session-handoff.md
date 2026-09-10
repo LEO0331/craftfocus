@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete through feat-009, including the responsive bedroom/gym isometric-room redesign.
+- Current status: Complete through feat-010, including detailed pixel previews, room loading stability, and primary navigation-flow polish.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session

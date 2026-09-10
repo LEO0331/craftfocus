@@ -4,7 +4,7 @@
 
 **Last Updated:** 2026-09-08 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-009 - Isometric room visual redesign
+**Last Completed Feature:** feat-010 - Pixel preview and navigation flow polish
 
 ## What's Done
 
@@ -137,6 +137,25 @@ Evidence:
 - `npx tsc --noEmit` passed.
 - `npm test` passed: 18 files / 64 tests.
 - `npm run e2e:build` passed: 21 static routes.
+
+## 2026-09-10 Pixel Preview and Flow Polish
+
+- Increased generated preview resolution from 48px to 96px while keeping the output bounded at 384px.
+- Increased persistent collectible fallback from 8×8 with 8 colors to 16×16 with up to 12 colors; the database accepts both legacy and new grids.
+- Replaced the oversized single preview with labeled original/generated comparison frames and explicit generation/publishing status.
+- Prevented own and friend rooms from rendering a default bedroom before persisted room data arrives.
+- Added stale-request protection and retry feedback for friend rooms and listing details.
+- Made room-type switching optimistic with rollback, blocked duplicate detail actions, disabled empty comments, and made successful publishing replace the completed form in history.
+- Added auth forward/back and publish/detail/creator-room/back flow coverage.
+
+Evidence:
+
+- Visual-verdict: 91 / pass on the real upload screen after image selection and generation.
+- `npx tsc --noEmit` passed.
+- `npm test` passed: 19 files / 66 tests.
+- `PORT=4201 npm run test:e2e` passed: 3 smoke flows / 2 credential-gated flows skipped.
+- All migrations and database regressions passed from scratch in disposable PostgreSQL 18.
+- Hosted `v23_is_valid_pixel_grid` migration applied successfully.
 
 ## 2026-06-11 API Review Pass
 

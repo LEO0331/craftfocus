@@ -58,4 +58,11 @@ test('v2 web flow works: login -> focus -> room -> listing', async ({ page }) =>
   await page.getByRole('button', { name: 'Publish Listing' }).click();
   await expect(page.getByText(/Listing Detail|作品詳情/).first()).toBeVisible({ timeout: 20000 });
   await snap(page, 'v2-05-listing-detail.png');
+
+  await page.getByRole('button', { name: /Visit Creator Room|查看作者房間/ }).click();
+  await expect(page.getByText(/Friend Room|好友房間/).first()).toBeVisible({ timeout: 20000 });
+  await page.goBack();
+  await expect(page.getByText(/Listing Detail|作品詳情/).first()).toBeVisible();
+  await page.goBack();
+  await expect(page.getByText(/Craft Feed|作品動態/).first()).toBeVisible();
 });
