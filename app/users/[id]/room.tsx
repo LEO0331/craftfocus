@@ -100,6 +100,7 @@ export default function UserRoomScreen() {
       <Card>
         <Text style={styles.label}>{t('room.galleryTitle')}</Text>
         <CollectibleGalleryBoard
+          roomType={roomType}
           placements={galleryPlacements}
           collectibles={galleryItems}
           selectedListingId={null}

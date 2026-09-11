@@ -10,6 +10,7 @@ import { IsometricRoom } from '@/components/IsometricRoom';
 import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { PixelSprite } from '@/components/PixelSprite';
 import { ROOM_SPRITES } from '@/constants/roomSprites';
+import { ROOM_COLLECTION_COLORS } from '@/constants/roomCollectibles';
 import { resolveSpriteId } from '@/constants/spriteUtils';
 import { theme } from '@/constants/theme';
 import { useRoom } from '@/hooks/useRoom';
@@ -187,6 +188,7 @@ export default function RoomScreen() {
           <View style={[styles.galleryWrap, splitRoomGallery ? styles.galleryWrapRow : styles.galleryWrapColumn]}>
             <Text style={styles.panelTitle}>{t('room.galleryTitle')}</Text>
             <CollectibleGalleryBoard
+              roomType={roomType}
               placements={galleryPlacements}
               collectibles={collectibles}
               selectedListingId={selectedCollectibleId}
@@ -218,7 +220,9 @@ export default function RoomScreen() {
             const active = selectedItemId === item.item_id;
             return (
               <View key={item.item_id} style={[styles.inventoryCard, active ? styles.inventoryCardActive : null]}>
-                <PixelSprite spriteId={spriteId} size={34} />
+                <View style={[styles.inventoryArt, { backgroundColor: ROOM_COLLECTION_COLORS[roomType].inset, borderColor: ROOM_COLLECTION_COLORS[roomType].border }]}>
+                  <PixelSprite spriteId={spriteId} size={64} roomType={roomType} />
+                </View>
                 <Text style={styles.inventoryName}>{ROOM_SPRITES[spriteId].name}</Text>
                 <Text style={styles.inventoryMeta}>{t('room.owned', { count: item.quantity })}</Text>
                 <Button
@@ -359,8 +363,11 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.body,
     alignSelf: 'flex-start',
   },
-  inventoryWrap: { gap: 8 },
+  inventoryWrap: { gap: 10, flexDirection: 'row', flexWrap: 'wrap' },
+  inventoryArt: { height: 84, width: '100%', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 12 },
   inventoryCard: {
+    flexBasis: 140,
+    flexGrow: 1,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.md,

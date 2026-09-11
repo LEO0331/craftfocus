@@ -95,6 +95,14 @@
       ],
       "status": "done",
       "evidence": "Raised pixel preview detail from 48px to 96px and persistent fallback from 8x8/8 colors to 16x16/12 colors; added labeled original/generated comparison and publish-stage feedback. Friend and own rooms now wait for persisted state, room switching is optimistic with rollback, detail actions prevent double submits, and publishing replaces the form so Back returns to the originating feed. Visual-verdict passed at 91; 19 unit files/66 tests, TypeScript, database migrations/regressions, browser navigation tests, and web export passed."
+    },
+    {
+      "id": "feat-011",
+      "name": "Cozy room and themed collectible artwork",
+      "description": "Refine the isometric scene and match collectible miniatures, inventory cards, and gallery frames to bedroom and gym themes.",
+      "dependencies": ["feat-009", "feat-010"],
+      "status": "done",
+      "evidence": "Original 16x16 artwork for 12 existing inventory IDs, contextual palettes, and larger inventory previews. Preserved ownership and placement IDs; corrected small-screen anchor hit areas. TypeScript, 71 unit tests, 21-route export, and local browser fixture checks of both themes at 1200/390/320px passed. Live authenticated and native-device verification remain outstanding."
     }
   ]
 }

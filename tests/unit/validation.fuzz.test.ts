@@ -35,7 +35,8 @@ describe('validation fuzz smoke', () => {
         expect(() => sanitizeText(raw, 60)).toThrow();
       }
 
-      if (normalized.length <= 40) {
+      // Search preserves interior whitespace, unlike sanitizeText.
+      if (raw.trim().length <= 40) {
         expect(validateSearchQuery(raw).length).toBeLessThanOrEqual(40);
       } else {
         expect(() => validateSearchQuery(raw)).toThrow();

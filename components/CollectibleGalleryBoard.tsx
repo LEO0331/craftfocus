@@ -2,7 +2,8 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { theme } from '@/constants/theme';
-import type { CustomGalleryPlacement, GalleryItem } from '@/types/models';
+import type { CustomGalleryPlacement, GalleryItem, RoomType } from '@/types/models';
+import { ROOM_COLLECTION_COLORS } from '@/constants/roomCollectibles';
 
 interface CollectibleGalleryBoardProps {
   placements: CustomGalleryPlacement[];
@@ -12,6 +13,7 @@ interface CollectibleGalleryBoardProps {
   readOnly?: boolean;
   cellSize?: number;
   gapSize?: number;
+  roomType?: RoomType;
   i18n?: {
     a11yEmpty: (x: number, y: number) => string;
     a11yFilled: (x: number, y: number, title: string) => string;
@@ -31,13 +33,15 @@ export function CollectibleGalleryBoard({
   readOnly = false,
   cellSize = 54,
   gapSize = 6,
+  roomType = 'bedroom',
   i18n,
 }: CollectibleGalleryBoardProps) {
+  const colors = ROOM_COLLECTION_COLORS[roomType];
   const collectibleMap = new Map(collectibles.map((item) => [item.listingId, item]));
   const placementMap = new Map(placements.map((placement) => [`${placement.cellX}-${placement.cellY}`, placement]));
 
   return (
-    <View style={[styles.wrap, { gap: gapSize }]}>
+    <View style={[styles.wrap, { gap: gapSize, backgroundColor: colors.frame, borderColor: colors.border }]}>
       {Array.from({ length: SIZE }).map((_, y) => (
         <View key={`row-${y}`} style={[styles.row, { gap: gapSize }]}>
           {Array.from({ length: SIZE }).map((__, x) => {
@@ -52,7 +56,7 @@ export function CollectibleGalleryBoard({
                 key={key}
                 onPress={() => onCellPress?.(x, y, placement?.listingId ?? null)}
                 disabled={readOnly}
-                style={[styles.cell, { width: cellSize, height: cellSize }, active ? styles.cellActive : null]}
+                style={[styles.cell, { width: cellSize, height: cellSize, backgroundColor: colors.inset, borderColor: colors.border }, active ? styles.cellActive : null]}
                 accessibilityRole="button"
                 accessibilityLabel={
                   placement

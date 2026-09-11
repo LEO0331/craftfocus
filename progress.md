@@ -157,6 +157,18 @@ Evidence:
 - All migrations and database regressions passed from scratch in disposable PostgreSQL 18.
 - Hosted `v23_is_valid_pixel_grid` migration applied successfully.
 
+## 2026-09-11 Cozy Room and Themed Collectibles
+
+- Continued the cozy isometric scene with original artwork informed by the cutaway composition and readable silhouettes of Unpacking (https://www.unpackinggame.com/) and Cozy Room Decorator (https://store.steampowered.com/app/2615130/Cozy_Room_Decorator/). No game assets were copied.
+- Added original 16x16 miniatures for 12 existing furniture IDs, with warm bedroom and sage/teal gym palettes. Larger inventory cards, catalog thumbnails, room sprites, and owner/visitor gallery frames share theme colors.
+- Reused PixelSprite's renderer and inventory IDs; custom artwork remains intact. No dependencies or database changes.
+- Preserved placement IDs while separating small-screen touch targets. Verified every placement target, show/hide spots, day/evening, and empty visitor rooms at 1200, 390, and 320 pixels using real room/gallery components in a local browser fixture.
+- Corrected an existing randomized test's whitespace assumption: search trims edges while the text sanitizer collapses interior whitespace. Production validation is unchanged.
+
+Verification: TypeScript passed; 21 unit files / 71 tests passed; 21-route web export passed; browser smoke passed (3 tests, 2 credential-gated skips). Visual review passed at 92, recorded in .omx/state/cozy-room/ralph-progress.json. No standalone lint command is configured; git diff --check passed.
+
+Remaining limits: local Supabase configuration is absent, so authenticated live flows were not reverified; native-device visual QA and production deployment were not performed in this pass. Browser fixture screenshots are in the session visualization directory (cozy-bedroom-1200-day.png and cozy-gym-390-evening.png).
+
 ## 2026-06-11 API Review Pass
 
 - Applied Stripe-style API review to the internal Supabase service layer.

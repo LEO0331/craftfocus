@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete through feat-010, including detailed pixel previews, room loading stability, and primary navigation-flow polish.
+- Current status: Complete through feat-011: themed 16x16 collectible miniatures, room/gallery palette integration, and mobile placement hit-area fixes. Latest checks and limitations are recorded in progress.md (2026-09-11).
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session

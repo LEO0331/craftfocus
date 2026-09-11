@@ -62,10 +62,10 @@ function Block({ x, y, w, d, h, top, front, side, children }: {
 
 // Original room-scale artwork. Inventory thumbnails keep their familiar pixel
 // sprites; larger objects gain faces and shadows inside the isometric scene.
-function RoomObject({ itemId, size }: { itemId: string; size: number }) {
+function RoomObject({ itemId, size, roomType }: { itemId: string; size: number; roomType: RoomType }) {
   const desk = itemId === 'study_desk' || itemId === 'work_desk';
   const modeled = desk || ['plant', 'bookshelf', 'bean_bag', 'floor_rug', 'yoga_mat', 'dumbbell', 'desk_lamp'].includes(itemId);
-  if (!modeled) return <PixelSprite spriteId={resolveSpriteId(itemId)} size={size} />;
+  if (!modeled) return <PixelSprite spriteId={resolveSpriteId(itemId)} size={size} roomType={roomType} />;
   return <View style={{ width: size, height: size }}>
     <View style={{ width: 100, height: 100, transformOrigin: [0, 0, 0], transform: [{ scale: size / 100 }] }}>
       {desk && <>
@@ -171,7 +171,6 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
   const [availableWidth, setAvailableWidth] = useState(roomSceneWidth(windowWidth - 96));
   const [evening, setEvening] = useState(false);
   const [showSpots, setShowSpots] = useState(true);
-  const [focusedAnchor, setFocusedAnchor] = useState<string | null>(null);
   const colors = (evening ? NIGHT : DAY)[roomType];
   const width = roomSceneWidth(availableWidth);
   const scale = width / ROOM_SCENE.width;
@@ -214,16 +213,15 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
           const hitSize = Math.max(44, size);
           const label = placed ? i18n?.anchorFilled(anchor.id, placed.item_id) ?? `Anchor ${anchor.id} has ${placed.item_id}` : i18n?.anchorEmpty(anchor.id) ?? `Anchor ${anchor.id} empty`;
           return <Pressable key={anchor.id} testID={`room-anchor-${anchor.id}`} onPress={() => onSelectAnchor(anchor.id)}
-            onFocus={() => setFocusedAnchor(anchor.id)} onBlur={() => setFocusedAnchor(null)}
             disabled={!editing} accessibilityRole={editing ? 'button' : 'image'} accessibilityLabel={label}
             accessibilityState={{ selected: active, disabled: !editing }}
             accessibilityHint={editing ? i18n?.anchorHintEditable : i18n?.anchorHintReadonly}
             style={({ pressed }) => [{ position: 'absolute', left: point.x * scale - hitSize / 2, top: point.y * scale - hitSize + 12 * scale,
               width: hitSize, height: hitSize, alignItems: 'center', justifyContent: 'flex-end',
-              zIndex: isWall ? 1 : 100 + Math.round(point.y), opacity: pressed ? 0.8 : 1 }, focusedAnchor === anchor.id && styles.anchorFocus]}>
+              zIndex: isWall ? 1 : 100 + Math.round(point.y), opacity: pressed ? 0.8 : 1 }]}>
             {!isWall && <View pointerEvents="none" style={[styles.itemShadow, { width: placed ? size * 0.7 : 28 * scale, height: 12 * scale, backgroundColor: active ? '#EAA65480' : placed ? '#3C312935' : '#FFFFFF38' }]} />}
             {placed && spriteId ? <View pointerEvents="none" style={{ marginBottom: 5 * scale, transform: [{ translateY: active ? -5 * scale : 0 }] }}>
-              <RoomObject itemId={placed.item_id} size={size} />
+              <RoomObject itemId={placed.item_id} size={size} roomType={roomType} />
             </View> : <View pointerEvents="none" style={[styles.spot, { width: Math.max(18, 26 * scale), height: Math.max(18, 20 * scale), borderColor: active ? '#BC643D' : evening ? '#E0D2B67A' : '#715E414A', backgroundColor: active ? '#FFE8B5' : evening ? '#FFF2CA18' : '#FFF7DF80' }]}>
               <Text style={[styles.spotText, { color: active ? '#843E27' : evening ? '#E7DDCB' : '#756145' }]}>{active ? '✓' : '+'}</Text>
             </View>}
@@ -249,7 +247,8 @@ const styles = StyleSheet.create({
   toolTextActive: { color: '#493C29', fontWeight: '800' },
   guideTool: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
   guideText: { color: '#746046', fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
-  canvas: { width: '100%', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#D8CCB5' },
+  canvas: { width: '100%', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#D8CCB5',
+    ...Platform.select({ web: { userSelect: 'none' as const }, default: {} }) },
   groundShadow: { position: 'absolute', width: 330, height: 44, left: 135, top: 394, borderRadius: 100, backgroundColor: '#1527190D' },
   wallBaseboard: { position: 'absolute', bottom: 0, height: 4, width: '100%' },
   window: { position: 'absolute', left: 37, top: 16, width: 42, height: 52, borderWidth: 2.2, borderColor: '#F9EED3', overflow: 'hidden' },
@@ -278,7 +277,6 @@ const styles = StyleSheet.create({
   spot: { width: 26, height: 20, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   spotText: { fontSize: 16, lineHeight: 19, fontWeight: '500' },
   selectedDot: { width: 6, height: 6, borderRadius: 3, position: 'absolute', bottom: -3, backgroundColor: '#BA613D' },
-  anchorFocus: { borderWidth: 2, borderColor: '#9D5738', borderRadius: 12 },
   caption: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   captionDot: { width: 5, height: 5, borderRadius: 3 },
   captionText: { fontSize: 12, color: '#79674E', flexShrink: 1 },

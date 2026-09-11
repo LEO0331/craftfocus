@@ -3,10 +3,13 @@ import { StyleSheet, View } from 'react-native';
 
 import { ANIMAL_SPRITES } from '@/constants/animalSprites';
 import { ROOM_SPRITES } from '@/constants/roomSprites';
+import { roomCollectibleSprite } from '@/constants/roomCollectibles';
+import type { RoomType } from '@/types/models';
 
 interface PixelSpriteProps {
   spriteId: string;
   size?: number;
+  roomType?: RoomType;
 }
 
 const SPRITE_MAP = {
@@ -14,8 +17,9 @@ const SPRITE_MAP = {
   ...ANIMAL_SPRITES,
 } as const;
 
-export function PixelSprite({ spriteId, size = 32 }: PixelSpriteProps) {
-  const sprite = SPRITE_MAP[spriteId as keyof typeof SPRITE_MAP] ?? ROOM_SPRITES.unknown;
+export function PixelSprite({ spriteId, size = 32, roomType }: PixelSpriteProps) {
+  const sprite = (roomType ? roomCollectibleSprite(spriteId, roomType) : undefined)
+    ?? SPRITE_MAP[spriteId as keyof typeof SPRITE_MAP] ?? ROOM_SPRITES.unknown;
   const rows = sprite.grid;
   const dimension = rows.length;
   const pixelSize = Math.max(1, Math.floor(size / dimension));

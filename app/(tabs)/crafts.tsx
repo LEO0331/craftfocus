@@ -202,7 +202,7 @@ export default function CraftsScreen() {
               <View key={item.id} style={styles.officialCard}>
                 <View style={styles.officialHead}>
                   <View style={styles.officialTitleWrap}>
-                    <PixelSprite spriteId={item.id} size={34} />
+                    <PixelSprite spriteId={item.id} size={48} roomType={['dumbbell', 'yoga_mat', 'tool_box'].includes(item.id) ? 'gym' : 'bedroom'} />
                     <Text style={styles.officialName}>{item.name}</Text>
                   </View>
                   <ClaimChip label={`${officialSeedCost}🌱`} onPress={() => handleClaimOfficial(item.id)} disabled={claimingOfficialId === item.id} />
