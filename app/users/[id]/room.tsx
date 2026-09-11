@@ -91,6 +91,9 @@ export default function UserRoomScreen() {
             anchorFilled: (anchorId, itemId) => t('room.anchorFilled', { anchorId, itemId }),
             anchorHintEditable: t('room.anchorHintEditable'),
             anchorHintReadonly: t('room.anchorHintReadonly'),
+            daylight: t('room.daylight'),
+            evening: t('room.evening'),
+            viewHint: t('room.viewHint'),
           }}
         />
       </Card>

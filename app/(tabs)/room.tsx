@@ -175,6 +175,12 @@ export default function RoomScreen() {
                 anchorFilled: (anchorId, itemId) => t('room.anchorFilled', { anchorId, itemId }),
                 anchorHintEditable: t('room.anchorHintEditable'),
                 anchorHintReadonly: t('room.anchorHintReadonly'),
+                daylight: t('room.daylight'),
+                evening: t('room.evening'),
+                showSpots: t('room.showSpots'),
+                hideSpots: t('room.hideSpots'),
+                editHint: t('room.editHint'),
+                viewHint: t('room.viewHint'),
               }}
             />
           </View>

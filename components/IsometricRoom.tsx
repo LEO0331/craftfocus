@@ -198,38 +198,38 @@ export function IsometricRoom({ roomType, placements, selectedAnchorId, onSelect
     <View testID="room-canvas" style={[styles.canvas, { height: width * ROOM_SCENE.height / ROOM_SCENE.width, backgroundColor: colors.backdrop }]}>
       <View style={{ width: ROOM_SCENE.width, height: ROOM_SCENE.height, transformOrigin: [0, 0, 0], transform: [{ scale }] }}>
         <Architecture roomType={roomType} evening={evening} />
-        {anchors.map((anchor) => {
+      </View>
+      {anchors.map((anchor) => {
           const placed = placements.find((p) => p.anchor_id === anchor.id);
           if (!placed && !editing) return null;
           const isWall = anchor.slotType === 'wall';
           const wallIndex = wallAnchors.findIndex((a) => a.id === anchor.id);
           const point = isWall
-            ? (wallIndex === 0 ? roomPoint(0, 1.2, 48) : roomPoint(wallIndex === 1 ? 3.4 : 5.8, 0, 30))
+            ? (wallIndex === 0 ? roomPoint(0, 1.2, 48) : roomPoint(wallIndex === 1 ? 3.4 : 5.8, 0, 72))
             : roomPoint(anchor.x, anchor.y);
           const active = editing && selectedAnchorId === anchor.id;
           const spriteId = placed ? resolveSpriteId(placed.item_id) : null;
           const large = placed && ['study_desk', 'work_desk', 'bookshelf', 'bean_bag'].includes(placed.item_id);
-          const size = large ? 90 : 68;
-          const hitSize = Math.max(44 / scale, size);
+          const size = (large ? 90 : 68) * scale;
+          const hitSize = Math.max(44, size);
           const label = placed ? i18n?.anchorFilled(anchor.id, placed.item_id) ?? `Anchor ${anchor.id} has ${placed.item_id}` : i18n?.anchorEmpty(anchor.id) ?? `Anchor ${anchor.id} empty`;
           return <Pressable key={anchor.id} testID={`room-anchor-${anchor.id}`} onPress={() => onSelectAnchor(anchor.id)}
             onFocus={() => setFocusedAnchor(anchor.id)} onBlur={() => setFocusedAnchor(null)}
             disabled={!editing} accessibilityRole={editing ? 'button' : 'image'} accessibilityLabel={label}
             accessibilityState={{ selected: active, disabled: !editing }}
             accessibilityHint={editing ? i18n?.anchorHintEditable : i18n?.anchorHintReadonly}
-            style={({ pressed }) => [{ position: 'absolute', left: point.x - hitSize / 2, top: point.y - hitSize + 12,
+            style={({ pressed }) => [{ position: 'absolute', left: point.x * scale - hitSize / 2, top: point.y * scale - hitSize + 12 * scale,
               width: hitSize, height: hitSize, alignItems: 'center', justifyContent: 'flex-end',
               zIndex: isWall ? 1 : 100 + Math.round(point.y), opacity: pressed ? 0.8 : 1 }, focusedAnchor === anchor.id && styles.anchorFocus]}>
-            {!isWall && <View style={[styles.itemShadow, { width: placed ? size * 0.7 : 28, backgroundColor: active ? '#EAA65480' : placed ? '#3C312935' : '#FFFFFF38' }]} />}
-            {placed && spriteId ? <View style={{ marginBottom: 5, transform: [{ translateY: active ? -5 : 0 }] }}>
+            {!isWall && <View pointerEvents="none" style={[styles.itemShadow, { width: placed ? size * 0.7 : 28 * scale, height: 12 * scale, backgroundColor: active ? '#EAA65480' : placed ? '#3C312935' : '#FFFFFF38' }]} />}
+            {placed && spriteId ? <View pointerEvents="none" style={{ marginBottom: 5 * scale, transform: [{ translateY: active ? -5 * scale : 0 }] }}>
               <RoomObject itemId={placed.item_id} size={size} />
-            </View> : <View style={[styles.spot, { borderColor: active ? '#BC643D' : evening ? '#E0D2B67A' : '#715E414A', backgroundColor: active ? '#FFE8B5' : evening ? '#FFF2CA18' : '#FFF7DF80' }]}>
+            </View> : <View pointerEvents="none" style={[styles.spot, { width: Math.max(18, 26 * scale), height: Math.max(18, 20 * scale), borderColor: active ? '#BC643D' : evening ? '#E0D2B67A' : '#715E414A', backgroundColor: active ? '#FFE8B5' : evening ? '#FFF2CA18' : '#FFF7DF80' }]}>
               <Text style={[styles.spotText, { color: active ? '#843E27' : evening ? '#E7DDCB' : '#756145' }]}>{active ? '✓' : '+'}</Text>
             </View>}
-            {active && <View style={styles.selectedDot} />}
+            {active && <View pointerEvents="none" style={styles.selectedDot} />}
           </Pressable>;
         })}
-      </View>
     </View>
     <View style={styles.caption}>
       <View style={[styles.captionDot, { backgroundColor: editing ? '#6D8F6D' : '#B89560' }]} />
