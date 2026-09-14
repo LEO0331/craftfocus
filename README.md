@@ -118,6 +118,43 @@ Legacy tables such as `user_items`, `room_items`, and `exchange_requests` are re
 - **PWA:** Static shell caching only; no offline write sync.
 - **Images:** Supabase Storage for uploaded craft images; local/browser pixel conversion where supported; palette/grid fallback renderer for custom pixel display.
 
+### Main player flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Player
+    participant App as CraftFocus app
+    participant Auth as Supabase Auth
+    participant API as Supabase API / RLS
+    participant DB as Postgres + RPC
+    participant Storage as Supabase Storage
+
+    Player->>App: Sign up or log in
+    App->>Auth: Email/password request
+    Auth-->>App: Session and user ID
+    App->>API: Load profile, wallet, room, and inventory
+    API->>DB: Read rows allowed for this user
+    DB-->>API: Current player state
+    API-->>App: Render home, focus, and room
+
+    Player->>App: Complete a focus session
+    App->>API: Finalize focus session
+    API->>DB: Reward RPC validates session and credits seeds
+    DB-->>API: Updated wallet and session
+    API-->>App: Show earned seeds
+
+    Player->>App: Publish or claim a craft
+    opt Publishing an image
+        App->>Storage: Upload owner-scoped image
+        Storage-->>App: Public image URL
+    end
+    App->>API: Create listing or claim item
+    API->>DB: RLS-protected write or claim RPC
+    DB-->>API: Updated listing, inventory, or gallery
+    API-->>App: Refresh crafts and room
+```
+
 More detail:
 
 - [Architecture Deep Dive (English)](./docs/ARCHITECTURE_DEEP_DIVE_EN.md)
