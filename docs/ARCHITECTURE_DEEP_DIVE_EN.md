@@ -2,7 +2,7 @@
 
 ## 1) System Design Overview
 
-### Product scope (current V2.x)
+### Product scope (current V2.3)
 - Cross-platform focus + social craft app built from one Expo codebase.
 - Core gameplay loop: complete focus sessions -> earn seeds -> claim official/custom listings -> decorate room and gallery.
 - Social loop: publish custom craft listings, likes/comments, friends, visit friend rooms.
@@ -12,7 +12,7 @@
 - Runtime targets: iOS / Android / Web (GitHub Pages as web channel).
 - Backend: Supabase (Postgres + Auth + Storage + RLS + RPC).
 - Data authority: Postgres + RPC for transaction-sensitive operations.
-- Client fallback path: selected claim flows include client-first fallback to survive RPC drift/migration mismatch.
+- Transaction-sensitive actions use the current server-authoritative RPC contract; clients do not mutate wallets or inventory as a fallback.
 - Startup UX: static/exported web pages render a branded loading shell and login game-flow preview before full data interactions complete.
 
 ### Key bounded contexts
@@ -21,7 +21,7 @@
 - Profile includes display identity + active animal.
 
 2. Focus economy
-- Focus session writes through `award_seeds_for_session` RPC.
+- `start_focus_session` creates a server-owned run; `award_seeds_for_session` finalizes that run by session ID.
 - Seeds are wallet-backed (`user_wallets`) and unlock progression.
 - Visibility policy is strict: leaving the focus route, hiding the browser tab, or backgrounding the app auto-stops the session as `given_up`.
 
@@ -106,23 +106,23 @@
 **Why not now**
 - More failure windows and rollback complexity in client.
 
-## D4. Client fallback in claim flows
+## D4. Server-authoritative claim and reward flows
 **Chosen**
-- `claimOfficialInventoryItem` and `claimListingWithSeeds` try client fallback + multiple RPC signatures.
+- Official claims, listing claims, room placement, and focus rewards use versioned, server-authoritative RPCs.
 
-**Why this instead of strict RPC-only**
-- Improves resiliency during mixed migration states and older deployed clients.
-- Unblocks users when backend function signatures changed.
+**Why this instead of client fallback**
+- Prevents the client from partially changing wallet or inventory state when a request fails.
+- Keeps authorization, idempotency, and concurrency control in the database transaction.
 
 **Trade-offs**
-- Duplicated logic (RPC + client fallback).
-- Must carefully rollback wallet updates in client path.
+- Client and deployed schema must be released together.
+- A failed RPC needs clear user feedback and a retry after the backend is healthy.
 
 **Alternative considered**
-- Break hard on any RPC mismatch.
+- Client-orchestrated fallback writes.
 
 **Why not now**
-- Poor UX and revenue/progression blocking in MVP.
+- They weaken the server authority boundary and can create inconsistent economic state.
 
 ## D5. Wallet as canonical seed source (`user_wallets`)
 **Chosen**
@@ -301,7 +301,7 @@
 
 ### B. Data & Consistency
 4. “How do you guarantee seeds are not lost/duplicated during claims?”
-- Strong answer: prefer RPC transaction path; fallback path includes rollback logic and uniqueness constraints.
+- Strong answer: server-authoritative RPCs perform the transaction; constraints provide idempotency and the client refreshes state after success.
 
 5. “How do you avoid duplicate claims?”
 - Strong answer: unique `(user_id, listing_id)` + client precheck + backend enforcement.
@@ -313,8 +313,8 @@
 7. “What does RLS protect here?”
 - Strong answer: user-owned rows, claim visibility boundaries, owner-only mutations.
 
-8. “What are key risks in client fallback path?”
-- Strong answer: partial write risk; mitigated by rollback attempts + moving priority back to canonical server path when stable.
+8. “Why not allow a client fallback to write economic state?”
+- Strong answer: direct client fallbacks are intentionally removed for economic state; the client surfaces the error and retries the authoritative RPC only.
 
 9. “Why avoid storing sensitive secrets in app bundle?”
 - Strong answer: only publish anon key; service role stays server-side.
@@ -336,8 +336,8 @@
 14. “How would you move media storage off Supabase?”
 - Strong answer: keep `storage.ts` abstraction and switch adapter to R2/S3 while preserving app APIs.
 
-15. “How would you reduce fallback complexity later?”
-- Strong answer: enforce migration gating + RPC versioning + remove legacy signature fallbacks once all clients are updated.
+15. “How do you prevent schema drift from breaking RPC calls?”
+- Strong answer: deploy additive migrations before the client, keep RPC contracts versioned where needed, and verify the deployed build against the configured backend.
 
 ### F. Reliability / Delivery
 16. “How do you prevent schema drift from breaking web claims?”
@@ -348,13 +348,13 @@
 
 ### G. Resume-level “why this over alternatives”
 18. “What was your biggest design trade-off?”
-- Strong answer: speed/resilience (fallbacks) vs purity (single canonical backend path).
+- Strong answer: cross-platform delivery speed versus keeping economic and social mutations fully server-authoritative.
 
 19. “What did you intentionally not build?”
 - Strong answer: full chat, payments, heavy AI generation, real-time multiplayer; explained by cost and MVP focus.
 
 20. “If given one month, what’s your first architectural hardening?”
-- Strong answer: remove duplicated client-fallback claims after backend stabilization; improve observability and migration contract checks.
+- Strong answer: add deployed backend contract tests and observability around RPC failures and migration state.
 
 ---
 
@@ -371,13 +371,13 @@ Use this format in interviews:
 - Expo single codebase + Supabase RLS/RPC + additive migrations.
 
 4. Hard problem solved
-- Claim reliability across migration drift via guarded fallback and rollback logic.
+- Claim reliability through additive migrations, server-authoritative RPCs, and database constraints.
 
 5. Outcome
 - End-to-end flow from focus -> seeds -> claims -> room/gallery display with social feed.
 
 6. Next step
-- Consolidate to stricter server-authoritative claim path and stronger contract testing.
+- Add stronger deployed contract testing and observability without weakening server authority.
 
 ---
 
@@ -387,7 +387,7 @@ Use this format in interviews:
 |---|---|---|---|---|
 | Cross-platform | Expo RN + Router | single codebase speed | split web/native stacks | less web-native customization |
 | Backend | Supabase | low ops + RLS | custom API server | SQL/RPC operational discipline |
-| Claims | RPC + fallback | resilience during migration drift | RPC-only hard fail | duplicated logic temporarily |
+| Claims | Server-authoritative RPCs | atomic authorization and state changes | client fallback writes | requires coordinated migration/client releases |
 | Room placement | Anchor snap | deterministic UX | free drag-drop | lower placement freedom |
 | Companion | ASCII loops | tiny payload + compatibility | heavy sprite animation | lower visual detail |
 | Migration strategy | Safe deprecate | low-risk rollout | destructive cleanup | legacy schema footprint |

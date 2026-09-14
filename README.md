@@ -6,6 +6,8 @@ CraftFocus is a cozy focus-and-social craft app where protected time becomes see
 
 One Expo React Native + TypeScript codebase runs on **iOS, Android, and Web**.
 
+[繁體中文 README](./README-zh.md)
+
 ![CraftFocus How It Works](./assets/images/how-it-works.svg)
 
 ## For Players

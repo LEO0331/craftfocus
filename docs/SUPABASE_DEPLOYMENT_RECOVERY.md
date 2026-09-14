@@ -3,7 +3,7 @@
 The September 8, 2026 signup outage was caused by a deleted or obsolete
 Supabase project URL. Recovery completed using project `dotbjffrepidvlmokhgl`,
 with all migrations applied, Auth URLs configured, GitHub secrets replaced, and
-GitHub Pages deployment #72 verified. Keep this procedure as the recovery
+GitHub Pages deployment #76 verified. Keep this procedure as the recovery
 runbook for future backend replacements.
 
 The first recovery attempt exposed a missing catalog seed: new-user creation

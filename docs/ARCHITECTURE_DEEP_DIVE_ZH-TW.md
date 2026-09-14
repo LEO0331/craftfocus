@@ -2,7 +2,7 @@
 
 ## 1) 系統設計總覽
 
-### 目前產品範圍（V2.x）
+### 目前產品範圍（V2.3）
 - 以單一 Expo 程式碼庫實作跨平台 Focus + 社交手作 App。
 - 核心循環：專注計時 -> 取得種子（seeds）-> 兌換官方/玩家作品 -> 佈置房間與收藏牆。
 - 社交循環：發布自訂作品、按讚留言、好友互訪。
@@ -12,7 +12,7 @@
 - 執行目標：iOS / Android / Web（GitHub Pages 為 Web 通道）。
 - 後端：Supabase（Postgres + Auth + Storage + RLS + RPC）。
 - 資料權威來源：Postgres + RPC（交易敏感流程優先走伺服器）。
-- 客戶端備援：在部分 claim 流程加上 client-first fallback，降低 migration 不一致造成的中斷。
+- 交易敏感操作使用目前的伺服器權威 RPC 契約；客戶端不再以 fallback 直接異動錢包或庫存。
 - 啟動體驗：Web static export 會先顯示品牌 loading shell；登入頁也有輕量遊戲流程動畫，避免首屏像是空白或卡住。
 
 ### 關鍵邊界（bounded contexts）
@@ -21,7 +21,7 @@
 - profile 含顯示名稱與目前使用動物。
 
 2. 專注經濟系統
-- 專注結算透過 `award_seeds_for_session` RPC。
+- `start_focus_session` 先建立伺服器擁有的 run，`award_seeds_for_session` 再以 session ID 結算該 run。
 - 種子由 `user_wallets` 管理，驅動後續兌換與成長。
 - 可見性策略嚴格：離開 Focus route、切換瀏覽器分頁或 App 進入背景，都會自動停止並以 `given_up` 結算。
 
@@ -101,21 +101,23 @@
 **暫不採用原因**
 - 回滾成本與失敗窗更大。
 
-## D4. Claim 流程保留 client fallback
+## D4. 伺服器權威的兌換與獎勵流程
 **採用做法**
-- `claimOfficialInventoryItem`、`claimListingWithSeeds` 具備 fallback 與多簽名嘗試。
+- 官方兌換、作品兌換、房間擺放與專注獎勵都使用具版本管理、由伺服器權威執行的 RPC。
 
-**為什麼不堅持 RPC-only**
-- 後端函式版本不一致時，仍可保住主要 UX。
+**為什麼不使用 client fallback**
+- 避免請求失敗時由客戶端造成錢包或庫存的部分異動。
+- 權限、冪等與併發控制都能維持在資料庫交易內。
 
 **取捨**
-- 邏輯重複，且需補足回滾處理。
+- 客戶端與已部署 schema 必須協調發布。
+- RPC 失敗時需清楚回饋，並在後端恢復後重試。
 
 **替代方案**
-- RPC 失敗就直接中止。
+- 由客戶端串接的 fallback 寫入。
 
 **暫不採用原因**
-- 會直接阻斷核心遊戲循環。
+- 會削弱伺服器權威邊界，並可能產生不一致的經濟資料。
 
 ## D5. 以 `user_wallets` 作為種子餘額權威
 **採用做法**
@@ -289,7 +291,7 @@
 
 ### B. 一致性與資料正確性
 4. 「如何確保 claim 不會重複扣點或白拿？」
-- 建議答法：RPC 交易為主，fallback 有回滾邏輯，外加唯一鍵。
+- 建議答法：由伺服器權威 RPC 完成交易；約束條件提供冪等性，成功後客戶端重新讀取狀態。
 
 5. 「如何防止重複 claim？」
 - 建議答法：`(user_id, listing_id)` 唯一鍵 + 前後端雙層檢查。
@@ -301,8 +303,8 @@
 7. 「RLS 在這個系統實際保護了什麼？」
 - 建議答法：個人資料寫權限、claim 可見性、owner-only 操作。
 
-8. 「client fallback 的安全風險？」
-- 建議答法：部分成功風險，透過回滾與最終回歸 server-path 降低。
+8. 「為何不讓 client fallback 直接寫入經濟資料？」
+- 建議答法：避免部分成功和授權繞過；客戶端顯示錯誤，僅重試伺服器權威 RPC。
 
 9. 「為什麼前端只能用 anon key？」
 - 建議答法：service role 不能下放，避免高權限洩漏。
@@ -324,8 +326,8 @@
 14. 「未來如何換到 R2/S3？」
 - 建議答法：沿用 `storage.ts` 抽象層，替換 adapter。
 
-15. 「何時可以移除 fallback？」
-- 建議答法：當 migration 版本一致、RPC 契約穩定並完成灰度驗證後。
+15. 「如何避免 schema 漂移破壞 RPC？」
+- 建議答法：先部署增量 migration，再發布客戶端；需要時保留版本化 RPC，並以已設定後端驗證已部署版本。
 
 ### F. 交付與可靠度
 16. 「如何避免 migration 漂移造成 claim 壞掉？」
@@ -336,13 +338,13 @@
 
 ### G. 履歷級 trade-off
 18. 「最大架構取捨是什麼？」
-- 建議答法：可用性/韌性（fallback）vs 純粹單一路徑（strict RPC-only）。
+- 建議答法：跨平台交付速度與經濟／社交異動保持完全伺服器權威之間的取捨。
 
 19. 「你刻意沒做什麼？」
 - 建議答法：即時聊天、金流、重 AI 生成、多人即時互動，因成本與 MVP 專注。
 
 20. 「再給你一個月先補什麼？」
-- 建議答法：收斂 fallback、加強觀測性、把 schema/RPC 契約檢查前移到 CI。
+- 建議答法：補上已部署後端的契約測試，並改善 RPC 失敗的可觀測性。
 
 ---
 
@@ -358,13 +360,13 @@
 - Expo 單碼 + Supabase RLS/RPC + 增量 migration。
 
 4. 關鍵難題
-- migration 漂移下 claim 穩定性，靠 fallback + rollback 維持可用。
+- 透過增量 migration、伺服器權威 RPC 與資料庫約束維持兌換穩定性。
 
 5. 產出結果
 - 打通 focus -> seeds -> claim -> room/gallery -> 社交 feed 全流程。
 
 6. 下一步
-- 回到更嚴格 server-authoritative path，並強化契約測試。
+- 在不削弱伺服器權威的前提下，加強已部署契約測試與可觀測性。
 
 ---
 
@@ -374,7 +376,7 @@
 |---|---|---|---|---|
 | 跨平台 | Expo RN + Router | 單碼高速迭代 | Web/Native 分拆 | Web 客製深度較受限 |
 | 後端 | Supabase | 低維運 + RLS | 自建 API | SQL/RPC 契約管理成本 |
-| Claim | RPC + fallback | migration 漂移下仍可用 | RPC-only | 暫時存在重複邏輯 |
+| Claim | 伺服器權威 RPC | 原子化權限與狀態異動 | client fallback 寫入 | 需協調 migration 與客戶端發布 |
 | 房間 | Anchor 吸附 | 可預測、穩定 | 自由拖曳 | 自由度較低 |
 | 夥伴 | ASCII loop | 輕量、跨平台 | 重動畫資產 | 視覺精緻度較低 |
 | 遷移策略 | Safe deprecate | 低風險上線 | 破壞式清理 | legacy footprint 暫留 |

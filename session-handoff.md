@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete through feat-011: themed 16x16 collectible miniatures, room/gallery palette integration, and mobile placement hit-area fixes. Latest checks and limitations are recorded in progress.md (2026-09-11).
+- Current status: Complete through feat-011: themed 16x16 collectible miniatures, room/gallery palette integration, and mobile placement hit-area fixes. Documentation and agent guidance were refreshed on 2026-09-14; latest checks and limitations are recorded in progress.md.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session
@@ -21,7 +21,7 @@
 | TypeScript | `npx tsc --noEmit` | PASS | No type errors. |
 | Unit tests | `npm test` | PASS | 16 files / 56 tests passed. |
 | Web export | `npm run e2e:build` | PASS | 21 static routes. |
-| Browser smoke | `PORT=4194 npm run test:e2e` | PASS | 2 passed / 2 credential-gated skipped. |
+| Browser smoke | `PORT=4201 npm run test:e2e` | PASS | 3 passed / 2 credential-gated skipped. |
 | Database | disposable PostgreSQL 18 scripts | PASS | Fresh migrations, regressions, and concurrency checks. |
 | Lighthouse | `PORT=4191 npm run lighthouse:web` | PASS | Performance 67; accessibility, best practices, and SEO 100. |
 | Expo compatibility | `npx expo-doctor` | PASS | 18/18 checks passed after SDK package alignment. |
@@ -37,6 +37,8 @@
 - `feature_list.json`
 - `progress.md`
 - `session-handoff.md`
+- `README-zh.md`
+- All `docs/*.md` files and `AGENTS.md` were audited/refreshed on 2026-09-14.
 
 ## Decisions Made
 

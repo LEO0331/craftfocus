@@ -25,7 +25,7 @@ To reproduce in a fresh disposable local PostgreSQL database, run bootstrap, the
 
 ## Deployment and remaining limits
 
-- Apply all four 2026-09 migrations to the configured Supabase project together with the updated client. Old clients cannot claim focus rewards after the migration, and new clients need the new start endpoint. No remote migration or hosted integration test was performed.
+- The September recovery subsequently applied the 2026-09 migrations to the configured Supabase project and verified the hosted signup path. Keep client releases coordinated with these RPC contracts: old clients cannot claim focus rewards after the migration, and new clients need the new start endpoint.
 - Review quarantined catalog rows administratively. Set `official_source = true` and reactivate only rows whose provenance is known.
 - Server elapsed time prevents trivial reward forgery but cannot prove that a user actually maintained focus.
 

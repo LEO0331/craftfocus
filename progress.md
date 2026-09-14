@@ -2,9 +2,19 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-08 Asia/Taipei
+**Last Updated:** 2026-09-14 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-010 - Pixel preview and navigation flow polish
+**Last Completed Feature:** feat-011 - Cozy room and themed collectible artwork
+
+## 2026-09-14 Documentation and Agent Guidance Refresh
+
+- Audited every Markdown document in `docs/` against the current service and migration code.
+- Updated English and Traditional Chinese architecture references from retired client-side claim fallbacks to the server-authoritative RPC flow, including the server-owned focus-session contract.
+- Updated the E2E report to the current local result: three browser smoke tests passed and two credential-gated tests skipped.
+- Preserved historical backend/API review dates while adding current-status notes where later recovery work changed their operational context.
+- Added GPT-6 Astra operating guidance to `AGENTS.md`, based on current official OpenAI model guidance: clear instruction precedence, purposeful autonomy, bounded delegation, evidence-led updates, and proportional verification.
+
+Verification: local Markdown links and the changed service/migration references were checked; `git diff --check` passed. This was documentation-only work, so no application build or test suite was required.
 
 ## What's Done
 

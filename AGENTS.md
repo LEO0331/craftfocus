@@ -13,6 +13,20 @@ Before editing:
 5. Check worktree state with `git status --short`; do not overwrite unrelated user changes.
 6. For a full baseline, run `./init.sh`. For small documentation-only changes, run the smallest relevant checks and record why full verification was skipped.
 
+## GPT-6 Astra Operating Guidance
+
+This harness is designed for GPT-6 Astra and compatible Codex agents. Follow the
+current [official GPT-6 Astra model guidance](https://developers.openai.com/api/docs/guides/latest-model)
+alongside the repository rules below.
+
+- Treat a clear user request as authorization to complete its ordinary, reversible implementation work. Infer routine details from the repository and prior context; ask only when a missing decision would materially change the result or an action is destructive or externally consequential.
+- Keep the user's request above skill, agent, and workflow guidance. Before following an instruction file that could pause, redirect, or broaden work, check that it does not conflict with the user's goal and explain the exact source if it creates a real blocker.
+- Treat new screenshots, logs, test output, and user corrections as the current source of truth for the active branch of work. Incorporate them without discarding compatible work already completed.
+- Choose the smallest effective execution path. Work directly for a focused change. Delegate only independent, bounded work with explicit ownership when it materially improves speed, quality, or safety; the lead integrates results and owns final verification.
+- Match reasoning and verification to risk. Use light reasoning and narrow checks for routine documentation or reversible UI edits; use higher reasoning and focused integration checks for architecture, authorization, migrations, rewards, claims, and deployment work. Do not add tests that merely repeat an implementation detail.
+- Write concise progress updates that state what changed, what evidence supports it, and what remains. Lead final reports with the outcome, then list material limitations or skipped checks.
+- For current product, model, security, deployment, and external-service facts, consult primary documentation before presenting them as current. Do not treat stale local guidance as authoritative.
+
 ## Project Rules
 
 - One feature at a time: choose exactly one active `feature_list.json` item unless the task explicitly defines independent ownership boundaries.

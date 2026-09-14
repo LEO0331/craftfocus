@@ -1,6 +1,6 @@
 # CraftFocus API Design Review
 
-Date: 2026-06-11
+Date: 2026-06-11 (review); status revalidated 2026-09-14
 
 ## Assumptions
 
@@ -48,7 +48,7 @@ Strengths:
 - Transaction-sensitive seed/claim/placement workflows use Supabase RPCs.
 - RLS remains the primary authorization layer.
 - Critical mutation functions are resource-oriented in the client service layer.
-- Claim RPCs avoid client-side wallet mutation on failure.
+- Claim RPCs avoid client-side wallet mutation on failure; the current client has no direct-write claim fallback.
 
 Known limitations:
 

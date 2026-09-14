@@ -1,6 +1,6 @@
 # CraftFocus E2E Test Report
 
-Date: 2026-05-27  
+Date: 2026-09-14
 Target: Web static export and deployed-compatible `/craftfocus` routes  
 Account data: credentials are supplied through environment variables and are not stored in this repository.
 
@@ -14,6 +14,7 @@ Covered by smoke tests without backend env:
 - Configuration error banner appears when Supabase public env vars are missing.
 - Login form controls render.
 - Signup route renders and links back to login.
+- Browser Back and Forward preserve the expected login/signup route and controls.
 
 Covered by authenticated E2E when `E2E_EMAIL` and `E2E_PASSWORD` are set:
 
@@ -29,7 +30,7 @@ Covered by authenticated E2E when `E2E_EMAIL` and `E2E_PASSWORD` are set:
 
 - Overall: **PASS**
 - Command: `npm run test:e2e`
-- Result: `2 passed`, `2 skipped`
+- Result: `3 passed`, `2 skipped`
 - Skipped tests are credential-gated and only run when E2E credentials are present.
 
 ## Commands
@@ -81,5 +82,5 @@ Some screenshots are historical evidence from prior authenticated passes and may
 
 - The login page now includes a lightweight animated game-flow preview above the login card.
 - The app shows a branded loading shell during startup/auth boot so first load does not look blank.
-- Room visuals and placement anchors continue to evolve; E2E selectors should prefer accessibility labels and stable route checks over pixel-perfect positions.
+- Room visuals and placement anchors continue to evolve; E2E selectors should prefer accessibility labels and stable route checks over pixel-perfect positions. The current room suite also has local fixture coverage for both room themes and 1200px, 390px, and 320px layouts.
 - Supabase-backed actions require a configured backend and valid test user.
