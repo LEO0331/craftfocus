@@ -8,6 +8,11 @@ type CraftPostRow = TableRow<'craft_posts'>;
 type LikeRow = TableRow<'likes'>;
 type CommentRow = TableRow<'comments'>;
 type ListingClaimRow = TableRow<'listing_claims'>;
+type EngagementRow = {
+  craft_post_id: string;
+  likes_count: number;
+  comments_count: number;
+};
 
 export interface CraftFeedItem extends CraftPostRow {
   author_name: string;
@@ -46,14 +51,6 @@ function profileAnimal(profile: ProfileRow | undefined): string {
   return 'cat';
 }
 
-function countByPostId<T extends { craft_post_id: string }>(rows: T[]) {
-  const map = new Map<string, number>();
-  rows.forEach((row) => {
-    map.set(row.craft_post_id, (map.get(row.craft_post_id) ?? 0) + 1);
-  });
-  return map;
-}
-
 export async function listCraftPosts(currentUserId?: string, options?: { limit?: number }): Promise<CraftFeedItem[]> {
   const limit = normalizeListLimit(options?.limit, API_LIMITS.craftFeedDefault, API_LIMITS.craftFeedMax);
   const { data: posts, error: postsError } = await supabase
@@ -69,10 +66,9 @@ export async function listCraftPosts(currentUserId?: string, options?: { limit?:
   const authorIds = Array.from(new Set(posts.map((post) => post.user_id)));
   const postIds = posts.map((post) => post.id);
 
-  const [profilesResult, likesResult, commentsResult, likedResult, claimsResult] = await Promise.all([
+  const [profilesResult, engagementResult, likedResult, claimsResult] = await Promise.all([
     supabase.from('profiles').select('*').in('id', authorIds),
-    supabase.from('likes').select('craft_post_id').in('craft_post_id', postIds),
-    supabase.from('comments').select('craft_post_id').in('craft_post_id', postIds),
+    supabase.rpc('get_craft_post_engagement', { p_post_ids: postIds }),
     currentUserId
       ? supabase.from('likes').select('craft_post_id').eq('user_id', currentUserId).in('craft_post_id', postIds)
       : Promise.resolve({ data: [] as Pick<LikeRow, 'craft_post_id'>[], error: null }),
@@ -82,14 +78,14 @@ export async function listCraftPosts(currentUserId?: string, options?: { limit?:
   ]);
 
   if (profilesResult.error) throw profilesResult.error;
-  if (likesResult.error) throw likesResult.error;
-  if (commentsResult.error) throw commentsResult.error;
+  if (engagementResult.error) throw engagementResult.error;
   if (likedResult.error) throw likedResult.error;
   if (claimsResult.error) throw claimsResult.error;
 
   const profileMap = buildProfileMap(profilesResult.data ?? []);
-  const likesMap = countByPostId(likesResult.data ?? []);
-  const commentsMap = countByPostId(commentsResult.data ?? []);
+  const engagementMap = new Map(
+    ((engagementResult.data ?? []) as EngagementRow[]).map((row) => [row.craft_post_id, row])
+  );
   const likedSet = new Set((likedResult.data ?? []).map((row) => row.craft_post_id));
   const claimSet = new Set((claimsResult.data ?? []).map((row) => row.listing_id));
 
@@ -97,8 +93,8 @@ export async function listCraftPosts(currentUserId?: string, options?: { limit?:
     ...post,
     author_name: profileName(profileMap.get(post.user_id)),
     author_animal_id: profileAnimal(profileMap.get(post.user_id)),
-    likes_count: likesMap.get(post.id) ?? 0,
-    comments_count: commentsMap.get(post.id) ?? 0,
+    likes_count: Number(engagementMap.get(post.id)?.likes_count ?? 0),
+    comments_count: Number(engagementMap.get(post.id)?.comments_count ?? 0),
     liked_by_me: likedSet.has(post.id),
     claimed_by_me: claimSet.has(post.id),
   }));

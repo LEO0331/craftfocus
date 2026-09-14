@@ -103,6 +103,14 @@
       "dependencies": ["feat-009", "feat-010"],
       "status": "done",
       "evidence": "Original 16x16 artwork for 12 existing inventory IDs, contextual palettes, and larger inventory previews. Preserved ownership and placement IDs; corrected small-screen anchor hit areas. TypeScript, 71 unit tests, 21-route export, and local browser fixture checks of both themes at 1200/390/320px passed. Live authenticated and native-device verification remain outstanding."
+    },
+    {
+      "id": "feat-012",
+      "name": "Social feed and release gate hardening",
+      "description": "Bound public engagement reads and require tests plus remote schema compatibility before GitHub Pages deployment.",
+      "dependencies": ["feat-007", "feat-008"],
+      "status": "done",
+      "evidence": "Feed engagement now uses a bounded aggregate RPC; server constraints and an atomic 100-comments-per-hour account quota protect public UGC. Deploy CI runs typecheck, unit/browser tests, fresh migrations, database regressions/concurrency, and blocks an outdated remote schema contract. TypeScript, 73 unit tests, 3 browser smoke tests, and diff checks passed locally; authenticated E2E and the PostgreSQL suite remain environment-gated."
     }
   ]
 }

@@ -87,6 +87,8 @@ MVP 刻意不包含：
 - 自訂創作標題上限為 `20` 個字元。
 - 自訂創作描述上限為 `60` 個字元。
 - 自訂創作的種子價格範圍為 `1-100`。
+- 留言上限為 `240` 個字元。
+- 每個帳號每個 UTC 小時最多可發布 `100` 則留言。
 
 ## V2 正式資料模型
 
@@ -297,6 +299,9 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```
 
 部署工作流程會在建置靜態 Expo Web 匯出時注入這些值。
+發布前會執行 typecheck、單元測試、browser smoke、所有資料庫 migrations，
+以及 regression／concurrency checks。遠端 Supabase project 必須提供預期的
+deployment contract version，因此正式部署前要先套用所有待處理 migrations。
 
 ## PWA 支援
 

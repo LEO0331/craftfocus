@@ -20,6 +20,8 @@ production SMTP provider is configured.
 1. Create or recover a Supabase project.
 2. Apply every migration in `supabase/migrations` in filename order. With a
    linked Supabase CLI project, run `supabase db push`.
+   The deploy preflight calls `deployment_contract_version`; Pages publishing
+   remains blocked until the remote project reports the expected version.
 3. In Supabase Auth URL Configuration, use:
    - Site URL: `https://leo0331.github.io/craftfocus/`
    - Redirect URL: `https://leo0331.github.io/craftfocus/`
@@ -28,7 +30,9 @@ production SMTP provider is configured.
    - `EXPO_PUBLIC_SUPABASE_ANON_KEY` with the project's public anon or
      publishable key. Never use the service-role key.
 5. Run the **Deploy Web (GitHub Pages)** workflow. Its preflight now verifies
-   that Supabase Auth is reachable before publishing the bundle.
+   that Supabase Auth is reachable and the schema contract matches before
+   publishing the bundle. Its quality job also runs TypeScript, unit/browser,
+   fresh-migration, regression, and concurrency checks.
 6. Test signup with an inbox you control and complete email confirmation when
    confirmation is enabled.
 

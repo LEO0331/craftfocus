@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete through feat-011: themed 16x16 collectible miniatures, room/gallery palette integration, and mobile placement hit-area fixes. Documentation and agent guidance were refreshed on 2026-09-14; latest checks and limitations are recorded in progress.md.
+- Current status: Complete through feat-012: public feed engagement is bounded, UGC limits are server-enforced, and deployment now requires local-quality plus remote-schema gates. Latest checks and limitations are recorded in progress.md.
 - Branch / commit: Not committed in this session.
 
 ## Completed This Session
@@ -19,9 +19,10 @@
 |---|---|---|---|
 | Docs links | custom Node link check | PASS | README/docs local links resolved before harness creation. |
 | TypeScript | `npx tsc --noEmit` | PASS | No type errors. |
-| Unit tests | `npm test` | PASS | 16 files / 56 tests passed. |
+| Unit tests | `npm test` | PASS | 21 files / 73 tests passed. |
 | Web export | `npm run e2e:build` | PASS | 21 static routes. |
 | Browser smoke | `PORT=4201 npm run test:e2e` | PASS | 3 passed / 2 credential-gated skipped. |
+| Production SCA | `npm audit --omit=dev --json` | PASS | 0 vulnerabilities. |
 | Database | disposable PostgreSQL 18 scripts | PASS | Fresh migrations, regressions, and concurrency checks. |
 | Lighthouse | `PORT=4191 npm run lighthouse:web` | PASS | Performance 67; accessibility, best practices, and SEO 100. |
 | Expo compatibility | `npx expo-doctor` | PASS | 18/18 checks passed after SDK package alignment. |
@@ -39,6 +40,7 @@
 - `session-handoff.md`
 - `README-zh.md`
 - All `docs/*.md` files and `AGENTS.md` were audited/refreshed on 2026-09-14.
+- Feed aggregation, UGC database limits, remote deployment contract, and CI quality/database gates were added for feat-012.
 
 ## Decisions Made
 
@@ -49,6 +51,7 @@
 ## Blockers / Risks
 
 - Authenticated deployed E2E and hosted Supabase verification require valid project credentials.
+- The new migration and PostgreSQL regression/concurrency suite require the GitHub Actions disposable database run; the local server rejected passwordless verification.
 - Remaining npm advisories require a breaking Expo SDK upgrade.
 - Quarantined historical catalog rows need administrative provenance review before reactivation.
 

@@ -87,6 +87,8 @@ Intentionally excluded from MVP:
 - Custom craft title limit: `20` characters.
 - Custom craft description limit: `60` characters.
 - Custom craft seed cost range: `1-100`.
+- Comment length limit: `240` characters.
+- Each account can publish at most `100` comments per UTC hour.
 
 ## V2 Canonical Model
 
@@ -297,6 +299,10 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```
 
 The deploy workflow injects these at build time for the static Expo web export.
+Before publishing, it runs typecheck, unit tests, browser smoke tests, all
+database migrations and regression/concurrency checks. The remote Supabase
+project must expose the expected deployment contract version, so apply pending
+migrations before starting a production deploy.
 
 ## PWA Support
 

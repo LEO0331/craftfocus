@@ -4,7 +4,17 @@
 
 **Last Updated:** 2026-09-14 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-011 - Cozy room and themed collectible artwork
+**Last Completed Feature:** feat-012 - Social feed and release gate hardening
+
+## 2026-09-14 Review Finding Remediation
+
+- Replaced unbounded feed downloads of every like/comment row with the bounded `get_craft_post_engagement` RPC (maximum 100 post IDs) and supporting indexes.
+- Added database-enforced title, description, and comment length constraints plus an atomic per-account quota of 100 comments per UTC hour.
+- Added a remote `deployment_contract_version` check so GitHub Pages cannot publish against a Supabase project missing the required migration.
+- Expanded the deploy workflow to gate releases on TypeScript, unit tests, browser smoke, a fresh migration application, database regressions, and concurrency tests. Pull requests run quality checks without deploying.
+- Updated English/Traditional Chinese gameplay rules, API review notes, deployment recovery steps, generated database types, and regression coverage.
+
+Evidence: `npx tsc --noEmit` passed; `npm test` passed (21 files / 73 tests); local browser smoke passed (3 tests / 2 authenticated tests skipped); production dependency audit found 0 vulnerabilities; `git diff --check` passed. The local PostgreSQL service requires an unavailable password, so fresh-migration/regression/concurrency execution is delegated to the new disposable PostgreSQL CI job and remains unverified until that workflow runs.
 
 ## 2026-09-14 Documentation and Agent Guidance Refresh
 

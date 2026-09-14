@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-import { claimListingWithSeeds, claimOfficialInventoryItem, setPostLike } from '@/lib/crafts';
+import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, setPostLike } from '@/lib/crafts';
 
 describe('craft claim APIs', () => {
   beforeEach(() => {
@@ -71,5 +71,31 @@ describe('craft claim APIs', () => {
     expect(deleteFn).toHaveBeenCalled();
     expect(firstEq).toHaveBeenCalledWith('craft_post_id', 'post-1');
     expect(secondEq).toHaveBeenCalledWith('user_id', 'user-1');
+  });
+
+  it('loads feed engagement through the bounded aggregate RPC', async () => {
+    const post = { id: 'post-1', user_id: 'author-1', title: 'Craft' };
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'craft_posts') {
+        return { select: () => ({ eq: () => ({ order: () => ({ limit: async () => ({ data: [post], error: null }) }) }) }) };
+      }
+      if (table === 'profiles') {
+        return { select: () => ({ in: async () => ({ data: [{ id: 'author-1', username: 'maker' }], error: null }) }) };
+      }
+      if (table === 'likes' || table === 'listing_claims') {
+        return { select: () => ({ eq: () => ({ in: async () => ({ data: [], error: null }) }) }) };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    mocks.rpc.mockResolvedValueOnce({
+      data: [{ craft_post_id: 'post-1', likes_count: 7, comments_count: 12 }],
+      error: null,
+    });
+
+    const [result] = await listCraftPosts('user-1');
+
+    expect(mocks.rpc).toHaveBeenCalledWith('get_craft_post_engagement', { p_post_ids: ['post-1'] });
+    expect(mocks.from).not.toHaveBeenCalledWith('comments');
+    expect(result).toMatchObject({ likes_count: 7, comments_count: 12 });
   });
 });

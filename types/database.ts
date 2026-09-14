@@ -339,6 +339,14 @@ export type Database = {
         Args: Record<string, never>;
         Returns: undefined;
       };
+      get_craft_post_engagement: {
+        Args: { p_post_ids: string[] };
+        Returns: { craft_post_id: string; likes_count: number; comments_count: number }[];
+      };
+      deployment_contract_version: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
     };
     Enums: {
       focus_mode: 'general' | 'crafting' | 'sewing';

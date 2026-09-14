@@ -48,6 +48,8 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange
   perform pg_temp.expect_error($q$insert into public.craft_posts(user_id,title,description,category,image_url,listing_type,reward_item_id,seed_cost) values(auth.uid(),'Forged','','craft','https://example.com/a','catalog','plant',1)$q$);
   insert into public.craft_posts(user_id,title,description,category,image_url,created_at,seed_cost)
   values(auth.uid(),'Custom','','craft','https://example.com/a','2000-01-01',25);
+  perform pg_temp.expect_error($q$update public.craft_posts set title=repeat('x',21) where user_id=auth.uid() and title='Custom'$q$);
+  perform pg_temp.expect_error($q$update public.craft_posts set description=repeat('x',61) where user_id=auth.uid() and title='Custom'$q$);
   assert exists(select 1 from public.craft_posts where user_id=auth.uid() and title='Custom'
     and created_at >= date_trunc('day',clock_timestamp() at time zone 'UTC') at time zone 'UTC'),
     'Authenticated callers cannot backdate uploads';
@@ -65,6 +67,19 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange
   perform public.set_active_animal('cat');
   select id into post_id from public.craft_posts
   where user_id='20000000-0000-0000-0000-000000000002' and title='Exchange';
+  perform pg_temp.expect_error(format(
+    'insert into public.comments(user_id,craft_post_id,body) values(auth.uid(),%L,%L)',
+    post_id, repeat('x',241)));
+  for n in 1..100 loop
+    insert into public.comments(user_id,craft_post_id,body)
+    values(auth.uid(),post_id,'bounded comment ' || n);
+  end loop;
+  perform pg_temp.expect_error(format(
+    'insert into public.comments(user_id,craft_post_id,body) values(auth.uid(),%L,%L)',
+    post_id, 'comment 101'));
+  select engagement.comments_count::integer into n
+  from public.get_craft_post_engagement(array[post_id]) engagement;
+  assert n = 100, 'Engagement aggregation must count comments without returning comment rows';
   perform pg_temp.expect_error(format(
     'insert into public.exchange_requests(requester_id,owner_id,craft_post_id,status) values(auth.uid(),%L,%L,%L)',
     '20000000-0000-0000-0000-000000000002',post_id,'accepted'));

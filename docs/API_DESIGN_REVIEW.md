@@ -31,6 +31,8 @@ Date: 2026-06-11 (review); status revalidated 2026-09-14
 
 **Fix applied:** Added shared `API_LIMITS` and `normalizeListLimit(...)` in `lib/api.ts`. Added explicit limits to craft feed, comments, room placements, gallery lists, and friendships.
 
+**2026-09-14 hardening:** Feed engagement totals now come from the bounded `get_craft_post_engagement` RPC instead of downloading every like and comment row. Database constraints enforce public-content lengths and an atomic per-account hourly comment quota.
+
 ### Low: Error formatting was duplicated
 
 **Area:** Errors / developer experience

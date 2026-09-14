@@ -1,5 +1,7 @@
 import { pathToFileURL } from 'node:url';
 
+export const EXPECTED_DEPLOYMENT_CONTRACT = '2026-09-14.1';
+
 export async function verifyDeploymentEnvironment({
   supabaseUrl,
   anonKey,
@@ -35,6 +37,34 @@ export async function verifyDeploymentEnvironment({
   }
   if (!response.ok) {
     throw new Error(`Supabase Auth health check failed with HTTP ${response.status}.`);
+  }
+
+  const contractUrl = new URL('/rest/v1/rpc/deployment_contract_version', parsedUrl);
+  let contractResponse;
+  try {
+    contractResponse = await fetchImpl(contractUrl, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        authorization: `Bearer ${anonKey}`,
+        'content-type': 'application/json',
+      },
+      body: '{}',
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Supabase schema contract is unreachable at ${parsedUrl.origin}: ${detail}`);
+  }
+  if (!contractResponse.ok) {
+    throw new Error(`Supabase schema contract check failed with HTTP ${contractResponse.status}. Apply pending migrations before deployment.`);
+  }
+
+  const contractVersion = await contractResponse.json();
+  if (contractVersion !== EXPECTED_DEPLOYMENT_CONTRACT) {
+    throw new Error(
+      `Supabase schema contract mismatch: expected ${EXPECTED_DEPLOYMENT_CONTRACT}, received ${String(contractVersion)}.`
+    );
   }
   return parsedUrl.origin;
 }
