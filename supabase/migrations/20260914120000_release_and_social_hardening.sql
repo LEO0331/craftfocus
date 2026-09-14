@@ -1,21 +1,27 @@
 -- Bound public social-feed work and expose a deploy-time schema contract.
 
 alter table public.comments
+  drop constraint if exists comments_body_length;
+alter table public.comments
   add constraint comments_body_length
   check (char_length(btrim(body)) between 1 and 240) not valid;
 
 alter table public.craft_posts
+  drop constraint if exists craft_posts_title_length;
+alter table public.craft_posts
   add constraint craft_posts_title_length
-  check (char_length(btrim(title)) between 1 and 20) not valid;
+  check (listing_type <> 'custom' or char_length(btrim(title)) between 1 and 20) not valid;
 
 alter table public.craft_posts
+  drop constraint if exists craft_posts_description_length;
+alter table public.craft_posts
   add constraint craft_posts_description_length
-  check (description is null or char_length(description) <= 60) not valid;
+  check (listing_type <> 'custom' or description is null or char_length(description) <= 60) not valid;
 
 create index if not exists idx_likes_craft_post_id on public.likes(craft_post_id);
 create index if not exists idx_comments_craft_post_id on public.comments(craft_post_id);
 
-create table public.comment_hourly_writes (
+create table if not exists public.comment_hourly_writes (
   user_id uuid not null references public.profiles(id) on delete cascade,
   window_start timestamptz not null,
   comment_count integer not null check (comment_count between 0 and 100),
@@ -24,7 +30,7 @@ create table public.comment_hourly_writes (
 
 alter table public.comment_hourly_writes enable row level security;
 
-create function public.enforce_comment_hourly_limit()
+create or replace function public.enforce_comment_hourly_limit()
 returns trigger
 language plpgsql
 security definer
@@ -55,13 +61,14 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_comment_hourly_limit on public.comments;
 create trigger trg_comment_hourly_limit
 before insert on public.comments
 for each row execute function public.enforce_comment_hourly_limit();
 
 revoke all on function public.enforce_comment_hourly_limit() from public;
 
-create function public.get_craft_post_engagement(p_post_ids uuid[])
+create or replace function public.get_craft_post_engagement(p_post_ids uuid[])
 returns table (craft_post_id uuid, likes_count bigint, comments_count bigint)
 language plpgsql
 stable
@@ -89,7 +96,7 @@ $$;
 revoke all on function public.get_craft_post_engagement(uuid[]) from public;
 grant execute on function public.get_craft_post_engagement(uuid[]) to anon, authenticated;
 
-create function public.deployment_contract_version()
+create or replace function public.deployment_contract_version()
 returns text
 language sql
 stable
