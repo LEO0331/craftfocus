@@ -14,7 +14,7 @@
 - Expanded the deploy workflow to gate releases on TypeScript, unit tests, browser smoke, a fresh migration application, database regressions, and concurrency tests. Pull requests run quality checks without deploying.
 - Updated English/Traditional Chinese gameplay rules, API review notes, deployment recovery steps, generated database types, and regression coverage.
 
-Evidence: `npx tsc --noEmit` passed; `npm test` passed (21 files / 73 tests); local browser smoke passed (3 tests / 2 authenticated tests skipped); production dependency audit found 0 vulnerabilities; `git diff --check` passed. The local PostgreSQL service requires an unavailable password, so fresh-migration/regression/concurrency execution is delegated to the new disposable PostgreSQL CI job and remains unverified until that workflow runs.
+Evidence: `npx tsc --noEmit` passed; `npm test` passed (21 files / 73 tests); local browser smoke passed (3 tests / 2 authenticated tests skipped); production dependency audit found 0 vulnerabilities; `git diff --check` passed. The corrected migration was applied successfully to production Supabase. GitHub Actions run #87 passed its quality job, including fresh PostgreSQL migrations/regressions/concurrency, then passed the remote schema-contract check and deployed commit `29f628d` to GitHub Pages.
 
 ## 2026-09-14 Documentation and Agent Guidance Refresh
 
