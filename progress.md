@@ -8,6 +8,7 @@
 
 ## 2026-09-14 Review Finding Remediation
 
+- Published `docs/ACCEPTANCE_REVIEW_SUMMARY_ZH-TW.md` as an evidence-based public summary of the deep acceptance review, resolved HIGH findings, trust boundaries, test results, and remaining operational limits.
 - Replaced unbounded feed downloads of every like/comment row with the bounded `get_craft_post_engagement` RPC (maximum 100 post IDs) and supporting indexes.
 - Added database-enforced title, description, and comment length constraints plus an atomic per-account quota of 100 comments per UTC hour.
 - Added a remote `deployment_contract_version` check so GitHub Pages cannot publish against a Supabase project missing the required migration.

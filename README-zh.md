@@ -164,6 +164,7 @@ sequenceDiagram
 - [架構深度解析（英文）](./docs/ARCHITECTURE_DEEP_DIVE_EN.md)
 - [架構深度解析（繁體中文）](./docs/ARCHITECTURE_DEEP_DIVE_ZH-TW.md)
 - [API 設計審查](./docs/API_DESIGN_REVIEW.md)
+- [CraftFocus 深度驗收審查摘要](./docs/ACCEPTANCE_REVIEW_SUMMARY_ZH-TW.md)
 - [E2E 測試報告](./docs/E2E_REPORT.md)
 
 ## 快速開始
