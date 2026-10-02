@@ -4,7 +4,19 @@
 
 **Last Updated:** 2026-10-02 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-013 - Dependabot UUID security update
+**Last Completed Feature:** feat-014 - Blocked URI decoder and image-size security updates
+
+## 2026-10-02 Additional Dependabot Failures
+
+- Read the actual GitHub logs for runs `36959993114` and `36959996262`: both are Dependabot `security_update_not_possible` failures, unrelated to Lighthouse. Their minimum fixed versions are `decode-uri-component@0.5.0` and `image-size@2.0.3`.
+- Fast-forwarded to remote `658e8b4` before editing, preserving intervening dependency updates.
+- Added npm overrides resolving URI decoder 0.5.0 and image-size 2.0.4. Removed the now-unused transitive `queue` package from the lockfile.
+- Added `tools/patch-security-dependencies.cjs` as an idempotent postinstall script. It unwraps the decoder's ESM default in query-string and changes Metro's file-backed dimension lookup to pass an asynchronously read buffer. image-size's existing default export remains compatible. Unexpected consumer source changes fail installation for review instead of silently skipping a required patch.
+- Added real-consumer regression tests for encoded/malformed query parsing and Metro dimensions from both buffers and files. Remove the patches only when upstream consumers support these patched dependency APIs. Running npm with `--ignore-scripts` requires running the compatibility script manually before builds/tests.
+
+Verification: clean `npm ci` applied both patches; TypeScript passed; 23 unit files / 77 tests passed; consumer and Xcode regressions passed on Node 20.20.2; repeated patch execution passed; `node --check` passed; Expo compatibility passed; Playwright's web export/server completed and 3 browser smoke tests passed (2 credential-gated skips); `git diff --check` passed. npm audit reports neither target package and now lists 4 unrelated high advisories. Lighthouse was left unchanged as requested.
+
+Limits: native device builds and authenticated backend flows were not tested. Historical failed Dependabot jobs stay failed; the updated remote dependency graph must be scanned again by GitHub. No database/auth/deployment workflow changes were made.
 
 ## 2026-10-02 Dependabot UUID Security Update
 

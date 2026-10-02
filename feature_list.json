@@ -1,6 +1,14 @@
 {
   "features": [
     {
+      "id": "feat-014",
+      "name": "Blocked URI decoder and image-size security updates",
+      "description": "Resolve the two reported Dependabot jobs using patched packages while preserving Expo SDK 54 consumer compatibility.",
+      "dependencies": ["feat-013"],
+      "status": "done",
+      "evidence": "2026-10-02: overrides resolve decode-uri-component 0.5.0 and image-size 2.0.4. Guarded postinstall patches adapt query-string's default import and Metro's file-backed image read. Clean npm ci, TypeScript, 23 unit files / 77 tests, consumer regressions on Node 20, Expo compatibility, web export, and 3 browser smoke tests passed (2 credential-gated skips). Audit contains neither target finding; 4 unrelated high advisories remain."
+    },
+    {
       "id": "feat-013",
       "name": "Dependabot UUID security update",
       "description": "Resolve the blocked transitive UUID security update using Dependabot's suggested patched package without changing the Expo SDK.",
