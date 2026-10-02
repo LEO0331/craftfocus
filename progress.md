@@ -2,9 +2,20 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-14 Asia/Taipei
+**Last Updated:** 2026-10-02 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-012 - Social feed and release gate hardening
+**Last Completed Feature:** feat-013 - Dependabot UUID security update
+
+## 2026-10-02 Dependabot UUID Security Update
+
+- The supplied Dependabot log fails with `security_update_not_possible`: `xcode@3.0.1` requires `uuid@^7.0.3`, while the advisory requires UUID 14 or newer and Dependabot identifies 14.0.2 as the latest release.
+- Added the root npm override `uuid: ^14.0.2` and regenerated only the UUID lockfile entry. No direct dependency or Expo SDK upgrade was needed.
+- Added `tests/unit/xcodeCompatibility.test.ts` to exercise the actual CommonJS Xcode consumer and verify unique, correctly formatted project identifiers. It passed before and after the upgrade, and under Node 20.20.2 as used by CI.
+- UUID 14 is ESM-only; use the existing React Native toolchain requirement of Node >=20.19.4 so CommonJS can load it. Do not remove the compatibility test while the override is needed. References: https://github.com/uuidjs/uuid and https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides.
+
+Verification: `npx tsc --noEmit` passed; `npm test` passed (22 files / 74 tests); `npx expo install --check` passed; `npm run e2e:build` exported 21 routes under `/craftfocus`; `PORT=4217 npm run test:e2e` passed 3 smoke tests and skipped 2 credential-gated tests; `npm ls uuid` confirms only 14.0.2; `npm audit --json` contains no UUID finding; `git diff --check` passed. The equivalent commands from `init.sh` ran individually in PowerShell. No separate lint command is configured.
+
+Remaining limits: npm audit still reports 13 unrelated advisories (6 high / 7 moderate). Authenticated Supabase E2E was skipped because backend configuration and credentials are absent. A native iOS build was not run on Windows; the Xcode dependency path was tested directly. Changes are local; GitHub Dependabot will re-evaluate after they reach the remote branch.
 
 ## 2026-09-14 Review Finding Remediation
 

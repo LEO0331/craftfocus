@@ -1,6 +1,14 @@
 {
   "features": [
     {
+      "id": "feat-013",
+      "name": "Dependabot UUID security update",
+      "description": "Resolve the blocked transitive UUID security update using Dependabot's suggested patched package without changing the Expo SDK.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "2026-10-02: npm override ^14.0.2 resolves xcode's UUID dependency to 14.0.2. Xcode CommonJS identifier-generation regression passed on Node 24.14.0 and CI-compatible Node 20.20.2; TypeScript, 22 unit files / 74 tests, Expo dependency compatibility, 21-route web export, and 3 browser smoke tests passed (2 authenticated tests skipped). npm audit reports no UUID finding; 13 unrelated advisories remain."
+    },
+    {
       "id": "feat-001",
       "name": "Agent harness baseline",
       "description": "Maintain AGENTS.md, feature_list.json, progress.md, init.sh, and session-handoff.md so future agents can start, verify, and resume safely.",
