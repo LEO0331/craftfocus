@@ -2,9 +2,15 @@
 
 ## Current Objective
 
-- Goal: Review the whole CraftFocus project and fix confirmed issues.
-- Current status: Complete through feat-012: public feed engagement is bounded, UGC limits are server-enforced, and deployment now requires local-quality plus remote-schema gates. Latest checks and limitations are recorded in progress.md.
-- Branch / commit: Not committed in this session.
+- Goal: Recover the Supabase backend after the dependency security updates.
+- Current status: Complete through feat-015. Resumed the existing paused project `dotbjffrepidvlmokhgl`; dashboard is Healthy, Auth/schema preflight passes, and Pages run `36961278649` attempt 2 deployed successfully. No replacement project or credential changes were needed.
+- Branch / commit: main; application dependency fixes were pushed in `bf8de77`. Recovery evidence is recorded in progress.md.
+
+## Latest Recovery Evidence (2026-10-02)
+
+- Both reported URI decoder/image-size Dependabot alerts cleared; regression tests and GitHub quality gates passed.
+- DNS NXDOMAIN was caused by a paused Supabase project. Resume the project before considering replacement; follow `docs/SUPABASE_DEPLOYMENT_RECOVERY.md`.
+- Existing database/storage were preserved, and Pages deployment passed after resumption. Authenticated signup/E2E was not rerun.
 
 ## Completed This Session
 

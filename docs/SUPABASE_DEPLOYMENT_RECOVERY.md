@@ -17,6 +17,15 @@ production SMTP provider is configured.
 
 ## Restore the backend
 
+First check the existing project in the Supabase dashboard. A paused project
+can stop resolving in DNS even though its database, backups, and storage are
+retained. If the dashboard shows **Project is paused**, choose **Resume
+project** and wait for its services to become healthy. Keep the same project
+URL and public key, then rerun the failed deployment. Do not create a new
+project or reapply migrations solely because a paused hostname is unreachable.
+
+If the existing project cannot be resumed, use the replacement procedure:
+
 1. Create or recover a Supabase project.
 2. Apply every migration in `supabase/migrations` in filename order. With a
    linked Supabase CLI project, run `supabase db push`.

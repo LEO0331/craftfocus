@@ -4,7 +4,19 @@
 
 **Last Updated:** 2026-10-02 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-014 - Blocked URI decoder and image-size security updates
+**Last Completed Feature:** feat-015 - Paused Supabase project recovery
+
+## 2026-10-02 Paused Supabase Project Recovery
+
+- The authenticated Supabase dashboard established that `dotbjffrepidvlmokhgl` was paused, not deleted. Its database, backups, and storage were retained.
+- Resumed the existing CraftFocus project. After startup, the dashboard reports **Healthy** and the original hostname resolves again. No project replacement, migration replay, credential rotation, auth setting change, or paid upgrade was needed.
+- Verified `npm run verify:deployment-env` against the original project using the app's existing public publishable key: Auth health and schema contract both passed. No private credential was saved in the repository.
+- Retried failed jobs in Pages run `36961278649`; attempt 2 completed successfully, with both quality and deploy jobs passing.
+- Updated the recovery runbook to check for paused state before considering a replacement backend. Updated feature state and handoff context.
+
+Verification: Supabase dashboard Healthy; DNS resolution restored; Auth and deployment-contract preflight passed; GitHub Pages deployment succeeded at https://github.com/LEO0331/craftfocus/actions/runs/36961278649. `git diff --check` passed. Repository changes are documentation/state only, so application tests were not repeated; the successful workflow quality job covers the unchanged application. Screenshot evidence: session visualization `supabase-restored.jpg`.
+
+Remaining limits: no real-user signup or authenticated E2E account was used in this recovery. If Supabase pauses the project again, resume it through the dashboard and rerun the failed deployment; do not bypass the preflight. Lighthouse was not changed.
 
 ## 2026-10-02 Additional Dependabot Failures
 

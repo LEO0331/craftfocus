@@ -1,6 +1,14 @@
 {
   "features": [
     {
+      "id": "feat-015",
+      "name": "Paused Supabase project recovery",
+      "description": "Resume the existing CraftFocus backend and verify Auth, schema compatibility, and GitHub Pages deployment without replacing stored data.",
+      "dependencies": ["feat-008", "feat-014"],
+      "status": "done",
+      "evidence": "2026-10-02: resumed existing project dotbjffrepidvlmokhgl through the authenticated dashboard, preserving database and storage. Dashboard reports Healthy; DNS resolves; the deployed public key passes Auth health and schema-contract preflight. Pages run 36961278649 attempt 2 passed quality and deployment. URL, keys, schema, and auth settings unchanged. Recovery runbook now checks paused state before replacement."
+    },
+    {
       "id": "feat-014",
       "name": "Blocked URI decoder and image-size security updates",
       "description": "Resolve the two reported Dependabot jobs using patched packages while preserving Expo SDK 54 consumer compatibility.",
