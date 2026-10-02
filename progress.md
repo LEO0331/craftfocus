@@ -18,6 +18,8 @@ Verification: clean `npm ci` applied both patches; TypeScript passed; 23 unit fi
 
 Limits: native device builds and authenticated backend flows were not tested. Historical failed Dependabot jobs stay failed; the updated remote dependency graph must be scanned again by GitHub. No database/auth/deployment workflow changes were made.
 
+Remote verification: pushed fix `bf8de77`; GitHub Actions run `36960918586` passed its entire quality job (install, TypeScript, unit/browser tests, fresh database migrations, regressions, and concurrency). GitHub's open Dependabot alerts now contain only `node-forge`, confirming both reported package alerts have cleared. Deployment is separately blocked at the Supabase preflight: the last documented project hostname `dotbjffrepidvlmokhgl.supabase.co` returns DNS NXDOMAIN and Auth cannot be reached. Backend restoration requires access to the Supabase project or a replacement project configuration; the preflight remains enabled. Lighthouse remains outside this request's scope.
+
 ## 2026-10-02 Dependabot UUID Security Update
 
 - The supplied Dependabot log fails with `security_update_not_possible`: `xcode@3.0.1` requires `uuid@^7.0.3`, while the advisory requires UUID 14 or newer and Dependabot identifies 14.0.2 as the latest release.
