@@ -305,6 +305,29 @@ database migrations and regression/concurrency checks. The remote Supabase
 project must expose the expected deployment contract version, so apply pending
 migrations before starting a production deploy.
 
+### Daily database health check
+
+`.github/workflows/supabase-health.yml` runs daily at **09:17 Asia/Taipei**
+(01:17 UTC) and can also be started from **Actions → Daily Supabase Database
+Health → Run workflow**. It reuses the two repository secrets above and performs
+three read-only database API queries for at most one public `item_catalog` ID
+each. It installs no dependencies, changes no data, retries transient failures,
+and fails the workflow if the database is unreachable or returns an invalid
+response. An empty catalog is healthy; response data and keys are not logged.
+
+The workflow starts scheduling once it reaches the repository's default branch.
+[Supabase's pausing guidance](https://supabase.com/docs/guides/platform/free-project-pausing)
+says a few daily database requests are typically enough to avoid inactivity
+pausing, but this check is not a guarantee and cannot resume an already paused
+project. Follow [the recovery runbook](./docs/SUPABASE_DEPLOYMENT_RECOVERY.md)
+if the check fails because the project is paused.
+
+[GitHub scheduled-workflow limits](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
+include possible delayed/dropped runs and automatic schedule disabling in public
+repositories after 60 days without repository activity. Check that this workflow
+remains enabled during long periods without commits, and use GitHub Actions
+notification settings for failed-run alerts.
+
 ## PWA Support
 
 CraftFocus web is installable as a secondary channel:

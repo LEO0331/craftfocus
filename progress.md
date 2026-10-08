@@ -2,9 +2,19 @@
 
 ## Current State
 
-**Last Updated:** 2026-10-02 Asia/Taipei
+**Last Updated:** 2026-10-08 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-015 - Paused Supabase project recovery
+**Last Completed Feature:** feat-016 - Daily Supabase database health check
+
+## 2026-10-08 Daily Supabase Database Health Check
+
+- Added `.github/workflows/supabase-health.yml`: daily at 01:17 UTC / 09:17 Asia/Taipei, plus manual dispatch. Three bounded public `item_catalog` reads generate database activity without writes or migrations.
+- Reused `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` repository secrets. No new credentials, dependencies, checkout, or installation; GitHub token permissions are empty. Each request has connection/request timeouts and transient retries. HTTP errors and non-array/unbounded responses fail the job; an empty catalog passes. Keys and response rows are not logged.
+- README documents setup/manual execution, default-branch activation, failure notifications, Supabase recovery, and GitHub's 60-day public-repository inactivity limit. Supabase describes a few daily database requests as typically sufficient, not a guarantee against pausing.
+
+Verification: YAML parsing and trigger/permissions assertions passed; Bash syntax passed; 10 mocked workflow execution scenarios passed (row/empty success, trailing slash, missing URL/key, invalid host, HTTP error, unexpected/invalid JSON, oversized response). `npx tsc --noEmit` passed; `npm test` passed (23 files / 77 tests). Initial sandbox runs blocked Git Bash initialization and Vitest temporary-file renames; reruns outside the sandbox passed. Temporary validation script removed. `git diff --check` passed. No separate lint command is configured.
+
+Limits / next step: changes are local and live GitHub/Supabase execution was not performed. Put the workflow on the default branch, then manually run **Daily Supabase Database Health** to verify the configured secrets and backend. Full web export/E2E/Lighthouse and database migration checks were skipped because no application, schema, or Pages deployment behavior changed. The check cannot resume an already paused project, and GitHub schedules may be delayed/dropped or disabled after 60 days without repository activity.
 
 ## 2026-10-02 Paused Supabase Project Recovery
 

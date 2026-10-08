@@ -1,6 +1,14 @@
 {
   "features": [
     {
+      "id": "feat-016",
+      "name": "Daily Supabase database health check",
+      "description": "Run a small read-only GitHub Actions database health check daily to reduce free-tier inactivity pausing and surface backend failures.",
+      "dependencies": ["feat-015"],
+      "status": "done",
+      "evidence": "2026-10-08: daily/manual GitHub Actions workflow performs three bounded read-only item_catalog requests at 09:17 Asia/Taipei using existing public repository secrets, with timeouts, retries, and response validation. YAML/Bash checks, 10 mocked execution scenarios, TypeScript, and 23 unit files / 77 tests passed. README records activation and schedule/pausing limits. Changes are local; live GitHub/Supabase execution remains to be verified after the workflow reaches the default branch."
+    },
+    {
       "id": "feat-015",
       "name": "Paused Supabase project recovery",
       "description": "Resume the existing CraftFocus backend and verify Auth, schema compatibility, and GitHub Pages deployment without replacing stored data.",

@@ -2,9 +2,10 @@
 
 ## Current Objective
 
-- Goal: Recover the Supabase backend after the dependency security updates.
-- Current status: Complete through feat-015. Resumed the existing paused project `dotbjffrepidvlmokhgl`; dashboard is Healthy, Auth/schema preflight passes, and Pages run `36961278649` attempt 2 deployed successfully. No replacement project or credential changes were needed.
-- Branch / commit: main; application dependency fixes were pushed in `bf8de77`. Recovery evidence is recorded in progress.md.
+- Goal: Add a small daily GitHub Actions database health check to reduce Supabase free-tier inactivity pausing.
+- Current status: feat-016 implemented and locally verified. `.github/workflows/supabase-health.yml` runs three read-only public catalog queries daily at 09:17 Asia/Taipei or on manual dispatch, using existing repository secrets. README documents operational limits.
+- Branch / commit: local uncommitted changes on main. TypeScript, 23 unit files / 77 tests, YAML/Bash validation, and 10 mocked workflow scenarios passed. No live GitHub/Supabase run was performed.
+- Next step: publish the workflow to the default branch and manually run **Daily Supabase Database Health**. Monitor failed runs and ensure the schedule stays enabled during long repository inactivity. This check reduces pause risk but cannot guarantee prevention or resume a paused project.
 
 ## Latest Recovery Evidence (2026-10-02)
 
