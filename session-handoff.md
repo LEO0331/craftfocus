@@ -2,10 +2,10 @@
 
 ## Current Objective
 
-- Goal: Add a small daily GitHub Actions database health check to reduce Supabase free-tier inactivity pausing.
-- Current status: feat-016 implemented and locally verified. `.github/workflows/supabase-health.yml` runs three read-only public catalog queries daily at 09:17 Asia/Taipei or on manual dispatch, using existing repository secrets. README documents operational limits.
-- Branch / commit: local uncommitted changes on main. TypeScript, 23 unit files / 77 tests, YAML/Bash validation, and 10 mocked workflow scenarios passed. No live GitHub/Supabase run was performed.
-- Next step: publish the workflow to the default branch and manually run **Daily Supabase Database Health**. Monitor failed runs and ensure the schedule stays enabled during long repository inactivity. This check reduces pause risk but cannot guarantee prevention or resume a paused project.
+- Goal: review dependency security exposure and fix applicable compatible updates.
+- Current status: feat-017 completed locally on 2026-11-02. Runtime decode-uri-component and active build/test packages patched; audit now has zero high/critical findings. See docs/DEPENDENCY_SECURITY_REVIEW.md for retained glob/minimatch/deepmerge findings.
+- Branch / commit: local uncommitted changes; initial worktree was clean. Clean install/postinstall, TypeScript, 77 unit tests, large malformed-query consumer regression, web export and 3 browser smoke tests passed; 2 authenticated tests skipped. Expo's offline local dependency-map check passed.
+- Next step: review/publish changes and check the remote Dependabot rescan. Exact GitHub alerts could not be read: connector lacks alert APIs and browser access stopped on URL-verification failure. No alerts were dismissed. Retained findings need upstream fixes/coordinated toolchain upgrades; no app-user-controlled input path found. No production deploy or native build performed.
 
 ## Latest Recovery Evidence (2026-10-02)
 
