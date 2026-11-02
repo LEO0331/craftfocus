@@ -2,9 +2,21 @@
 
 ## Current State
 
-**Last Updated:** 2026-10-08 Asia/Taipei
+**Last Updated:** 2026-11-02 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-016 - Daily Supabase database health check
+**Last Completed Feature:** feat-017 - Applicable dependency security updates
+
+## 2026-11-02 Applicable Dependency Security Updates
+
+PR #11 follow-up: merged origin/main at 0989e30 after the seven individual Dependabot updates landed. Only package-lock.json conflicted, on Rolldown/oxc transitive versions. Retained the already tested PR lockfile (Rolldown 1.2.16), which includes every merged security package version and the additional Vitest 4.1.12 fix. Post-merge clean npm ci/postinstall, TypeScript, 77 unit tests, exact preservation of all seven merged security package versions, and git diff --check passed. Audit remains 28 moderate / 1 low with zero high/critical. Package files are byte-identical to the previously tested PR head, so web export/browser tests were not repeated. No application changes.
+
+- Reviewed installed consumers and live npm/GitHub advisory data. Updated the runtime URI decoder to 0.5.1; updated compatible Expo/React Native tooling dependencies (compression, node-forge, shell-quote, source-map-js, undici) and Vitest/coverage/mocker 4.1.12 with Vite 8.3.5. Existing Expo compatibility patches remain intact.
+- Audit reduced from 41 affected nodes (1 critical / 9 high / 30 moderate / 1 low) to 29 (28 moderate / 1 low). Remaining root advisories are build-time glob, minimatch and deepmerge; see docs/DEPENDENCY_SECURITY_REVIEW.md for exposure and reasons to retain rather than force incompatible major versions. No application-user-controlled input path was found for these packages.
+- GitHub's authenticated alert list was inaccessible: the connector lacks Dependabot APIs and browser automation stopped because it could not establish the URL reliably. No remote alert IDs were enumerated, dismissed or claimed closed. Changes remain local and uncommitted.
+
+Verification: clean npm ci and guarded postinstall passed; repeated patch execution passed; TypeScript passed; 23 unit files / 77 tests passed before and after clean installation. A child process decoded a malformed query with 32,000 distinct encoded runs within a 5-second timeout. Playwright's web export/server and 3 browser smoke flows passed; 2 authenticated tests skipped. Expo install --check passed against its offline local dependency map (online validation unavailable). git diff --check passed. The clean-install unit rerun initially hit sandbox EPERM temporary-file rename errors; the same command passed outside the sandbox. Vite emits an informational future native-config-loader warning; current config and tests work.
+
+Limits / next step: no native-device build, authenticated backend test, production deploy or GitHub closure verification. Database and Lighthouse checks were skipped because schema/application behavior was unchanged. Publish/review the local changes, then verify Dependabot's rescan. Coordinate remaining major toolchain updates with an Expo/React Native upgrade; deepmerge currently has no published fix.
 
 ## 2026-10-08 Daily Supabase Database Health Check
 
