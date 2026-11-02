@@ -4,7 +4,7 @@
 
 - Goal: review dependency security exposure and fix applicable compatible updates.
 - Current status: feat-017 completed locally on 2026-11-02. Runtime decode-uri-component and active build/test packages patched; audit now has zero high/critical findings. See docs/DEPENDENCY_SECURITY_REVIEW.md for retained glob/minimatch/deepmerge findings.
-- Branch / commit: local uncommitted changes; initial worktree was clean. Clean install/postinstall, TypeScript, 77 unit tests, large malformed-query consumer regression, web export and 3 browser smoke tests passed; 2 authenticated tests skipped. Expo's offline local dependency-map check passed.
+- Branch / commit: codex/dependency-security-updates, PR #11; original fix 1544c55 pushed. Merged origin/main at 0989e30 to resolve the Rolldown/oxc lockfile conflict while retaining all seven merged Dependabot updates and Vitest 4.1.12. Initial implementation checks: clean install/postinstall, TypeScript, 77 unit tests, large malformed-query consumer regression, web export and 3 browser smoke tests passed; 2 authenticated tests skipped. Expo's offline local dependency-map check passed.
 - Next step: review/publish changes and check the remote Dependabot rescan. Exact GitHub alerts could not be read: connector lacks alert APIs and browser access stopped on URL-verification failure. No alerts were dismissed. Retained findings need upstream fixes/coordinated toolchain upgrades; no app-user-controlled input path found. No production deploy or native build performed.
 
 ## Latest Recovery Evidence (2026-10-02)
