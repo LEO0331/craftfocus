@@ -1,5 +1,7 @@
 import type { ItemCatalogRow } from '@/types/models';
 
+export const OFFICIAL_ITEM_COST = 25;
+
 export const ITEM_CATALOG_SEED: ItemCatalogRow[] = [
   { id: 'leather_wallet', name: 'Leather Wallet', category: 'leather', description: 'Compact holder for cards and notes.', required_progress: 100 },
   { id: 'sewing_kit', name: 'Sewing Kit', category: 'sewing', description: 'Starter kit with thread and needle tools.', required_progress: 100 },

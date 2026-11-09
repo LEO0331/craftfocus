@@ -6,6 +6,7 @@ import { Platform, useWindowDimensions } from 'react-native';
 import { TopStatusBadge } from '@/components/TopStatusBadge';
 import { theme } from '@/constants/theme';
 import { useI18n } from '@/hooks/useI18n';
+import { isLocalMode } from '@/lib/data-mode';
 
 function TabBarIcon(props: { name: ComponentProps<typeof FontAwesome>['name']; color: string }) {
   return <FontAwesome size={20} style={{ marginBottom: -2 }} {...props} />;
@@ -53,7 +54,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="friends"
-        options={{ title: t('tabs.friends'), tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} /> }}
+        options={{ href: isLocalMode ? null : undefined, title: t('tabs.friends'), tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} /> }}
       />
       <Tabs.Screen
         name="profile"

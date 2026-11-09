@@ -2,6 +2,26 @@
 
 ## 1) 系統設計總覽
 
+### Web 本機展示模式
+
+Pages 使用 `EXPO_PUBLIC_DATA_MODE=local` 匯出。Web 版會建立單一的本機身分，
+由 IndexedDB 保存進度。專注獎勵、物品型錄、房間錨點與操作畫面沿用既有實作。
+社群功能需使用 Supabase 模式，iOS 與 Android 也沿用 Supabase 模式。
+在 Supabase 模式中，身分驗證與交易由伺服器處理，服務錯誤會如實顯示。
+
+`craftfocus-local-demo` 資料庫的結構版本為 2，包含 `profile`、`sessions`、
+`wallet`、`inventory`、`room`、`placements`、`animals`、`crafts` 及 `gallery`。
+版本 1 建立各 store 並寫入初始資料，版本 2 新增專注狀態與房間唯一錨點的索引。
+型錄隨應用程式提供，創作圖像驗證後以 Blob 儲存。
+專注工作階段與種子獎勵一併提交，兌換時扣除種子與增加庫存也在同一筆交易完成。
+重新整理後無法繼續先前的專注工作階段。下次開始專注時，仍在進行中的舊工作階段會結束且不發放獎勵。
+
+個人資料頁提供匯出、匯入和重設。第 1 版 JSON 備份使用
+`craftfocus-local-demo` 格式識別碼，圖像以 Base64 搭配 MIME 類型保存。
+匯入會驗證結構與大小限制（備份最多 64 MiB，單張圖像最多 10 MiB），再以單筆交易取代進度。
+備份中仍在進行的專注工作階段會標記為中斷，獎勵為零。
+本機時鐘與資料由瀏覽器控制，適合單人展示。線上獎勵與兌換由 Supabase 資料庫和 RPC 管理。
+
 ### 目前產品範圍（V2.3）
 - 以單一 Expo 程式碼庫實作跨平台 Focus + 社交手作 App。
 - 核心循環：專注計時 -> 取得種子（seeds）-> 兌換官方/玩家作品 -> 佈置房間與收藏牆。
@@ -11,7 +31,7 @@
 - 前端：Expo React Native + TypeScript + Expo Router。
 - 執行目標：iOS / Android / Web（GitHub Pages 為 Web 通道）。
 - 後端：Supabase（Postgres + Auth + Storage + RLS + RPC）。
-- 資料權威來源：Postgres + RPC（交易敏感流程優先走伺服器）。
+- Supabase 模式的資料權威來源：Postgres + RPC。
 - 交易敏感操作使用目前的伺服器權威 RPC 契約；客戶端不再以 fallback 直接異動錢包或庫存。
 - 啟動體驗：Web static export 會先顯示品牌 loading shell；登入頁也有輕量遊戲流程動畫，避免首屏像是空白或卡住。
 
@@ -44,8 +64,11 @@
 
 ### 部署拓樸
 - Web 由 static export 部署到 GitHub Pages `/craftfocus`。
+- 匯出會複製應用程式殼層至 `404.html`，讓 Expo Router 載入未預先產生 HTML 的本機創作網址。
+  直接開啟這類網址時，伺服器會傳回殼層及 HTTP 404 狀態。
+  [GitHub Pages 自訂 404 說明](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site)
 - 後端使用 Supabase（免費層為主）。
-- PWA 定位為次要通道（殼層離線，資料操作仍需連線）。
+- PWA 為次要通道。已快取的頁面可存取 IndexedDB，Supabase 資料操作需要連線。
 
 ---
 

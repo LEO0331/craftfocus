@@ -1,4 +1,5 @@
 import { Alert } from '@/lib/alert';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,10 +8,11 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CraftPostCard } from '@/components/CraftPostCard';
 import { PixelSprite } from '@/components/PixelSprite';
-import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
+import { ITEM_CATALOG_SEED, OFFICIAL_ITEM_COST } from '@/constants/itemCatalog';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, type CraftFeedItem } from '@/lib/crafts';
+import { isLocalMode } from '@/lib/data-mode';
 import { useI18n } from '@/hooks/useI18n';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { ensureWallet, getWalletBalance } from '@/lib/wallet';
@@ -47,10 +49,11 @@ function ClaimChip({
 }
 
 export default function CraftsScreen() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const { t } = useI18n();
   const [posts, setPosts] = useState<CraftFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [claimingOfficialId, setClaimingOfficialId] = useState<string | null>(null);
   const [officialSearch, setOfficialSearch] = useState('');
   const [listingSearch, setListingSearch] = useState('');
@@ -60,20 +63,23 @@ export default function CraftsScreen() {
 
   const loadPosts = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       if (user?.id) {
         await ensureWallet(user.id);
       }
       const nextPosts = await listCraftPosts(user?.id);
       setPosts(nextPosts);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [t, user?.id]);
 
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+  useFocusEffect(useCallback(() => {
+    void loadPosts();
+  }, [loadPosts]));
 
   const handleClaim = useCallback(
     async (listingId: string) => {
@@ -111,7 +117,7 @@ export default function CraftsScreen() {
       try {
         await ensureWallet(user.id);
         const balance = await getWalletBalance(user.id);
-        const requiredSeeds = 25;
+        const requiredSeeds = OFFICIAL_ITEM_COST;
         if (balance < requiredSeeds) {
           Alert.alert(t('crafts.official.title'), t('crafts.official.notEnoughSeeds', { count: requiredSeeds }));
           return;
@@ -182,8 +188,8 @@ export default function CraftsScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadPosts} />}
     >
-      <Text style={styles.heading}>{t('crafts.title')}</Text>
-      <Button label={t('crafts.upload')} onPress={() => router.push('/crafts/new')} />
+      <Text style={styles.heading}>{t(isLocalMode ? 'localCraft.listTitle' : 'crafts.title')}</Text>
+      <Button label={t(isLocalMode ? 'localCraft.create' : 'crafts.upload')} onPress={() => router.push('/crafts/new')} />
 
       <Card>
         <Text style={styles.sectionTitle}>{t('crafts.official.title')}</Text>
@@ -196,21 +202,18 @@ export default function CraftsScreen() {
           accessibilityLabel={t('crafts.official.searchPlaceholder')}
         />
         <View style={styles.officialGrid}>
-          {pagedOfficialItems.map((item) => {
-            const officialSeedCost = 25;
-            return (
+          {pagedOfficialItems.map((item) => (
               <View key={item.id} style={styles.officialCard}>
                 <View style={styles.officialHead}>
                   <View style={styles.officialTitleWrap}>
                     <PixelSprite spriteId={item.id} size={48} roomType={['dumbbell', 'yoga_mat', 'tool_box'].includes(item.id) ? 'gym' : 'bedroom'} />
                     <Text style={styles.officialName}>{item.name}</Text>
                   </View>
-                  <ClaimChip label={`${officialSeedCost}🌱`} onPress={() => handleClaimOfficial(item.id)} disabled={claimingOfficialId === item.id} />
+                  <ClaimChip label={`${OFFICIAL_ITEM_COST}🌱`} onPress={() => handleClaimOfficial(item.id)} disabled={claimingOfficialId === item.id} />
                 </View>
                 <Text style={styles.officialMeta}>{item.description ?? t('crafts.official.defaultDescription')}</Text>
               </View>
-            );
-          })}
+          ))}
         </View>
         <View style={styles.paginationRow}>
           <Button label={t('common.prev')} onPress={() => setOfficialPage((prev) => Math.max(1, prev - 1))} disabled={officialPage <= 1} variant="secondary" />
@@ -221,16 +224,17 @@ export default function CraftsScreen() {
 
       <Card>
         <Text style={styles.sectionTitle}>{t('crafts.custom.title')}</Text>
-        <Text style={styles.sectionHint}>{t('crafts.custom.hint')}</Text>
+        <Text style={styles.sectionHint}>{t(isLocalMode ? 'localCraft.hint' : 'crafts.custom.hint')}</Text>
         <TextInput
           value={listingSearch}
           onChangeText={setListingSearch}
-          placeholder={t('crafts.custom.searchPlaceholder')}
+          placeholder={t(isLocalMode ? 'localCraft.search' : 'crafts.custom.searchPlaceholder')}
           style={styles.searchInput}
-          accessibilityLabel={t('crafts.custom.searchPlaceholder')}
+          accessibilityLabel={t(isLocalMode ? 'localCraft.search' : 'crafts.custom.searchPlaceholder')}
         />
         {isLoading && !posts.length ? <ActivityIndicator color={theme.colors.primary} /> : null}
-        {!isLoading && !posts.length ? <Text style={styles.empty}>{t('crafts.empty')}</Text> : null}
+        {loadError ? <Text accessibilityRole="alert" style={styles.empty}>{loadError}</Text> : null}
+        {!isLoading && !loadError && !posts.length ? <Text style={styles.empty}>{t(isLocalMode ? 'localCraft.empty' : 'crafts.empty')}</Text> : null}
         <View style={styles.grid}>
           {pagedListings.map((post) => (
             <View key={post.id} style={styles.gridItem}>
@@ -241,6 +245,8 @@ export default function CraftsScreen() {
                 description={post.description ?? undefined}
                 imageUrl={post.image_url ?? undefined}
                 pixelImageUrl={post.pixel_image_url ?? undefined}
+                imageBlob={post.pixelImageBlob ?? post.imageBlob}
+                privateCraft={isLocalMode}
                 pixelPalette={(post.pixel_palette as Record<string, string> | null | undefined) ?? null}
                 pixelGrid={post.pixel_grid ?? null}
                 likes={post.likes_count}

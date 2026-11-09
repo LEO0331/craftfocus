@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { isLocalMode } from '@/lib/data-mode';
+import { readLocalProfile, updateLocalProfile } from '@/lib/local/database';
 import type { Database } from '@/types/database';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export function useProfile() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,6 +20,14 @@ export function useProfile() {
     }
 
     setIsLoading(true);
+    if (isLocalMode) {
+      try {
+        setProfile(await readLocalProfile());
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -61,6 +71,12 @@ export function useProfile() {
     async (next: { display_name: string | null; bio: string | null; avatar_url: string | null }) => {
       if (!user?.id) {
         throw new Error('Not authenticated');
+      }
+
+      if (isLocalMode) {
+        const data = await updateLocalProfile(next);
+        setProfile(data);
+        return data;
       }
 
       const { data, error } = await supabase

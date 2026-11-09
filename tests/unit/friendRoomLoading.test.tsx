@@ -19,6 +19,7 @@ vi.mock('react-native', () => {
   };
 });
 vi.mock('expo-router', () => ({ useLocalSearchParams: () => ({ id: 'friend-1' }) }));
+vi.mock('@/lib/data-mode', () => ({ isLocalMode: false }));
 vi.mock('@/hooks/useI18n', () => ({ useI18n: () => ({ t: mocks.t }) }));
 vi.mock('@/lib/rooms', () => ({ listPublicRoomLayout: mocks.listRoom }));
 vi.mock('@/lib/gallery', () => ({

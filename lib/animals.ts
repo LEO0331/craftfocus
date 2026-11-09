@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { ANIMAL_SPRITES } from '@/constants/animalSprites';
+import { isLocalMode, LOCAL_USER_ID } from '@/lib/data-mode';
+import { listLocalAnimals, setLocalActiveAnimal } from '@/lib/local/economy';
 import type { FocusMode } from '@/types/models';
 
 export interface UserAnimal {
@@ -31,6 +33,7 @@ function getCatalogInfo(value: unknown): { name?: string; sprite_key?: string } 
 }
 
 export async function listUserAnimals(userId: string): Promise<UserAnimal[]> {
+  if (isLocalMode) return userId === LOCAL_USER_ID ? listLocalAnimals() : [];
   const { data, error } = await supabase
     .from('user_animals')
     .select('animal_id,is_active,animal_catalog(name,sprite_key)')
@@ -56,6 +59,7 @@ export async function getActiveAnimal(userId: string): Promise<UserAnimal | null
 }
 
 export async function setActiveAnimal(animalId: string) {
+  if (isLocalMode) return setLocalActiveAnimal(animalId);
   const { error } = await supabase.rpc('set_active_animal', { p_animal_id: animalId });
   if (error) throw error;
 }

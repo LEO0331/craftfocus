@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { onTopStatusRefresh } from '@/lib/topStatusBus';
 import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
 import { getActiveAnimal, resolveAnimalSpecies } from '@/lib/animals';
+import { getWalletBalance } from '@/lib/wallet';
+import { isLocalMode } from '@/lib/data-mode';
 
 const KNOWN_SPECIES = new Set(['cat', 'dog', 'rabbit', 'fox']);
 
@@ -15,7 +17,7 @@ function normalizeSpecies(input: string | null | undefined): string {
 }
 
 export function useTopStatus() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const [seedsBalance, setSeedsBalance] = useState(0);
   const [activeAnimal, setActiveAnimal] = useState('cat');
 
@@ -23,6 +25,13 @@ export function useTopStatus() {
     if (!user?.id) {
       setSeedsBalance(0);
       setActiveAnimal('cat');
+      return;
+    }
+
+    if (isLocalMode) {
+      const [balance, active] = await Promise.all([getWalletBalance(user.id), getActiveAnimal(user.id)]);
+      setSeedsBalance(balance);
+      setActiveAnimal(resolveAnimalSpecies(active?.sprite_key ?? 'cat'));
       return;
     }
 

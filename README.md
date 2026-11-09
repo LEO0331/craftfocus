@@ -8,6 +8,21 @@ One Expo React Native + TypeScript codebase runs on **iOS, Android, and Web**.
 
 [繁體中文 README](./README-zh.md)
 
+## Local Demo Mode
+
+The public web build opens directly with a browser-local profile. You can run
+focus sessions, earn and spend seeds, decorate your room, choose animal
+companions, and save your own pixel crafts for the 5×5 gallery. Friend requests,
+public discovery, room visits, shared publishing, exchanges, likes, and comments
+require Supabase Mode.
+
+IndexedDB saves your profile, focus history, wallet, inventory, room, companion
+unlocks, gallery, crafts, and image blobs in the current browser. Progress is
+specific to the browser profile and site origin. Clearing site data may erase
+it, and private browsing may discard it when you close the browser. In Profile,
+export a JSON backup to keep a copy. Importing a backup replaces your current
+demo progress after confirmation. The reset action clears this demo's progress.
+
 ![CraftFocus How It Works](./assets/images/how-it-works.svg)
 
 ## For Players
@@ -21,7 +36,7 @@ CraftFocus is built around a simple loop:
 5. Decorate your room and collectible gallery.
 6. Visit friends and interact with their crafts.
 
-The login screen includes a lightweight animated preview of this loop so new players can understand the game before signing in.
+In Supabase Mode, the login screen includes a lightweight animated preview of this loop.
 
 ## What You Can Do
 
@@ -116,13 +131,13 @@ Legacy tables such as `user_items`, `room_items`, and `exchange_requests` are re
 ## Architecture
 
 - **Frontend:** Expo React Native, TypeScript, Expo Router, React Native Web.
-- **State:** Lightweight hooks/context with Supabase as source of truth.
+- **State:** Lightweight hooks and context backed by IndexedDB in Local Demo Mode and Supabase in Supabase Mode.
 - **Backend:** Supabase Auth, Postgres, Storage, RLS, and RPC.
 - **Web hosting:** GitHub Pages static export under `/craftfocus`.
 - **PWA:** Static shell caching only; no offline write sync.
 - **Images:** Supabase Storage for uploaded craft images; local/browser pixel conversion where supported; palette/grid fallback renderer for custom pixel display.
 
-### Main player flow
+### Supabase player flow
 
 ```mermaid
 sequenceDiagram
@@ -175,18 +190,31 @@ More detail:
 npm install
 ```
 
-### 2) Configure Environment
+### 2) Start the web demo
 
-Create `.env`:
+Set the mode in `.env.local`, then run `npx expo start --web`.
+
+```dotenv
+EXPO_PUBLIC_DATA_MODE=local
+```
+
+The browser needs IndexedDB access. Native iOS and Android continue to use the
+Supabase path.
+When switching modes in development, stop Expo and run `npx expo start --web --clear`
+to rebuild the bundle with the new setting.
+
+### 3) Run with Supabase
+
+For a configured Supabase project, set these values in `.env.local` and restart
+Expo:
 
 ```bash
+EXPO_PUBLIC_DATA_MODE=supabase
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 Only use the public anon key in frontend code. Never commit service-role keys.
-
-### 3) Run Locally
 
 ```bash
 npx expo start
@@ -264,6 +292,8 @@ npm run test:e2e
 ```
 
 Credential-gated E2E specs skip automatically when credentials are not provided.
+Set `EXPO_PUBLIC_DATA_MODE=local` in the shell to select the local browser suite
+and export a credential-free build.
 
 To run authenticated E2E against a deployed app:
 
@@ -292,41 +322,25 @@ Expected public URL:
 https://<github-username>.github.io/craftfocus/
 ```
 
-Required GitHub repository secrets:
+The Pages workflow sets `EXPO_PUBLIC_DATA_MODE=local` for its browser checks and
+static export. It publishes `dist/` under `/craftfocus` and requires no Supabase
+secrets. It still runs TypeScript, unit tests, browser tests, and migration,
+regression, and concurrency checks against a disposable Postgres service.
+To preview the same export, set the mode in your shell, run
+`npm run verify:deployment-env`, then run `npm run e2e:serve` and open
+`http://127.0.0.1:4173/craftfocus/`.
 
-```text
-EXPO_PUBLIC_SUPABASE_URL
-EXPO_PUBLIC_SUPABASE_ANON_KEY
-```
-
-The deploy workflow injects these at build time for the static Expo web export.
-Before publishing, it runs typecheck, unit tests, browser smoke tests, all
-database migrations and regression/concurrency checks. The remote Supabase
-project must expose the expected deployment contract version, so apply pending
-migrations before starting a production deploy.
+To publish a Supabase build again, follow the online deployment checklist in the
+[Supabase deployment recovery runbook](./docs/SUPABASE_DEPLOYMENT_RECOVERY.md).
 
 ### Daily database health check
 
-`.github/workflows/supabase-health.yml` runs daily at **09:17 Asia/Taipei**
-(01:17 UTC) and can also be started from **Actions → Daily Supabase Database
-Health → Run workflow**. It reuses the two repository secrets above and performs
-three read-only database API queries for at most one public `item_catalog` ID
-each. It installs no dependencies, changes no data, retries transient failures,
-and fails the workflow if the database is unreachable or returns an invalid
-response. An empty catalog is healthy; response data and keys are not logged.
-
-The workflow starts scheduling once it reaches the repository's default branch.
-[Supabase's pausing guidance](https://supabase.com/docs/guides/platform/free-project-pausing)
-says a few daily database requests are typically enough to avoid inactivity
-pausing, but this check is not a guarantee and cannot resume an already paused
-project. Follow [the recovery runbook](./docs/SUPABASE_DEPLOYMENT_RECOVERY.md)
-if the check fails because the project is paused.
-
-[GitHub scheduled-workflow limits](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
-include possible delayed/dropped runs and automatic schedule disabling in public
-repositories after 60 days without repository activity. Check that this workflow
-remains enabled during long periods without commits, and use GitHub Actions
-notification settings for failed-run alerts.
+Scheduled database checks are opt-in. To enable them for an active Supabase
+project, configure the two Supabase repository secrets and set the Actions
+repository variable `SUPABASE_HEALTH_ENABLED` to `true`. The schedule is
+**09:17 Asia/Taipei** (01:17 UTC). A manual run from **Actions → Daily Supabase
+Database Health → Run workflow** performs the same three read-only catalog
+checks on demand.
 
 ## PWA Support
 
@@ -339,6 +353,7 @@ CraftFocus web is installable as a secondary channel:
 Offline behavior:
 
 - Previously loaded static shell/routes can open offline.
+- Local Demo Mode writes progress to IndexedDB in the browser.
 - Supabase-backed actions still require network, including login, wallet updates, claims, uploads, comments, and friend actions.
 
 Install paths:

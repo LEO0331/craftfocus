@@ -3,6 +3,13 @@ import { isValidGalleryCell } from '@/lib/galleryUtils';
 import { API_LIMITS } from '@/lib/api';
 import type { TableRow } from '@/types/database';
 import type { CustomGalleryPlacement, GalleryItem } from '@/types/models';
+import { isLocalMode } from '@/lib/data-mode';
+import {
+  listLocalCrafts,
+  listLocalGalleryPlacements,
+  placeLocalCollectible,
+  removeLocalCollectiblePlacement,
+} from '@/lib/local/crafts';
 
 type CraftPostRow = TableRow<'craft_posts'>;
 type CustomCollectibleRow = TableRow<'custom_collectibles'>;
@@ -20,6 +27,17 @@ function mapPlacement(row: CustomGalleryPlacementRow): CustomGalleryPlacement {
 }
 
 export async function listCustomCollectibles(userId: string): Promise<GalleryItem[]> {
+  if (isLocalMode) {
+    return (await listLocalCrafts(userId)).map((craft) => ({
+      listingId: craft.id,
+      title: craft.title,
+      imageUrl: null,
+      pixelImageUrl: null,
+      imageBlob: craft.pixelImage ?? craft.image,
+      pixelPalette: craft.pixelPalette,
+      pixelGrid: craft.pixelGrid,
+    }));
+  }
   const { data: collectibles, error: collectiblesError } = await supabase
     .from('custom_collectibles')
     .select('listing_id,image_url,pixel_image_url')
@@ -78,6 +96,13 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
 }
 
 export async function listGalleryPlacements(userId: string): Promise<CustomGalleryPlacement[]> {
+  if (isLocalMode) {
+    return (await listLocalGalleryPlacements(userId)).map((placement) => ({
+      ...placement,
+      userId,
+      listingId: placement.id,
+    }));
+  }
   const { data, error } = await supabase
     .from('custom_gallery_placements')
     .select('id,user_id,listing_id,cell_x,cell_y')
@@ -89,6 +114,7 @@ export async function listGalleryPlacements(userId: string): Promise<CustomGalle
 }
 
 export async function listPublicGalleryPlacements(userId: string): Promise<CustomGalleryPlacement[]> {
+  if (isLocalMode) return [];
   return listGalleryPlacements(userId);
 }
 
@@ -118,6 +144,7 @@ export async function upsertGalleryPlacement(listingId: string, x: number, y: nu
     throw new Error('Invalid gallery cell');
   }
 
+  if (isLocalMode) return placeLocalCollectible(listingId, x, y);
   const { error } = await supabase.rpc('upsert_custom_gallery_placement', {
     p_listing_id: listingId,
     p_cell_x: x,
@@ -127,6 +154,7 @@ export async function upsertGalleryPlacement(listingId: string, x: number, y: nu
 }
 
 export async function removeGalleryPlacement(listingId: string) {
+  if (isLocalMode) return removeLocalCollectiblePlacement(listingId);
   const { error } = await supabase.rpc('remove_custom_gallery_placement', {
     p_listing_id: listingId,
   });

@@ -5,7 +5,7 @@ import path from 'node:path';
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 
-test.skip(!EMAIL || !PASSWORD, 'E2E_EMAIL/E2E_PASSWORD not set');
+test.skip(process.env.EXPO_PUBLIC_DATA_MODE === 'local' || !EMAIL || !PASSWORD, 'Requires Supabase mode and E2E credentials');
 
 async function snap(page: Page, name: string) {
   const dir = path.join(process.cwd(), 'docs', 'e2e');

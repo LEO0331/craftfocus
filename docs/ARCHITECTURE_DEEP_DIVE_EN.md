@@ -2,6 +2,41 @@
 
 ## 1) System Design Overview
 
+### Web Local Demo Mode
+
+Pages exports with `EXPO_PUBLIC_DATA_MODE=local`. On web this selects a single
+local identity and IndexedDB service paths. The existing screens and Expo Router
+routes share the same focus reward definitions, catalogs, anchors, and UI. Social
+actions require Supabase Mode, which also continues to serve iOS and Android.
+Selecting Supabase Mode keeps authentication and the server RPCs authoritative,
+including when the backend reports an error.
+
+The `craftfocus-local-demo` database currently uses schema version 2. Its stores are
+`profile`, `sessions`, `wallet`, `inventory`, `room`, `placements`, `animals`,
+`crafts`, and `gallery`. Version 1 created and seeded the stores. Version 2 adds
+indexes for session status and unique room anchors. Catalog definitions are
+bundled. Crafts can contain validated image blobs. The schema version is
+independent of the backup version.
+
+Session finalization checks the stable session ID and commits the status and
+reward together with the wallet balance. A refresh cannot resume an
+interrupted session. Starting another session closes any stale active run
+without a reward. Official claims deduct seeds and increase owned inventory
+in a single transaction.
+Placements check ownership, the room theme, and the available anchor or gallery
+cell before committing.
+
+Profile's **Export backup**, **Import backup**, and **Reset demo data** controls
+operate on this database. A version 1 backup is JSON with format identifier
+`craftfocus-local-demo`, record groups, and base64-encoded images with their MIME
+types. Import validates a backup up to 64 MiB, with up to 10 MiB per image,
+before replacing progress in a single transaction. An active session in a
+backup is restored as interrupted with zero rewards.
+
+The browser controls its clock and IndexedDB. Local balances, history, and
+backups are suitable for personal demo progress. Online claims and rewards
+remain governed by the Supabase database and RPCs.
+
 ### Product scope (current V2.3)
 - Cross-platform focus + social craft app built from one Expo codebase.
 - Core gameplay loop: complete focus sessions -> earn seeds -> claim official/custom listings -> decorate room and gallery.
@@ -11,7 +46,7 @@
 - Frontend: Expo React Native + TypeScript + Expo Router.
 - Runtime targets: iOS / Android / Web (GitHub Pages as web channel).
 - Backend: Supabase (Postgres + Auth + Storage + RLS + RPC).
-- Data authority: Postgres + RPC for transaction-sensitive operations.
+- Supabase Mode data authority: Postgres + RPC for transaction-sensitive operations.
 - Transaction-sensitive actions use the current server-authoritative RPC contract; clients do not mutate wallets or inventory as a fallback.
 - Startup UX: static/exported web pages render a branded loading shell and login game-flow preview before full data interactions complete.
 
@@ -44,8 +79,12 @@
 
 ### Deployment topology
 - Web static export deployed to GitHub Pages `/craftfocus`.
+- The export copies the app shell to `404.html` so Expo Router can resolve
+  browser-local craft URLs that do not have prebuilt HTML. A direct request
+  for such a URL receives the shell with an HTTP 404 status.
+  [GitHub Pages custom 404 documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site)
 - Supabase hosted backend (free tier constraints).
-- PWA layer is secondary channel (shell offline, online for data actions).
+- PWA layer is a secondary channel. Cached routes use IndexedDB for local demo data. Supabase data actions require a connection.
 
 ---
 

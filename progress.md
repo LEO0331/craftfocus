@@ -2,9 +2,27 @@
 
 ## Current State
 
-**Last Updated:** 2026-11-02 Asia/Taipei
+**Last Updated:** 2026-11-09 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-017 - Applicable dependency security updates
+**Last Completed Feature:** feat-018 - IndexedDB Local Demo Mode
+
+## 2026-11-09 IndexedDB Local Demo Mode
+
+- Added a web-only local player identity and IndexedDB v2 persistence for focus, wallet, inventory, room placement, companions, private crafts, and gallery. Bundled catalogs remain the source of item and anchor definitions.
+- Focus finalization and official claims commit their related records together. Refresh never resumes an active timer. Local room and gallery placement require an empty destination.
+- Added bilingual backup, restore, and reset controls. The v1 JSON format includes image blobs as base64 and is limited to 64 MiB. Local profiles use the default avatar. Social features and online claim history require Supabase Mode.
+- Set Pages and Lighthouse builds to local mode, added a Pages 404 shell for dynamic craft URLs, and made the scheduled Supabase health check opt-in.
+
+Verification:
+
+- TypeScript and Vitest passed, 27 files and 101 tests. The expanded coverage gate passed with 96.29% lines and 89.55% branches overall. The local persistence modules measured 95.92% lines and 88.54% branches.
+- A credential-free Pages export and all five local Chrome Playwright tests passed. The tests covered reload and visibility handling, claims and room placement, image and gallery backup round trip, keyboard and mobile behavior, blocked storage, and zero Supabase requests.
+- Explicit Supabase-mode Expo export succeeded for web, iOS, and Android. Native device execution and authenticated live Supabase tests were outside this pass.
+- Sequential mode-switch verification passed with a clean Metro cache for each export. Three Supabase-mode auth smoke tests passed with seven mode or credential skips. Five local checks passed with five online skips.
+- Local deployment preflight passed without credentials. Disposable PostgreSQL 18.3 passed all 28 migrations and the existing regression and concurrency suites.
+- Lighthouse mobile scored 71 performance, 96 accessibility, 100 best practices, and 100 SEO. It flagged existing contrast issues in the Home badge and inactive tabs. Windows Chrome temp cleanup reported EPERM after both reports were written.
+
+Next step: review the feature branch and CI before publishing to Pages. Local progress is browser-specific and client-controlled. The live Supabase project was outside verification.
 
 ## 2026-11-02 Applicable Dependency Security Updates
 

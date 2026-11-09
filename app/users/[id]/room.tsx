@@ -5,15 +5,21 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppLoading } from '@/components/AppLoading';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { OnlineModeNotice } from '@/components/OnlineModeNotice';
 import { CollectibleGalleryBoard } from '@/components/CollectibleGalleryBoard';
 import { IsometricRoom } from '@/components/IsometricRoom';
 import { theme } from '@/constants/theme';
 import { useI18n } from '@/hooks/useI18n';
+import { isLocalMode } from '@/lib/data-mode';
 import { listPublicGalleryItems, listPublicGalleryPlacements } from '@/lib/gallery';
 import { listPublicRoomLayout, type RoomPlacement } from '@/lib/rooms';
 import type { CustomGalleryPlacement, GalleryItem, RoomType } from '@/types/models';
 
 export default function UserRoomScreen() {
+  return isLocalMode ? <OnlineModeNotice /> : <OnlineUserRoomScreen />;
+}
+
+function OnlineUserRoomScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const { t } = useI18n();
   const userId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);

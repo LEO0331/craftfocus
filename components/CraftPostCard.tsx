@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AsciiPet } from '@/components/AsciiPet';
+import { BlobImage } from '@/components/BlobImage';
 import { Card } from '@/components/Card';
 import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
@@ -15,6 +16,8 @@ interface CraftPostCardProps {
   description?: string;
   imageUrl?: string;
   pixelImageUrl?: string;
+  imageBlob?: Blob | null;
+  privateCraft?: boolean;
   pixelPalette?: Record<string, string> | null;
   pixelGrid?: string[] | null;
   likes?: number;
@@ -35,6 +38,8 @@ export function CraftPostCard({
   description,
   imageUrl,
   pixelImageUrl,
+  imageBlob,
+  privateCraft = false,
   pixelPalette,
   pixelGrid,
   likes = 0,
@@ -51,14 +56,19 @@ export function CraftPostCard({
   const displayImageUrl = pixelImageUrl ?? imageUrl;
   const compact = layout === 'compact';
   const [isClaimHovered, setIsClaimHovered] = useState(false);
+  const imageLabel = t(privateCraft ? 'localCraft.image' : 'craft.card.image');
+  const imageStyle = compact ? styles.thumb : styles.image;
+  const artwork = imageBlob
+    ? <BlobImage blob={imageBlob} style={imageStyle} accessibilityLabel={imageLabel} />
+    : displayImageUrl
+      ? <Image source={{ uri: displayImageUrl }} style={imageStyle} accessibilityLabel={imageLabel} />
+      : null;
 
   const content = (
     <Card>
       {compact ? (
         <View style={styles.compactHead}>
-          {displayImageUrl ? (
-            <Image source={{ uri: displayImageUrl }} style={styles.thumb} accessibilityLabel={t('craft.card.image')} />
-          ) : pixelPalette && pixelGrid ? (
+          {artwork ?? (pixelPalette && pixelGrid ? (
             <View style={styles.thumbSprite} accessibilityLabel={t('craft.card.imageFallback')}>
               <PixelGridSprite palette={pixelPalette} grid={pixelGrid} size={30} />
             </View>
@@ -66,13 +76,13 @@ export function CraftPostCard({
             <View style={styles.thumbFallback} accessibilityLabel={t('craft.card.imageFallback')}>
               <Text style={styles.thumbFallbackText}>PXL</Text>
             </View>
-          )}
+          ))}
           <Text style={styles.title}>{title}</Text>
         </View>
       ) : (
         <>
-          {displayImageUrl ? <Image source={{ uri: displayImageUrl }} style={styles.image} accessibilityLabel={t('craft.card.image')} /> : null}
-          {!displayImageUrl && pixelPalette && pixelGrid ? (
+          {artwork}
+          {!artwork && pixelPalette && pixelGrid ? (
             <View style={styles.imageSpriteWrap} accessibilityLabel={t('craft.card.imageFallback')}>
               <PixelGridSprite palette={pixelPalette} grid={pixelGrid} size={96} />
             </View>
@@ -80,42 +90,50 @@ export function CraftPostCard({
           <Text style={styles.title}>{title}</Text>
         </>
       )}
-      <View style={styles.authorRow}>
-        <AsciiPet art={resolveAsciiAnimalBadge(authorAnimalId)} compact />
-        <Text style={styles.meta}>
-          {t('craft.card.by')} {authorName ?? t('craft.card.unknownAuthor')}
-        </Text>
-      </View>
+      {!privateCraft ? (
+        <View style={styles.authorRow}>
+          <AsciiPet art={resolveAsciiAnimalBadge(authorAnimalId)} compact />
+          <Text style={styles.meta}>
+            {t('craft.card.by')} {authorName ?? t('craft.card.unknownAuthor')}
+          </Text>
+        </View>
+      ) : null}
       {description ? <Text style={styles.description}>{description}</Text> : null}
-      <View style={styles.row}>
-        <Text style={[styles.meta, likedByMe ? styles.liked : null]}>♥ {likes}</Text>
-        <Text style={styles.meta}>💬 {comments}</Text>
-        <Text style={[styles.meta, styles.price]}>{seedCost} 🌱</Text>
-      </View>
-      <View style={styles.footerRow}>
-        <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>
-          {claimedByMe ? t('craft.card.claimed') : t('craft.card.unclaimed')}
-        </Text>
-        {onClaimPress && claimLabel ? (
-          <Pressable
-            onPress={(event) => {
-              event.stopPropagation?.();
-              onClaimPress();
-            }}
-            onHoverIn={() => setIsClaimHovered(true)}
-            onHoverOut={() => setIsClaimHovered(false)}
-            style={({ pressed }) => [
-              styles.claimChip,
-              Platform.OS === 'web' && isClaimHovered ? styles.claimChipHover : null,
-              pressed ? styles.claimChipPressed : null,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={claimLabel}
-          >
-            <Text style={styles.claimChipText}>{claimLabel}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      {privateCraft ? (
+        <Text style={[styles.meta, styles.claimed]}>{t('localCraft.owned')}</Text>
+      ) : (
+        <>
+          <View style={styles.row}>
+            <Text style={[styles.meta, likedByMe ? styles.liked : null]}>♥ {likes}</Text>
+            <Text style={styles.meta}>💬 {comments}</Text>
+            <Text style={[styles.meta, styles.price]}>{seedCost} 🌱</Text>
+          </View>
+          <View style={styles.footerRow}>
+            <Text style={[styles.meta, claimedByMe ? styles.claimed : null]}>
+              {claimedByMe ? t('craft.card.claimed') : t('craft.card.unclaimed')}
+            </Text>
+            {onClaimPress && claimLabel ? (
+              <Pressable
+                onPress={(event) => {
+                  event.stopPropagation?.();
+                  onClaimPress();
+                }}
+                onHoverIn={() => setIsClaimHovered(true)}
+                onHoverOut={() => setIsClaimHovered(false)}
+                style={({ pressed }) => [
+                  styles.claimChip,
+                  Platform.OS === 'web' && isClaimHovered ? styles.claimChipHover : null,
+                  pressed ? styles.claimChipPressed : null,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={claimLabel}
+              >
+                <Text style={styles.claimChipText}>{claimLabel}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </>
+      )}
     </Card>
   );
 
@@ -128,7 +146,7 @@ export function CraftPostCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t('craft.card.openPost', { title })}
-      accessibilityHint={t('craft.card.openPostHint')}
+      accessibilityHint={t(privateCraft ? 'localCraft.detail' : 'craft.card.openPostHint')}
     >
       {content}
     </Pressable>

@@ -1,6 +1,14 @@
 import { supabase } from '@/lib/supabase';
+import { isLocalMode, LOCAL_USER_ID } from '@/lib/data-mode';
+import { openLocalDatabase } from '@/lib/local/database';
+import { getLocalWalletBalance } from '@/lib/local/economy';
 
 export async function ensureWallet(userId: string): Promise<void> {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) throw new Error('Unknown local player');
+    await openLocalDatabase();
+    return;
+  }
   const { data: existing, error: existingError } = await supabase
     .from('user_wallets')
     .select('user_id')
@@ -31,6 +39,7 @@ export async function ensureWallet(userId: string): Promise<void> {
 }
 
 export async function getWalletBalance(userId: string): Promise<number> {
+  if (isLocalMode) return userId === LOCAL_USER_ID ? getLocalWalletBalance() : 0;
   const { data, error } = await supabase.from('user_wallets').select('seeds_balance').eq('user_id', userId).maybeSingle();
   if (error) throw error;
   return data?.seeds_balance ?? 0;

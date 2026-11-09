@@ -1,5 +1,6 @@
 import { Alert } from '@/lib/alert';
 import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -8,27 +9,28 @@ import { AsciiPet } from '@/components/AsciiPet';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { CategoryPicker } from '@/components/CategoryPicker';
+import LocalDemoData from '@/components/LocalDemoData';
 import { resolveAsciiAnimalBadge } from '@/constants/asciiPets';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n, type AppLanguage } from '@/hooks/useI18n';
 import { useProfile } from '@/hooks/useProfile';
 import { deleteMyAccount } from '@/lib/auth';
+import { isLocalMode } from '@/lib/data-mode';
+import { listLocalSessions } from '@/lib/local/economy';
+import { countLocalCrafts } from '@/lib/local/crafts';
+import { listUserInventory } from '@/lib/rooms';
 import { getWalletBalance } from '@/lib/wallet';
 import { getActiveAnimal, listUserAnimals, resolveAnimalSpecies, setActiveAnimal, type UserAnimal } from '@/lib/animals';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { storageAdapter } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/validation';
-import type { TableRow } from '@/types/database';
-
-type FocusSessionRow = TableRow<'focus_sessions'>;
-type UserInventoryRow = TableRow<'user_inventory'>;
 
 const STORAGE_BUCKET = 'craft-images';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { player: user, logout } = useAuth();
   const { language, setLanguage, t } = useI18n();
   const { profile, saveProfile } = useProfile();
 
@@ -65,31 +67,36 @@ export default function ProfileScreen() {
   const loadStats = useCallback(async () => {
     if (!user?.id) return;
 
-    const [{ data: sessions, error: sessionsError }, { count: works, error: worksError }, { data: inventory, error: inventoryError }] =
-      await Promise.all([
+    const [sessions, works, inventory] = isLocalMode
+      ? await Promise.all([
+        listLocalSessions(),
+        countLocalCrafts(),
+        listUserInventory(user.id),
+      ])
+      : await Promise.all([
         supabase.from('focus_sessions').select('duration_minutes,status').eq('user_id', user.id),
         supabase.from('craft_posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         supabase.from('user_inventory').select('quantity').eq('user_id', user.id),
-      ]);
+      ]).then(([sessionsResult, worksResult, inventoryResult]) => {
+        const error = sessionsResult.error ?? worksResult.error ?? inventoryResult.error;
+        if (error) throw error;
+        return [sessionsResult.data, worksResult.count, inventoryResult.data] as const;
+      });
 
-    if (sessionsError) throw sessionsError;
-    if (worksError) throw worksError;
-    if (inventoryError) throw inventoryError;
-
-    const completed = (sessions ?? []).filter((entry: Pick<FocusSessionRow, 'status' | 'duration_minutes'>) => entry.status === 'completed');
+    const completed = (sessions ?? []).filter((entry) => entry.status === 'completed');
     const totalMinutes = completed.reduce((sum: number, entry) => sum + Number(entry.duration_minutes ?? 0), 0);
     const inventoryCount = (inventory ?? []).reduce(
-      (sum: number, row: Pick<UserInventoryRow, 'quantity'>) => sum + Number(row.quantity ?? 0),
+      (sum, row) => sum + Number(row.quantity ?? 0),
       0
     );
 
     setStats({ totalMinutes, completedSessions: completed.length, uploadedWorks: works ?? 0, unlockedItems: inventoryCount });
   }, [user?.id]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     loadStats().catch((error) => console.warn('Failed to load stats', error));
     loadMeta().catch((error) => console.warn('Failed to load meta', error));
-  }, [loadStats, loadMeta]);
+  }, [loadStats, loadMeta]));
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, allowsEditing: true, aspect: [1, 1] });
@@ -105,7 +112,7 @@ export default function ProfileScreen() {
       const safeBio = bio ? sanitizeText(bio, 280) : '';
       let avatarUrlToSave = profile?.avatar_url ?? null;
 
-      if (avatarUri && !avatarUri.startsWith('http')) {
+      if (!isLocalMode && avatarUri && !avatarUri.startsWith('http')) {
         const avatarPath = `${user.id}/avatars/${Date.now()}.jpg`;
         avatarUrlToSave = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: avatarPath, uri: avatarUri });
       } else if (avatarUri?.startsWith('http')) {
@@ -172,7 +179,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Button label={t('profile.pickAvatar')} onPress={pickAvatar} variant="secondary" />
+        {!isLocalMode ? <Button label={t('profile.pickAvatar')} onPress={pickAvatar} variant="secondary" /> : null}
 
         <Text style={styles.label}>{t('profile.username')}</Text>
         <TextInput
@@ -242,12 +249,16 @@ export default function ProfileScreen() {
         <Text style={styles.name}>{t('profile.stats')}</Text>
         <Text style={styles.sub}>{t('profile.totalMinutes', { count: stats.totalMinutes })}</Text>
         <Text style={styles.sub}>{t('profile.completedSessions', { count: stats.completedSessions })}</Text>
-        <Text style={styles.sub}>{t('profile.uploadedListings', { count: stats.uploadedWorks })}</Text>
+        <Text style={styles.sub}>{t(isLocalMode ? 'local.savedCrafts' : 'profile.uploadedListings', { count: stats.uploadedWorks })}</Text>
         <Text style={styles.sub}>{t('profile.inventoryQty', { count: stats.unlockedItems })}</Text>
       </Card>
 
-      <Button label={t('profile.logout')} onPress={() => logout()} variant="secondary" />
-      <Button label={t('profile.delete')} onPress={handleDeleteAccount} variant="danger" />
+      {isLocalMode ? <LocalDemoData /> : (
+        <>
+          <Button label={t('profile.logout')} onPress={() => logout()} variant="secondary" />
+          <Button label={t('profile.delete')} onPress={handleDeleteAccount} variant="danger" />
+        </>
+      )}
     </ScrollView>
   );
 }

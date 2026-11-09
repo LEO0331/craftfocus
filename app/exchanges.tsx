@@ -4,10 +4,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 
 import { Card } from '@/components/Card';
+import { OnlineModeNotice } from '@/components/OnlineModeNotice';
 import { ITEM_CATALOG_SEED } from '@/constants/itemCatalog';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
+import { isLocalMode } from '@/lib/data-mode';
 import { supabase } from '@/lib/supabase';
 import type { TableRow } from '@/types/database';
 
@@ -76,6 +78,10 @@ function formatRelativeTime(value: string, locale: string): string {
 }
 
 export default function ClaimsScreen() {
+  return isLocalMode ? <OnlineModeNotice /> : <OnlineClaimsScreen />;
+}
+
+function OnlineClaimsScreen() {
   const { user } = useAuth();
   const { t, language } = useI18n();
   const navigation = useNavigation();

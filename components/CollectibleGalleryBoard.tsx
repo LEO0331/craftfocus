@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { BlobImage } from '@/components/BlobImage';
 import { PixelGridSprite } from '@/components/PixelGridSprite';
 import { theme } from '@/constants/theme';
 import type { CustomGalleryPlacement, GalleryItem, RoomType } from '@/types/models';
@@ -50,6 +51,7 @@ export function CollectibleGalleryBoard({
             const collectible = placement ? collectibleMap.get(placement.listingId) : null;
             const active = placement?.listingId === selectedListingId;
             const sourceUri = collectible?.pixelImageUrl ?? collectible?.imageUrl ?? null;
+            const imageLabel = i18n?.imageLabel(collectible?.title ?? 'Collectible image') ?? collectible?.title ?? 'Collectible image';
 
             return (
               <Pressable
@@ -65,11 +67,13 @@ export function CollectibleGalleryBoard({
                 }
                 accessibilityHint={readOnly ? i18n?.a11yHintReadonly ?? 'Read-only gallery cell' : i18n?.a11yHintPlace ?? 'Tap to place or select collectible'}
               >
-                {sourceUri ? (
+                {collectible?.imageBlob ? (
+                  <BlobImage blob={collectible.imageBlob} style={styles.thumb} accessibilityLabel={imageLabel} />
+                ) : sourceUri ? (
                   <Image
                     source={{ uri: sourceUri }}
                     style={styles.thumb}
-                    accessibilityLabel={i18n?.imageLabel(collectible?.title ?? 'Collectible image') ?? collectible?.title ?? 'Collectible image'}
+                    accessibilityLabel={imageLabel}
                   />
                 ) : collectible?.pixelPalette && collectible.pixelGrid ? (
                   <View style={styles.spriteWrap}>

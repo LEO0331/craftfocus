@@ -2,6 +2,9 @@ import { supabase } from '@/lib/supabase';
 import type { TableRow } from '@/types/database';
 import { sanitizeText } from '@/lib/validation';
 import { API_LIMITS, mutationError, normalizeListLimit } from '@/lib/api';
+import { isLocalMode, LOCAL_USER_ID } from '@/lib/data-mode';
+import { deleteLocalCraft, getLocalCraft, listLocalCrafts, type LocalCraft } from '@/lib/local/crafts';
+import { claimLocalOfficialItem } from '@/lib/local/economy';
 
 type ProfileRow = TableRow<'profiles'>;
 type CraftPostRow = TableRow<'craft_posts'>;
@@ -15,6 +18,8 @@ type EngagementRow = {
 };
 
 export interface CraftFeedItem extends CraftPostRow {
+  imageBlob?: Blob;
+  pixelImageBlob?: Blob | null;
   author_name: string;
   author_animal_id: string;
   likes_count: number;
@@ -51,8 +56,43 @@ function profileAnimal(profile: ProfileRow | undefined): string {
   return 'cat';
 }
 
+function toLocalFeedItem(craft: LocalCraft): CraftFeedItem {
+  return {
+    id: craft.id,
+    user_id: LOCAL_USER_ID,
+    title: craft.title,
+    description: craft.description,
+    category: 'craft',
+    image_url: null,
+    pixel_image_url: null,
+    imageBlob: craft.image,
+    pixelImageBlob: craft.pixelImage,
+    pixel_palette: craft.pixelPalette,
+    pixel_grid: craft.pixelGrid,
+    open_to_exchange: false,
+    listing_category: 'custom',
+    seed_cost: 0,
+    listing_type: 'custom',
+    reward_item_id: null,
+    official_source: false,
+    is_active: true,
+    created_at: craft.createdAt,
+    author_name: '',
+    author_animal_id: 'cat',
+    likes_count: 0,
+    comments_count: 0,
+    liked_by_me: false,
+    claimed_by_me: true,
+  };
+}
+
+function requireOnlineCrafts() {
+  if (isLocalMode) throw new Error('This action requires Online Mode.');
+}
+
 export async function listCraftPosts(currentUserId?: string, options?: { limit?: number }): Promise<CraftFeedItem[]> {
   const limit = normalizeListLimit(options?.limit, API_LIMITS.craftFeedDefault, API_LIMITS.craftFeedMax);
+  if (isLocalMode) return (await listLocalCrafts(currentUserId)).map(toLocalFeedItem);
   const { data: posts, error: postsError } = await supabase
     .from('craft_posts')
     .select('*')
@@ -114,6 +154,7 @@ export async function createCraftPost(input: {
   listingType: 'catalog' | 'custom';
   rewardItemId?: string | null;
 }) {
+  requireOnlineCrafts();
   const safeTitle = sanitizeText(input.title, 20);
   const safeDescription = input.description ? sanitizeText(input.description, 60) : '';
 
@@ -142,6 +183,11 @@ export async function createCraftPost(input: {
 }
 
 export async function getCraftPostDetail(postId: string, currentUserId?: string): Promise<CraftPostDetail> {
+  if (isLocalMode) {
+    const craft = currentUserId === LOCAL_USER_ID ? await getLocalCraft(postId) : undefined;
+    if (!craft) throw new Error('Craft not found.');
+    return { ...toLocalFeedItem(craft), comments: [] };
+  }
   const { data: post, error: postError } = await supabase.from('craft_posts').select('*').eq('id', postId).single();
   if (postError) throw postError;
 
@@ -202,6 +248,7 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
 }
 
 export async function claimListingWithSeeds(listingId: string) {
+  requireOnlineCrafts();
   const { error } = await supabase.rpc('claim_listing_with_seeds', { p_listing_id: listingId });
   if (error) {
     throw mutationError('Listing claim failed', error);
@@ -209,6 +256,7 @@ export async function claimListingWithSeeds(listingId: string) {
 }
 
 export async function claimOfficialInventoryItem(itemId: string) {
+  if (isLocalMode) return claimLocalOfficialItem(itemId);
   const { error } = await supabase.rpc('claim_official_inventory_item_v2', { p_item_id: itemId });
   if (error) {
     throw mutationError('Official claim failed', error);
@@ -216,6 +264,7 @@ export async function claimOfficialInventoryItem(itemId: string) {
 }
 
 export async function setPostLike(postId: string, userId: string, liked: boolean) {
+  requireOnlineCrafts();
   if (liked) {
     const { error } = await supabase
       .from('likes')
@@ -230,6 +279,7 @@ export async function setPostLike(postId: string, userId: string, liked: boolean
 }
 
 export async function toggleLike(postId: string, userId: string) {
+  requireOnlineCrafts();
   const { data: existing, error: existingError } = await supabase
     .from('likes')
     .select('id')
@@ -251,6 +301,7 @@ export async function toggleLike(postId: string, userId: string) {
 }
 
 export async function addComment(postId: string, userId: string, body: string) {
+  requireOnlineCrafts();
   const normalizedBody = body.trim();
   if (!normalizedBody) throw new Error('Comment cannot be empty.');
 
@@ -259,6 +310,10 @@ export async function addComment(postId: string, userId: string, body: string) {
 }
 
 export async function deleteCraftPost(postId: string, userId: string) {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) throw new Error('Craft not owned');
+    return deleteLocalCraft(postId);
+  }
   const { error } = await supabase.from('craft_posts').update({ is_active: false }).eq('id', postId).eq('user_id', userId);
   if (error) throw error;
 }

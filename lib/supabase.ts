@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { isLocalMode } from '@/lib/data-mode';
 import type { Database } from '@/types/database';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-if (!isSupabaseConfigured) {
+if (!isLocalMode && !isSupabaseConfigured) {
   // Keep app bootable for local UI work even before .env is configured.
   // Auth calls will fail until valid keys are supplied.
   console.warn('Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY');
@@ -42,15 +43,26 @@ const authStorage = {
   },
 };
 
-export const supabase = createClient<Database>(
-  supabaseUrl ?? 'https://placeholder.supabase.co',
-  supabaseAnonKey ?? 'placeholder-anon-key',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: Platform.OS === 'web',
-      storage: authStorage,
+function createOnlineClient() {
+  return createClient<Database>(
+    supabaseUrl ?? 'https://placeholder.supabase.co',
+    supabaseAnonKey ?? 'placeholder-anon-key',
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: Platform.OS === 'web',
+        storage: authStorage,
+      },
     },
-  }
-);
+  );
+}
+
+// Fail closed if a route accidentally reaches an online-only adapter.
+export const supabase = isLocalMode
+  ? new Proxy({} as ReturnType<typeof createOnlineClient>, {
+      get() {
+        throw new Error('This feature requires Online Mode.');
+      },
+    })
+  : createOnlineClient();

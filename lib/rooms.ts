@@ -1,6 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import { ROOM_ANCHORS } from '@/constants/roomLayout';
 import { API_LIMITS } from '@/lib/api';
+import { isLocalMode, LOCAL_USER_ID } from '@/lib/data-mode';
+import {
+  getLocalRoom, listLocalInventory, listLocalRoom,
+  placeLocalInventory, removeLocalRoomPlacement, setLocalRoomType,
+} from '@/lib/local/economy';
 import type { RoomType } from '@/types/models';
 
 export interface RoomPlacement {
@@ -15,6 +20,10 @@ export interface UserInventoryItem {
 }
 
 export async function getOrCreateRoom(userId: string): Promise<{ id: string; room_type: RoomType }> {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) throw new Error('Not room owner');
+    return getLocalRoom();
+  }
   const { data: existing, error } = await supabase.from('rooms').select('id,room_type').eq('user_id', userId).maybeSingle();
   if (error) throw error;
   if (existing?.id) return { id: existing.id, room_type: existing.room_type ?? 'bedroom' };
@@ -29,6 +38,10 @@ export async function getOrCreateRoom(userId: string): Promise<{ id: string; roo
 }
 
 export async function listMyRoom(userId: string): Promise<{ roomId: string; roomType: RoomType; placements: RoomPlacement[] }> {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) throw new Error('Not room owner');
+    return listLocalRoom();
+  }
   const room = await getOrCreateRoom(userId);
   const { data, error } = await supabase
     .from('room_placements')
@@ -41,6 +54,10 @@ export async function listMyRoom(userId: string): Promise<{ roomId: string; room
 }
 
 export async function listPublicRoomLayout(userId: string): Promise<{ roomType: RoomType; placements: RoomPlacement[] }> {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) return { roomType: 'bedroom', placements: [] };
+    return listLocalRoom();
+  }
   const { data: room, error } = await supabase.from('rooms').select('id,room_type').eq('user_id', userId).maybeSingle();
   if (error || !room?.id) return { roomType: 'bedroom', placements: [] };
 
@@ -55,18 +72,28 @@ export async function listPublicRoomLayout(userId: string): Promise<{ roomType: 
 }
 
 export async function listUserInventory(userId: string): Promise<UserInventoryItem[]> {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) return [];
+    const inventory = await listLocalInventory();
+    return inventory.map(({ id, quantity }) => ({ item_id: id, quantity }));
+  }
   const { data, error } = await supabase.from('user_inventory').select('item_id,quantity').eq('user_id', userId).order('item_id', { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => ({ item_id: row.item_id, quantity: row.quantity }));
 }
 
 export async function setRoomType(userId: string, roomType: RoomType) {
+  if (isLocalMode) {
+    if (userId !== LOCAL_USER_ID) throw new Error('Not room owner');
+    return setLocalRoomType(roomType);
+  }
   const room = await getOrCreateRoom(userId);
   const { error } = await supabase.from('rooms').update({ room_type: roomType }).eq('id', room.id);
   if (error) throw error;
 }
 
 export async function placeInventoryAtAnchor(input: { roomId: string; itemId: string; anchorId: string }) {
+  if (isLocalMode) return placeLocalInventory(input);
   const { error } = await supabase.rpc('place_inventory_at_anchor', {
     p_room_id: input.roomId,
     p_item_id: input.itemId,
@@ -76,6 +103,7 @@ export async function placeInventoryAtAnchor(input: { roomId: string; itemId: st
 }
 
 export async function removeRoomPlacement(roomPlacementId: string) {
+  if (isLocalMode) return removeLocalRoomPlacement(roomPlacementId);
   const { error } = await supabase.rpc('remove_room_placement', { p_room_placement_id: roomPlacementId });
   if (error) throw error;
 }

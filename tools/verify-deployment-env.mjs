@@ -3,10 +3,15 @@ import { pathToFileURL } from 'node:url';
 export const EXPECTED_DEPLOYMENT_CONTRACT = '2026-09-14.1';
 
 export async function verifyDeploymentEnvironment({
+  dataMode = 'supabase',
   supabaseUrl,
   anonKey,
   fetchImpl = fetch,
 }) {
+  if (dataMode === 'local') return null;
+  if (dataMode !== 'supabase') {
+    throw new Error('EXPO_PUBLIC_DATA_MODE must be local or supabase.');
+  }
   if (!supabaseUrl || !anonKey) {
     throw new Error('EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must both be configured.');
   }
@@ -71,10 +76,13 @@ export async function verifyDeploymentEnvironment({
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   verifyDeploymentEnvironment({
+    dataMode: process.env.EXPO_PUBLIC_DATA_MODE,
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   })
-    .then((origin) => console.log(`Supabase Auth is reachable: ${origin}`))
+    .then((origin) => console.log(origin
+      ? `Supabase Auth is reachable: ${origin}`
+      : 'Local Demo Mode requires no Supabase configuration.'))
     .catch((error) => {
       console.error(error instanceof Error ? error.message : error);
       process.exitCode = 1;

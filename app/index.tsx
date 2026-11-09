@@ -4,13 +4,13 @@ import { AppLoading } from '@/components/AppLoading';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Index() {
-  const { session, isLoading } = useAuth();
+  const { player, isLoading } = useAuth();
 
   if (isLoading) {
     return <AppLoading message="Opening CraftFocus..." />;
   }
 
-  if (session) {
+  if (player) {
     return <Redirect href="/(tabs)/home" />;
   }
 

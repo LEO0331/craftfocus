@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { isLocalMode } from '@/lib/data-mode';
 
 /**
  * Storage abstraction for images/files.
@@ -45,8 +46,25 @@ function hasImageSignature(bytes: Uint8Array, mime: string): boolean {
   return false;
 }
 
-async function uriToBlob(uri: string): Promise<Blob> {
-  const safe = ALLOWED_URI_PREFIXES.some((prefix) => uri.startsWith(prefix));
+export async function readImageBlob(uri: string): Promise<Blob> {
+  if (isLocalMode && uri.startsWith('data:')) {
+    const separator = uri.indexOf(',');
+    const mime = /^data:(image\/(?:jpeg|png|webp));base64$/i.exec(uri.slice(0, separator))?.[1];
+    if (!mime) throw new Error('Unsupported file type. Use JPEG, PNG, or WEBP.');
+    // The app's CSP permits data images for rendering, but excludes data URLs from fetch.
+    if (uri.length - separator - 1 > Math.ceil(MAX_UPLOAD_BYTES / 3) * 4) {
+      throw new Error('Image exceeds 10MB upload limit.');
+    }
+    const decoded = atob(uri.slice(separator + 1));
+    const bytes = Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+    const blob = new Blob([bytes], { type: mime });
+    await validateImageBlob(blob);
+    return blob;
+  }
+
+  const safe = isLocalMode
+    ? uri.startsWith('blob:')
+    : ALLOWED_URI_PREFIXES.some((prefix) => uri.startsWith(prefix));
   if (!safe) {
     throw new Error('Unsupported image URI source.');
   }
@@ -55,6 +73,11 @@ async function uriToBlob(uri: string): Promise<Blob> {
     throw new Error(`Failed to read file: ${response.status}`);
   }
   const blob = await response.blob();
+  await validateImageBlob(blob);
+  return blob;
+}
+
+export async function validateImageBlob(blob: Blob): Promise<void> {
   if (blob.size > MAX_UPLOAD_BYTES) {
     throw new Error('Image exceeds 10MB upload limit.');
   }
@@ -66,13 +89,12 @@ async function uriToBlob(uri: string): Promise<Blob> {
   if (!hasImageSignature(header, blob.type)) {
     throw new Error('Invalid image content signature.');
   }
-
-  return blob;
 }
 
 export const storageAdapter: StorageAdapter = {
   async uploadImage({ bucket, path, uri }) {
-    const blob = await uriToBlob(uri);
+    if (isLocalMode) throw new Error('Image uploads require Online Mode.');
+    const blob = await readImageBlob(uri);
 
     const { error } = await supabase.storage.from(bucket).upload(path, blob, {
       upsert: true,

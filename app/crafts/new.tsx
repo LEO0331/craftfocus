@@ -1,7 +1,7 @@
 import { Alert } from '@/lib/alert';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, router, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
@@ -11,9 +11,11 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { createCraftPost } from '@/lib/crafts';
+import { isLocalMode } from '@/lib/data-mode';
+import { createLocalCraft } from '@/lib/local/crafts';
 import { convertImageToPixelSprite, pixelizeImage, type PixelGridSpriteData } from '@/lib/pixelize';
 import { ensureProfileRow } from '@/lib/profiles';
-import { storageAdapter } from '@/lib/storage';
+import { readImageBlob, storageAdapter } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { sanitizeText } from '@/lib/validation';
 
@@ -26,7 +28,7 @@ type FieldKey = 'title' | 'description' | 'seedCost' | 'image';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 export default function NewCraftPostScreen() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const { t } = useI18n();
   const navigation = useNavigation();
   const route = useRouter();
@@ -44,6 +46,11 @@ export default function NewCraftPostScreen() {
   const [pixelStatus, setPixelStatus] = useState<string | null>(null);
   const [pixelSpriteData, setPixelSpriteData] = useState<PixelGridSpriteData | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  useEffect(() => {
+    if (!imageUri?.startsWith('blob:')) return;
+    return () => URL.revokeObjectURL(imageUri);
+  }, [imageUri]);
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -69,6 +76,7 @@ export default function NewCraftPostScreen() {
     setIsPixelizing(true);
     setPixelStatus(null);
     try {
+      if (isLocalMode) await readImageBlob(imageUri);
       const nextPixelPreviewUri = await pixelizeImage(imageUri);
       setPixelPreviewUri(nextPixelPreviewUri);
       setPixelSpriteData(await convertImageToPixelSprite(nextPixelPreviewUri));
@@ -88,12 +96,12 @@ export default function NewCraftPostScreen() {
     if (!title.trim()) nextErrors.title = t('craft.new.titleRequired');
     if (!description.trim()) nextErrors.description = t('craft.new.descriptionRequired');
     if (!imageUri) nextErrors.image = t('craft.new.pickImageFirst');
-    if (!seedCost.trim()) {
+    if (!isLocalMode && !seedCost.trim()) {
       nextErrors.seedCost = t('craft.new.seedCostRequired');
     }
 
     const parsedSeedCost = Number(seedCost);
-    if (!Number.isFinite(parsedSeedCost) || parsedSeedCost < SEED_MIN || parsedSeedCost > SEED_MAX) {
+    if (!isLocalMode && (!Number.isFinite(parsedSeedCost) || parsedSeedCost < SEED_MIN || parsedSeedCost > SEED_MAX)) {
       nextErrors.seedCost = t('craft.new.seedCostRequired');
     }
 
@@ -116,9 +124,25 @@ export default function NewCraftPostScreen() {
     }
 
     setIsSaving(true);
-    setPublishStatus(t('craft.new.preparing'));
+    setPublishStatus(t(isLocalMode ? 'common.saving' : 'craft.new.preparing'));
     try {
       setSaveError(null);
+      if (isLocalMode) {
+        const image = await readImageBlob(imageUriToUpload);
+        const pixelUri = pixelPreviewUri ?? await pixelizeImage(imageUriToUpload);
+        const pixelImage = await readImageBlob(pixelUri);
+        const sprite = pixelSpriteData ?? await convertImageToPixelSprite(pixelUri);
+        const id = await createLocalCraft({
+          title,
+          description,
+          image,
+          pixelImage,
+          pixelPalette: sprite?.palette ?? null,
+          pixelGrid: sprite?.grid ?? null,
+        });
+        router.replace(`/crafts/${id}`);
+        return;
+      }
       await ensureProfileRow(user.id, user.email);
 
       const startOfUtcDay = new Date();
@@ -177,9 +201,11 @@ export default function NewCraftPostScreen() {
       }
       router.replace(`/crafts/${id}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.unknownError');
+      const message = isLocalMode && error instanceof Error && error.name === 'QuotaExceededError'
+        ? t('localCraft.storageFull')
+        : error instanceof Error ? error.message : t('common.unknownError');
       setSaveError(message);
-      Alert.alert(t('craft.new.publish'), message);
+      Alert.alert(t(isLocalMode ? 'localCraft.save' : 'craft.new.publish'), message);
     } finally {
       setIsSaving(false);
       setPublishStatus(null);
@@ -190,6 +216,7 @@ export default function NewCraftPostScreen() {
     <>
       <Stack.Screen
         options={{
+          ...(isLocalMode ? { title: t('localCraft.create') } : null),
           headerBackVisible: false,
           headerLeft: () => (
             <Pressable
@@ -204,7 +231,7 @@ export default function NewCraftPostScreen() {
         }}
       />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>{t('craft.new.title')}</Text>
+        <Text style={styles.heading}>{t(isLocalMode ? 'localCraft.create' : 'craft.new.title')}</Text>
         <Card>
         <TextInput
           placeholder={t('craft.new.fieldTitle')}
@@ -239,6 +266,7 @@ export default function NewCraftPostScreen() {
         <Text style={styles.helperText}>
           {t('craft.new.descriptionLimitHint', { count: description.length, max: DESCRIPTION_MAX })}
         </Text>
+        {!isLocalMode ? <>
         <TextInput
           placeholder={t('craft.new.seedCost')}
           keyboardType="number-pad"
@@ -253,6 +281,7 @@ export default function NewCraftPostScreen() {
         />
         {fieldErrors.seedCost ? <Text style={styles.errorText}>{fieldErrors.seedCost}</Text> : null}
         <Text style={styles.helperText}>{t('craft.new.seedCostLimitHint', { min: SEED_MIN, max: SEED_MAX })}</Text>
+        </> : null}
 
         <Button label={imageUri ? t('craft.new.changeImage') : t('craft.new.pickImage')} onPress={pickImage} disabled={isSaving || isPixelizing} />
         {fieldErrors.image ? <Text style={styles.errorText}>{fieldErrors.image}</Text> : null}
@@ -279,14 +308,14 @@ export default function NewCraftPostScreen() {
                 {pixelPreviewUri ? (
                   <Image source={{ uri: pixelPreviewUri }} style={styles.preview} resizeMode="contain" accessibilityLabel={t('craft.new.pixelPreview')} />
                 ) : (
-                  <Text style={styles.previewPlaceholder}>{t('craft.new.pixelPlaceholder')}</Text>
+                  <Text style={styles.previewPlaceholder}>{t(isLocalMode ? 'localCraft.pixelHint' : 'craft.new.pixelPlaceholder')}</Text>
                 )}
               </View>
             </View>
           </View>
         ) : null}
 
-        <Button label={isSaving ? t('craft.new.publishSaving') : t('craft.new.publish')} onPress={handleSave} disabled={isSaving} />
+        <Button label={isSaving ? t('craft.new.publishSaving') : t(isLocalMode ? 'localCraft.save' : 'craft.new.publish')} onPress={handleSave} disabled={isSaving || isPixelizing} />
         {publishStatus ? <Text style={styles.statusText}>{publishStatus}</Text> : null}
         {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         </Card>
