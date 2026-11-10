@@ -11,6 +11,7 @@ export default defineConfig({
       include: [
         'lib/validation.ts',
         'lib/focusRewards.ts',
+        'lib/local/*.ts',
         'constants/categories.ts',
         'constants/roomSprites.ts',
       ],

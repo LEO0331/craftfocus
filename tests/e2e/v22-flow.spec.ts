@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 
-test.skip(!EMAIL || !PASSWORD, 'E2E_EMAIL/E2E_PASSWORD not set');
+test.skip(process.env.EXPO_PUBLIC_DATA_MODE === 'local' || !EMAIL || !PASSWORD, 'Requires Supabase mode and E2E credentials');
 
 const text = {
   loginHeading: /Log In|登入/,

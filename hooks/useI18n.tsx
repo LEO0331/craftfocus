@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isLocalMode } from '@/lib/data-mode';
+import { readLocalProfile, updateLocalProfile } from '@/lib/local/database';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export type AppLanguage = 'en' | 'zh-TW';
@@ -7,6 +9,13 @@ const STORAGE_KEY = 'craftfocus.language';
 
 const MESSAGES: Record<AppLanguage, Record<string, string>> = {
   en: {
+    'local.label': 'Local Demo Mode',
+    'local.singlePlayer': 'Single player · Social features require Online Mode',
+    'local.loading': 'Opening your local demo…',
+    'local.storageUnavailable': 'CraftFocus could not open browser storage. Check that this browser allows IndexedDB, then reload.',
+    'local.reload': 'Reload',
+    'local.onlineOnly': 'This feature requires Online Mode. Your demo progress is stored in this browser.',
+    'local.savedCrafts': 'saved crafts: {count}',
     'common.cancel': 'Cancel',
     'common.delete': 'Delete',
     'common.loading': 'Loading...',
@@ -136,6 +145,20 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'room.loading': 'Loading your room...',
 
     'crafts.title': 'Craft Feed',
+    'localCraft.listTitle': 'My Crafts',
+    'localCraft.create': 'Create Craft',
+    'localCraft.save': 'Save Craft',
+    'localCraft.detail': 'Craft Detail',
+    'localCraft.hint': 'Your crafts stay in this browser. Place them in your room’s gallery. Sharing and trading require Online Mode.',
+    'localCraft.empty': 'Create your first craft to start your collection.',
+    'localCraft.search': 'Search my crafts',
+    'localCraft.owned': 'Ready for your gallery',
+    'localCraft.image': 'Saved craft image',
+    'localCraft.notFound': 'Craft not found.',
+    'localCraft.delete': 'Delete Craft',
+    'localCraft.deleteConfirm': 'Delete this craft and remove it from your gallery?',
+    'localCraft.storageFull': 'Browser storage is full. Export a backup or delete an old craft to free space.',
+    'localCraft.pixelHint': 'Generate a pixel preview to compare it with the original before saving.',
     'crafts.upload': 'Upload New Craft',
     'crafts.empty': 'No posts yet. Share your first craft work.',
     'crafts.official.title': 'Official Inventory',
@@ -287,6 +310,13 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'profile.accountDeletedBody': 'Your account has been permanently deleted.',
   },
   'zh-TW': {
+    'local.label': '本機展示模式',
+    'local.singlePlayer': '單人遊玩 · 社交功能需要線上模式',
+    'local.loading': '正在開啟本機展示…',
+    'local.storageUnavailable': 'CraftFocus 無法開啟瀏覽器儲存空間。請確認瀏覽器允許 IndexedDB，然後重新載入。',
+    'local.reload': '重新載入',
+    'local.onlineOnly': '此功能需要線上模式。你的展示進度儲存在此瀏覽器。',
+    'local.savedCrafts': '已儲存作品：{count}',
     'common.cancel': '取消',
     'common.delete': '刪除',
     'common.loading': '載入中...',
@@ -416,6 +446,20 @@ const MESSAGES: Record<AppLanguage, Record<string, string>> = {
     'room.loading': '正在載入你的房間...',
 
     'crafts.title': '作品動態',
+    'localCraft.listTitle': '我的作品',
+    'localCraft.create': '建立作品',
+    'localCraft.save': '儲存作品',
+    'localCraft.detail': '作品詳情',
+    'localCraft.hint': '作品只儲存在此瀏覽器，可擺放在房間展牆。分享和交換需要線上模式。',
+    'localCraft.empty': '建立第一件作品，開始你的收藏。',
+    'localCraft.search': '搜尋我的作品',
+    'localCraft.owned': '可擺放於展牆',
+    'localCraft.image': '已儲存的作品圖片',
+    'localCraft.notFound': '找不到此作品。',
+    'localCraft.delete': '刪除作品',
+    'localCraft.deleteConfirm': '要刪除此作品並將它從展牆移除嗎？',
+    'localCraft.storageFull': '瀏覽器儲存空間已滿。你可以匯出備份，或刪除舊作品來釋出空間。',
+    'localCraft.pixelHint': '產生像素預覽，即可在儲存前與原圖並排比較。',
     'crafts.upload': '上傳新作品',
     'crafts.empty': '尚無貼文，分享你的第一個作品吧。',
     'crafts.official.title': '官方庫存',
@@ -585,7 +629,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<AppLanguage>('en');
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
+    const savedLanguage = isLocalMode
+      ? readLocalProfile().then((profile) => profile.language)
+      : AsyncStorage.getItem(STORAGE_KEY);
+    savedLanguage
       .then((value) => {
         if (value === 'en' || value === 'zh-TW') setLanguageState(value);
       })
@@ -593,6 +640,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLanguage = async (next: AppLanguage) => {
+    if (isLocalMode) {
+      await updateLocalProfile({ language: next });
+      setLanguageState(next);
+      return;
+    }
     setLanguageState(next);
     await AsyncStorage.setItem(STORAGE_KEY, next);
   };

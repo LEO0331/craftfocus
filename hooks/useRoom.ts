@@ -20,7 +20,7 @@ import {
 import type { CustomGalleryPlacement, GalleryItem, RoomType } from '@/types/models';
 
 export function useRoom() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const [roomId, setRoomId] = useState<string | null>(null);
   const [roomType, setRoomType] = useState<RoomType>('bedroom');
   const [placements, setPlacements] = useState<RoomPlacement[]>([]);

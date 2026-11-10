@@ -2,6 +2,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { EXPECTED_DEPLOYMENT_CONTRACT, verifyDeploymentEnvironment } from '../../tools/verify-deployment-env.mjs';
 
 describe('verifyDeploymentEnvironment', () => {
+  it('skips backend checks in local mode', async () => {
+    const fetchImpl = vi.fn();
+    await expect(verifyDeploymentEnvironment({
+      dataMode: 'local', supabaseUrl: '', anonKey: '', fetchImpl,
+    })).resolves.toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unsupported mode', async () => {
+    await expect(verifyDeploymentEnvironment({
+      dataMode: 'typo', supabaseUrl: '', anonKey: '',
+    })).rejects.toThrow('must be local or supabase');
+  });
+
   it('rejects missing and placeholder configuration', async () => {
     await expect(verifyDeploymentEnvironment({ supabaseUrl: '', anonKey: '' })).rejects.toThrow('must both be configured');
     await expect(verifyDeploymentEnvironment({

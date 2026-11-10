@@ -16,9 +16,10 @@ import { useI18n } from '@/hooks/useI18n';
 import { useProfile } from '@/hooks/useProfile';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { getActiveAnimal, resolveAnimalSpecies } from '@/lib/animals';
+import { isLocalMode } from '@/lib/data-mode';
 
 export default function FocusScreen() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const { t } = useI18n();
   const { profile } = useProfile();
   const navigation = useNavigation();
@@ -28,7 +29,7 @@ export default function FocusScreen() {
   const [isRunning, setIsRunning] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [resultText, setResultText] = useState<string | null>(null);
-  const [pendingFinish, setPendingFinish] = useState<{ status: 'completed' | 'given_up'; reason: 'manual' | 'left_focus' } | null>(null);
+  const [pendingFinish, setPendingFinish] = useState<{ status: 'completed' | 'given_up'; reason: 'manual' | 'left_focus'; stoppedAt: number } | null>(null);
   const [animalSpecies, setAnimalSpecies] = useState<'cat' | 'dog' | 'rabbit' | 'fox'>('cat');
   const [animFrame, setAnimFrame] = useState(0);
   const isRunningRef = useRef(false);
@@ -36,11 +37,11 @@ export default function FocusScreen() {
   const hasEndedRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
-  const canceledStartRef = useRef(false);
+  const canceledStartAtRef = useRef<number | null>(null);
 
   const { startFocusSession, submitFocusSession, isSaving } = useFocusSession();
 
-  useEffect(() => () => { canceledStartRef.current = true; }, []);
+  useEffect(() => () => { canceledStartAtRef.current ??= Date.now(); }, []);
 
   const loadAnimalSpecies = useCallback(async () => {
     if (!user?.id) {
@@ -102,7 +103,11 @@ export default function FocusScreen() {
     [activityMode, profile?.display_name, profile?.username, t, user?.email]
   );
 
-  const handleFinish = useCallback(async (status: 'completed' | 'given_up', reason: 'manual' | 'left_focus' = 'manual') => {
+  const handleFinish = useCallback(async (
+    status: 'completed' | 'given_up',
+    reason: 'manual' | 'left_focus' = 'manual',
+    stoppedAt = Date.now(),
+  ) => {
     if (hasEndedRef.current || isStoppingRef.current || !sessionIdRef.current) {
       return;
     }
@@ -113,6 +118,7 @@ export default function FocusScreen() {
       const reward = await submitFocusSession({
         sessionId: sessionIdRef.current,
         status,
+        ...(isLocalMode ? { stoppedAt } : {}),
       });
 
       const summary =
@@ -126,17 +132,17 @@ export default function FocusScreen() {
       setIsRunning(false);
     } catch (error) {
       hasEndedRef.current = false;
-      setPendingFinish({ status, reason });
+      setPendingFinish({ status, reason, stoppedAt });
       Alert.alert(t('focus.error.save'), error instanceof Error ? error.message : t('common.unknownError'));
       setIsRunning(false);
     } finally {
       isStoppingRef.current = false;
     }
-  }, [activityMode, duration, submitFocusSession, t]);
+  }, [submitFocusSession, t]);
 
   const autoStopSession = useCallback((reason: 'left_focus') => {
     if (startingRef.current) {
-      canceledStartRef.current = true;
+      canceledStartAtRef.current ??= Date.now();
       return;
     }
     if (!isRunningRef.current || hasEndedRef.current || isStoppingRef.current) {
@@ -146,19 +152,15 @@ export default function FocusScreen() {
   }, [handleFinish]);
 
   useEffect(() => {
-    if (!isRunning && !isStarting) {
-      return;
-    }
-
     const unsubscribeBlur = navigation.addListener('blur', () => {
       autoStopSession('left_focus');
     });
 
     return unsubscribeBlur;
-  }, [autoStopSession, isRunning, isStarting, navigation]);
+  }, [autoStopSession, navigation]);
 
   useEffect(() => {
-    if ((!isRunning && !isStarting) || Platform.OS !== 'web' || typeof document === 'undefined') {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
       return;
     }
 
@@ -170,10 +172,10 @@ export default function FocusScreen() {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, [autoStopSession, isRunning, isStarting]);
+  }, [autoStopSession]);
 
   useEffect(() => {
-    if ((!isRunning && !isStarting) || Platform.OS === 'web') {
+    if (Platform.OS === 'web') {
       return;
     }
 
@@ -184,20 +186,25 @@ export default function FocusScreen() {
     });
 
     return () => subscription.remove();
-  }, [autoStopSession, isRunning, isStarting]);
+  }, [autoStopSession]);
 
   const handleStart = async () => {
     if (startingRef.current || isRunningRef.current || isSaving || pendingFinish) return;
     startingRef.current = true;
-    canceledStartRef.current = false;
+    canceledStartAtRef.current = null;
     setIsStarting(true);
     setStartedDuration(duration);
     setResultText(null);
     const nextMode = Math.random() > 0.5 ? 'sewing' : 'training';
     try {
       const sessionId = await startFocusSession(duration, nextMode === 'sewing' ? 'sewing' : 'crafting');
-      if (canceledStartRef.current || (Platform.OS === 'web' && typeof document !== 'undefined' && document.hidden)) {
-        await submitFocusSession({ sessionId, status: 'given_up' });
+      const isHidden = Platform.OS === 'web' && typeof document !== 'undefined' && document.hidden;
+      if (canceledStartAtRef.current !== null || isHidden) {
+        await submitFocusSession({
+          sessionId,
+          status: 'given_up',
+          ...(isLocalMode ? { stoppedAt: canceledStartAtRef.current ?? Date.now() } : {}),
+        });
         return;
       }
       sessionIdRef.current = sessionId;
@@ -234,7 +241,7 @@ export default function FocusScreen() {
           />
           {pendingFinish ? (
             <Button label={t('focus.retrySave')} disabled={isSaving}
-              onPress={() => { void handleFinish(pendingFinish.status, pendingFinish.reason); }} />
+              onPress={() => { void handleFinish(pendingFinish.status, pendingFinish.reason, pendingFinish.stoppedAt); }} />
           ) : null}
           {resultText ? <Text style={styles.result}>{resultText}</Text> : null}
         </Card>
@@ -247,7 +254,11 @@ export default function FocusScreen() {
           subtitle={t('focus.timer.subtitle')}
           stopLabel={t('focus.timer.stop')}
           onCompleted={() => {
-            void handleFinish('completed');
+            if (Platform.OS === 'web' && typeof document !== 'undefined' && document.hidden) {
+              autoStopSession('left_focus');
+            } else {
+              void handleFinish('completed');
+            }
           }}
           onStop={() => {
             void handleFinish('given_up');

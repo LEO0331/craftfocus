@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { OnlineModeNotice } from '@/components/OnlineModeNotice';
 import { FRIEND_FILTER_OPTIONS, type FriendFilter } from '@/constants/filterOptions';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,8 +19,13 @@ import {
   type FriendListItem,
 } from '@/lib/friends';
 import { validateSearchQuery } from '@/lib/validation';
+import { isLocalMode } from '@/lib/data-mode';
 
 export default function FriendsScreen() {
+  return isLocalMode ? <OnlineModeNotice /> : <OnlineFriendsScreen />;
+}
+
+function OnlineFriendsScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [query, setQuery] = useState('');

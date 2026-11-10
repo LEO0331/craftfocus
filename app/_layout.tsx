@@ -8,6 +8,7 @@ import { AppLoading } from '@/components/AppLoading';
 import { theme } from '@/constants/theme';
 import { AuthProvider, RequireAuth } from '@/hooks/useAuth';
 import { I18nProvider, useI18n } from '@/hooks/useI18n';
+import { isLocalMode } from '@/lib/data-mode';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 export { ErrorBoundary } from 'expo-router';
@@ -80,7 +81,12 @@ function RootNav() {
 
   return (
     <View style={styles.container}>
-      {!isSupabaseConfigured ? (
+      {isLocalMode ? (
+        <View style={styles.demoBanner}>
+          <Text style={styles.demoLabel}>{t('local.label')}</Text>
+          <Text style={styles.demoLabel}>{t('local.singlePlayer')}</Text>
+        </View>
+      ) : !isSupabaseConfigured ? (
         <View style={styles.banner} accessibilityRole="alert">
           <Text style={styles.bannerText}>{t('root.configError')}</Text>
         </View>
@@ -106,6 +112,17 @@ function RootNav() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   content: { flex: 1 },
+  demoBanner: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    columnGap: 12,
+    padding: 6,
+    backgroundColor: theme.colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  demoLabel: { color: theme.colors.text, fontSize: 12 },
   banner: {
     backgroundColor: '#FFF4E5',
     borderBottomWidth: 1,

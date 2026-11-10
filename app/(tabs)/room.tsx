@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { BlobImage } from '@/components/BlobImage';
 import { AppLoading } from '@/components/AppLoading';
 import { Card } from '@/components/Card';
 import { CollectibleGalleryBoard } from '@/components/CollectibleGalleryBoard';
@@ -15,6 +16,7 @@ import { resolveSpriteId } from '@/constants/spriteUtils';
 import { theme } from '@/constants/theme';
 import { useRoom } from '@/hooks/useRoom';
 import { useI18n } from '@/hooks/useI18n';
+import { isLocalMode } from '@/lib/data-mode';
 import type { BuildTargetId, RoomType } from '@/types/models';
 
 const ROOM_TYPES: RoomType[] = ['bedroom', 'gym'];
@@ -103,6 +105,7 @@ export default function RoomScreen() {
     if (next === roomType || isLoading) return;
     try {
       await switchRoomType(next);
+      if (isLocalMode) setSelectedAnchorId(null);
     } catch (error) {
       Alert.alert(t('room.switchFailed'), error instanceof Error ? error.message : t('common.unknownError'));
     }
@@ -237,7 +240,7 @@ export default function RoomScreen() {
         <Button
           label={t('room.place', { count: quantity })}
           onPress={handlePlace}
-          disabled={!selectedAnchorId || quantity <= 0 || isLoading}
+          disabled={!selectedAnchorId || quantity <= 0 || isLoading || (isLocalMode && Boolean(selectedPlacement))}
         />
         <Button label={t('room.remove')} onPress={handleRemove} variant="danger" disabled={!selectedPlacement || isLoading} />
       </Card>
@@ -265,11 +268,16 @@ export default function RoomScreen() {
             const isPlaced = placedCollectibleIds.has(collectible.listingId);
             const isActive = selectedCollectibleId === collectible.listingId;
             const previewUri = collectible.pixelImageUrl ?? collectible.imageUrl;
+            const previewLabel = t('room.collectibleImage', { title: collectible.title });
             return (
               <View key={collectible.listingId} style={[styles.collectibleCard, isActive ? styles.collectibleCardActive : null]}>
                 <View style={styles.collectibleHead}>
-                  {previewUri ? <Image source={{ uri: previewUri }} style={styles.collectibleThumb} accessibilityLabel={t('room.collectibleImage', { title: collectible.title })} /> : null}
-                  {!previewUri && collectible.pixelPalette && collectible.pixelGrid ? (
+                  {collectible.imageBlob ? (
+                    <BlobImage blob={collectible.imageBlob} style={styles.collectibleThumb} accessibilityLabel={previewLabel} />
+                  ) : previewUri ? (
+                    <Image source={{ uri: previewUri }} style={styles.collectibleThumb} accessibilityLabel={previewLabel} />
+                  ) : null}
+                  {!previewUri && !collectible.imageBlob && collectible.pixelPalette && collectible.pixelGrid ? (
                     <View style={styles.collectibleThumbSprite}>
                       <PixelGridSprite palette={collectible.pixelPalette} grid={collectible.pixelGrid} size={30} />
                     </View>

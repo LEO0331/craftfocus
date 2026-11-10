@@ -3,8 +3,9 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const rpc = vi.hoisted(() => vi.fn());
+vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
 vi.mock('@/lib/supabase', () => ({ supabase: { rpc } }));
-vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'user-1' } }) }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ player: { id: 'user-1', kind: 'supabase' } }) }));
 import { useFocusSession } from '@/hooks/useFocusSession';
 
 let renderer: any;

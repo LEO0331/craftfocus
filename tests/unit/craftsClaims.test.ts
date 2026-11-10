@@ -11,6 +11,7 @@ vi.mock('@/lib/supabase', () => ({
     from: mocks.from,
   },
 }));
+vi.mock('@/lib/data-mode', () => ({ isLocalMode: false, LOCAL_USER_ID: 'craftfocus-local-player' }));
 
 import { claimListingWithSeeds, claimOfficialInventoryItem, listCraftPosts, setPostLike } from '@/lib/crafts';
 

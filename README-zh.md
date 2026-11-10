@@ -8,6 +8,18 @@ CraftFocus 是一個溫馨的專注與社交創作應用程式：投入受保護
 
 同一套 Expo React Native 與 TypeScript 程式碼可在 **iOS、Android 和 Web** 執行。
 
+## 本機展示模式
+
+公開 Web 版會直接建立或載入瀏覽器中的展示個人檔案。你可以專注計時、賺取與使用種子、
+佈置房間、選擇動物夥伴，以及儲存自己的像素創作並放入 5×5 收藏展示板。
+好友邀請、搜尋玩家、拜訪房間、公開發布、玩家間兌換、按讚與留言需要 Supabase 模式。
+
+IndexedDB 會在目前的瀏覽器保存個人設定、專注紀錄、錢包、庫存、房間、動物解鎖狀態、
+收藏展示板、創作與圖像。進度只會保存在目前的瀏覽器設定檔與網站來源，不會跨裝置同步。
+清除網站資料可能會刪除進度，私密瀏覽也可能在關閉後清除資料。
+可在「個人資料」匯出 JSON 備份。匯入備份會在確認後取代目前的展示進度，
+重設則會清除本機展示進度。
+
 ![CraftFocus 運作方式](./assets/images/how-it-works.svg)
 
 ## 玩家指南
@@ -21,7 +33,7 @@ CraftFocus 的主要循環如下：
 5. 佈置房間和 5×5 收藏展示板。
 6. 造訪朋友並與其創作互動。
 
-登入畫面提供這個循環的輕量動畫預覽，讓新玩家可在登入前理解玩法。
+Supabase 模式的登入畫面提供輕量動畫預覽，讓新玩家在登入前理解玩法。
 
 ## 功能一覽
 
@@ -116,13 +128,13 @@ CraftFocus V2 使用以下正式遊戲資料表：
 ## 架構
 
 - **前端：** Expo React Native、TypeScript、Expo Router、React Native Web。
-- **狀態：** 輕量 hooks/context；Supabase 是資料真實來源。
+- **狀態：** 使用輕量 hooks 與 context，本機展示模式由 IndexedDB 保存，Supabase 模式由 Supabase 保存。
 - **後端：** Supabase Auth、Postgres、Storage、RLS 與 RPC。
 - **Web 託管：** 靜態匯出至 GitHub Pages 的 `/craftfocus` 路徑。
 - **PWA：** 僅快取靜態應用程式殼層；不支援離線寫入同步。
 - **圖像：** 使用 Supabase Storage 保存上傳的創作圖像；支援本機／瀏覽器像素轉換，以及自訂像素顯示用的調色盤／格狀資料備援渲染器。
 
-### 主要玩家流程
+### Supabase 模式玩家流程
 
 ```mermaid
 sequenceDiagram
@@ -175,18 +187,29 @@ sequenceDiagram
 npm install
 ```
 
-### 2) 設定環境變數
+### 2) 啟動本機 Web 展示
 
-建立 `.env`：
+在 `.env.local` 加入以下設定，再執行 `npx expo start --web`。
+
+```dotenv
+EXPO_PUBLIC_DATA_MODE=local
+```
+
+瀏覽器須允許使用 IndexedDB。iOS 與 Android 原生版使用 Supabase 模式。
+在開發環境切換模式時，請停止 Expo，再執行 `npx expo start --web --clear`，
+讓 Expo 使用新設定重新打包。
+
+### 3) 使用 Supabase 模式
+
+若有已設定的 Supabase 專案，請更新 `.env.local` 並重新啟動 Expo。
 
 ```bash
+EXPO_PUBLIC_DATA_MODE=supabase
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 前端程式碼只能使用公開 anon key。請勿提交 service-role key。
-
-### 3) 本機執行
 
 ```bash
 npx expo start
@@ -264,6 +287,7 @@ npm run test:e2e
 ```
 
 未提供憑證時，需要憑證的 E2E 規格會自動跳過。
+在終端機設定 `EXPO_PUBLIC_DATA_MODE=local`，即可選用本機瀏覽器測試並匯出不需要憑證的版本。
 
 若要對已部署的 App 執行已驗證 E2E：
 
@@ -292,17 +316,17 @@ Web 部署使用 GitHub Actions 發布至 GitHub Pages。
 https://<github-username>.github.io/craftfocus/
 ```
 
-必要的 GitHub repository secrets：
+Pages 工作流程在瀏覽器測試與靜態匯出時會設定 `EXPO_PUBLIC_DATA_MODE=local`，
+並將 `dist/` 發布到 `/craftfocus`。本機展示部署不需要 Supabase secrets。
+發布前會執行 TypeScript 型別檢查、單元測試及瀏覽器測試，也會在臨時 Postgres
+服務上執行遷移、回歸和並行測試。
+若要在本機預覽相同匯出結果，請在終端機設定模式，執行 `npm run verify:deployment-env`
+及 `npm run e2e:serve`，再開啟 `http://127.0.0.1:4173/craftfocus/`。
 
-```text
-EXPO_PUBLIC_SUPABASE_URL
-EXPO_PUBLIC_SUPABASE_ANON_KEY
-```
-
-部署工作流程會在建置靜態 Expo Web 匯出時注入這些值。
-發布前會執行 typecheck、單元測試、browser smoke、所有資料庫 migrations，
-以及 regression／concurrency checks。遠端 Supabase project 必須提供預期的
-deployment contract version，因此正式部署前要先套用所有待處理 migrations。
+要再次部署 Supabase 模式，請參閱 [Supabase 部署復原指南](./docs/SUPABASE_DEPLOYMENT_RECOVERY.md)。
+若要恢復定期資料庫健康檢查，請設定 Supabase 的 repository secrets，並將 Actions
+repository variable `SUPABASE_HEALTH_ENABLED` 設為 `true`。排程時間為台北時間
+09:17（01:17 UTC），也可在 Actions 手動執行。
 
 ## PWA 支援
 
@@ -315,6 +339,7 @@ CraftFocus Web 可作為次要使用管道安裝：
 離線行為：
 
 - 已載入過的靜態殼層／路由可在離線時開啟。
+- 本機展示模式會將遊戲進度寫入瀏覽器的 IndexedDB。
 - 登入、錢包更新、兌換、上傳、留言及朋友互動等依賴 Supabase 的操作，仍需要網路。
 
 安裝方式：

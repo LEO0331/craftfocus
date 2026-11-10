@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 
 const configError = /Configuration error: missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY\.|設定錯誤：缺少/;
 
+test.skip(process.env.EXPO_PUBLIC_DATA_MODE === 'local', 'Auth screens require Supabase mode');
+
 test('login page renders configuration banner and core auth controls without backend env', async ({ page }) => {
   await page.goto('auth/login');
 

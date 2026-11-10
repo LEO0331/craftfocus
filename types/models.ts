@@ -55,6 +55,7 @@ export interface GalleryItem {
   title: string;
   imageUrl: string | null;
   pixelImageUrl: string | null;
+  imageBlob?: Blob;
   pixelPalette: Record<string, string> | null;
   pixelGrid: string[] | null;
 }

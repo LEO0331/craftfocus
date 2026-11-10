@@ -56,7 +56,8 @@ export function resolvePath(requestPath) {
     return { filePath: exportedPage, status: 200 };
   }
 
-  return { filePath: path.join(root, 'index.html'), status: 200 };
+  const notFoundPage = path.join(root, '404.html');
+  return { filePath: fs.existsSync(notFoundPage) ? notFoundPage : null, status: 404 };
 }
 
 const server = http.createServer((req, res) => {

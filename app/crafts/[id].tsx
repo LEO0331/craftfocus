@@ -9,7 +9,8 @@ import { CraftPostCard } from '@/components/CraftPostCard';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
-import { addComment, claimListingWithSeeds, getCraftPostDetail, setPostLike, type CraftPostDetail } from '@/lib/crafts';
+import { addComment, claimListingWithSeeds, deleteCraftPost, getCraftPostDetail, setPostLike, type CraftPostDetail } from '@/lib/crafts';
+import { isLocalMode } from '@/lib/data-mode';
 import { emitTopStatusRefresh } from '@/lib/topStatusBus';
 import { sanitizeText } from '@/lib/validation';
 import { ensureWallet, getWalletBalance } from '@/lib/wallet';
@@ -17,14 +18,14 @@ import { ensureWallet, getWalletBalance } from '@/lib/wallet';
 export default function CraftDetailScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const postId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const { t } = useI18n();
 
   const [post, setPost] = useState<CraftPostDetail | null>(null);
   const [comment, setComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<'like' | 'claim' | 'comment' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'like' | 'claim' | 'comment' | 'delete' | null>(null);
 
   const loadPost = useCallback(async () => {
     if (!postId) return;
@@ -35,7 +36,9 @@ export default function CraftDetailScreen() {
       const detail = await getCraftPostDetail(postId, user?.id);
       setPost(detail);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : t('common.unknownError'));
+      setLoadError(isLocalMode && error instanceof Error && error.message === 'Craft not found.'
+        ? t('localCraft.notFound')
+        : error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +99,28 @@ export default function CraftDetailScreen() {
     }
   };
 
+  const handleDelete = () => {
+    if (!user || !postId || pendingAction) return;
+    Alert.alert(t('localCraft.delete'), t('localCraft.deleteConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: async () => {
+          setPendingAction('delete');
+          try {
+            await deleteCraftPost(postId, user.id);
+            router.replace('/(tabs)/crafts');
+          } catch (error) {
+            Alert.alert(t('localCraft.delete'), error instanceof Error ? error.message : t('common.unknownError'));
+          } finally {
+            setPendingAction(null);
+          }
+        },
+      },
+    ]);
+  };
+
   if (!postId) {
     return (
       <View style={styles.center}>
@@ -106,7 +131,7 @@ export default function CraftDetailScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>{t('craft.detail.title')}</Text>
+      <Text style={styles.heading}>{t(isLocalMode ? 'localCraft.detail' : 'craft.detail.title')}</Text>
 
       {post ? (
         <CraftPostCard
@@ -116,6 +141,8 @@ export default function CraftDetailScreen() {
           description={post.description ?? undefined}
           imageUrl={post.image_url ?? undefined}
           pixelImageUrl={post.pixel_image_url ?? undefined}
+          imageBlob={post.pixelImageBlob ?? post.imageBlob}
+          privateCraft={isLocalMode}
           pixelPalette={(post.pixel_palette as Record<string, string> | null | undefined) ?? null}
           pixelGrid={post.pixel_grid ?? null}
           likes={post.likes_count}
@@ -133,7 +160,11 @@ export default function CraftDetailScreen() {
         </Card>
       )}
 
-      {post ? (
+      {post && isLocalMode ? (
+        <Button label={t('localCraft.delete')} onPress={handleDelete} disabled={Boolean(pendingAction)} variant="secondary" />
+      ) : null}
+
+      {post && !isLocalMode ? (
         <Card>
           <View style={styles.actionsRow}>
             <Button label={pendingAction === 'like' ? t('common.saving') : post.liked_by_me ? t('craft.detail.unlike') : t('craft.detail.like')} onPress={handleToggleLike} disabled={Boolean(pendingAction)} />
@@ -143,7 +174,7 @@ export default function CraftDetailScreen() {
         </Card>
       ) : null}
 
-      {post ? (
+      {post && !isLocalMode ? (
         <Card>
           <Text style={styles.label}>{t('craft.detail.comments')}</Text>
           <TextInput

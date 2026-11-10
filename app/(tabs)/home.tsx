@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -8,14 +8,13 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { listCraftPosts } from '@/lib/crafts';
+import { isLocalMode } from '@/lib/data-mode';
+import { listLocalSessions } from '@/lib/local/economy';
 import { listMyRoom } from '@/lib/rooms';
 import { supabase } from '@/lib/supabase';
-import type { TableRow } from '@/types/database';
-
-type FocusSessionRow = TableRow<'focus_sessions'>;
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { player: user } = useAuth();
   const { t } = useI18n();
   const [todayMinutes, setTodayMinutes] = useState(0);
   const [roomItemCount, setRoomItemCount] = useState(0);
@@ -33,18 +32,24 @@ export default function HomeScreen() {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
-      const [{ data: sessions }, roomLayout, posts] = await Promise.all([
-        supabase
-          .from('focus_sessions')
-          .select('duration_minutes,status')
-          .eq('user_id', user.id)
-          .gte('created_at', startOfDay.toISOString()),
+      const [sessions, roomLayout, posts] = await Promise.all([
+        isLocalMode
+          ? listLocalSessions().then((rows) => rows.filter((row) => row.started_at >= startOfDay.getTime()))
+          : supabase
+            .from('focus_sessions')
+            .select('duration_minutes,status')
+            .eq('user_id', user.id)
+            .gte('created_at', startOfDay.toISOString())
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data;
+            }),
         listMyRoom(user.id),
-        listCraftPosts(user.id),
+        isLocalMode ? [] : listCraftPosts(user.id),
       ]);
 
       const completedMinutes = (sessions ?? []).reduce(
-        (sum: number, row: Pick<FocusSessionRow, 'status' | 'duration_minutes'>) => {
+        (sum, row) => {
           if (row.status !== 'completed') {
             return sum;
           }
@@ -59,17 +64,18 @@ export default function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [t, user?.id]);
 
-  useEffect(() => {
-    loadDashboard();
+  const refreshDashboard = useCallback(() => {
+    void loadDashboard().catch((error) => console.warn('Failed to load dashboard', error));
   }, [loadDashboard]);
+  useFocusEffect(refreshDashboard);
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadDashboard} />}
+      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refreshDashboard} />}
     >
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{t('home.eyebrow')}</Text>
@@ -91,18 +97,20 @@ export default function HomeScreen() {
       <Card>
         <Text style={styles.title}>{t('home.quickActions')}</Text>
         <Button label={t('home.startFocus')} onPress={() => router.navigate('/(tabs)/focus')} />
-        <Button label={t('home.uploadCraft')} onPress={() => router.push('/crafts/new')} variant="secondary" />
+        <Button label={t(isLocalMode ? 'localCraft.create' : 'home.uploadCraft')} onPress={() => router.push('/crafts/new')} variant="secondary" />
       </Card>
 
-      <Card>
-        <Text style={styles.title}>{t('home.recentActivity')}</Text>
-        {!recentActivity.length ? <Text style={styles.hint}>{t('home.noActivity')}</Text> : null}
-        {recentActivity.map((line) => (
-          <Text key={line} style={styles.hint}>
-            • {line}
-          </Text>
-        ))}
-      </Card>
+      {!isLocalMode ? (
+        <Card>
+          <Text style={styles.title}>{t('home.recentActivity')}</Text>
+          {!recentActivity.length ? <Text style={styles.hint}>{t('home.noActivity')}</Text> : null}
+          {recentActivity.map((line) => (
+            <Text key={line} style={styles.hint}>
+              • {line}
+            </Text>
+          ))}
+        </Card>
+      ) : null}
     </ScrollView>
   );
 }

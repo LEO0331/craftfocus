@@ -78,8 +78,10 @@ vi.mock('@/components/FocusTimer', () => {
   };
 });
 
+vi.mock('@/lib/data-mode', () => ({ isLocalMode: false }));
+
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => ({ user: { id: 'user-1', email: 'codex@test.com' } }),
+  useAuth: () => ({ player: { id: 'user-1', email: 'codex@test.com', kind: 'supabase' } }),
 }));
 
 vi.mock('@/hooks/useProfile', () => ({
