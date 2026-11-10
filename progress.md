@@ -2,9 +2,14 @@
 
 ## Current State
 
-**Last Updated:** 2026-11-09 Asia/Taipei
+**Last Updated:** 2026-11-10 Asia/Taipei
 **Active Feature:** none
 **Last Completed Feature:** feat-018 - IndexedDB Local Demo Mode
+
+## 2026-11-10 Pages CI runner compatibility
+
+- Pinned the Pages quality job to Ubuntu 24.04. Playwright 1.59.1 has a Chromium dependency map for that runner, and the PR's Ubuntu 26.04 run failed during dependency installation.
+- Verified the workflow YAML and the locked Playwright dependency map locally. Hosted CI exercises the actual Linux install. Full local application checks were skipped for this runner-only change.
 
 ## 2026-11-09 IndexedDB Local Demo Mode
 

@@ -6,7 +6,7 @@
       "description": "Run the GitHub Pages demo as a credential-free single-player app with persistent focus rewards, official claims, room decoration, companions, private crafts, a collectible gallery, and local backup controls.",
       "dependencies": [],
       "status": "done",
-      "evidence": "2026-11-09: TypeScript, 101 Vitest tests, credential-free Pages export, five local Playwright tests, Lighthouse, Supabase-mode web/iOS/Android exports, and disposable PostgreSQL regression/concurrency checks completed. See progress.md for limitations and review status."
+      "evidence": "2026-11-09: TypeScript, 101 Vitest tests, credential-free Pages export, five local Playwright tests, Lighthouse, Supabase-mode web/iOS/Android exports, and disposable PostgreSQL regression/concurrency checks completed. 2026-11-10: Pages quality runner pinned to Ubuntu 24.04 for Playwright 1.59.1. See progress.md for verification."
     },
     {
       "id": "feat-017",
