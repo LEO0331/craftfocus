@@ -6,7 +6,8 @@ import { isLocalMode } from '@/lib/data-mode';
  * MVP uses Supabase Storage first; this interface keeps R2 migration low-friction.
  */
 export interface StorageAdapter {
-  uploadImage(params: { bucket: string; path: string; uri: string }): Promise<string>;
+  uploadImage(params: { bucket: string; path: string; uri: string; upsert?: boolean }): Promise<string>;
+  removeImages(bucket: string, paths: string[]): Promise<void>;
 }
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -92,12 +93,12 @@ export async function validateImageBlob(blob: Blob): Promise<void> {
 }
 
 export const storageAdapter: StorageAdapter = {
-  async uploadImage({ bucket, path, uri }) {
+  async uploadImage({ bucket, path, uri, upsert = true }) {
     if (isLocalMode) throw new Error('Image uploads require Online Mode.');
     const blob = await readImageBlob(uri);
 
     const { error } = await supabase.storage.from(bucket).upload(path, blob, {
-      upsert: true,
+      upsert,
       contentType: blob.type || 'image/jpeg',
     });
 
@@ -107,5 +108,10 @@ export const storageAdapter: StorageAdapter = {
 
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
+  },
+  async removeImages(bucket, paths) {
+    if (isLocalMode) throw new Error('Image removal requires Online Mode.');
+    const { error } = await supabase.storage.from(bucket).remove(paths);
+    if (error) throw error;
   },
 };

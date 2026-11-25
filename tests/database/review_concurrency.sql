@@ -4,6 +4,7 @@ create extension if not exists dblink;
 insert into public.item_catalog(id,name,category) values ('plant','Plant','decor') on conflict do nothing;
 insert into auth.users(id) values ('30000000-0000-0000-0000-000000000003');
 select set_config('request.jwt.claim.sub','30000000-0000-0000-0000-000000000003',false);
+select set_config('request.jwt.claims','{"iss":"https://test.supabase.co/auth/v1"}',false);
 select public.place_inventory_at_anchor((select id from public.rooms where user_id=auth.uid()),'plant','race');
 select id as placement_id from public.room_placements where room_id=(select id from public.rooms where user_id=auth.uid()) \gset
 select dblink_connect('a',format('host=%s port=%s dbname=%s user=%s',inet_server_addr(),inet_server_port(),current_database(),current_user));
@@ -12,6 +13,8 @@ select dblink_exec('a','set role authenticated');
 select dblink_exec('b','set role authenticated');
 select dblink_exec('a',$$set request.jwt.claim.sub='30000000-0000-0000-0000-000000000003'$$);
 select dblink_exec('b',$$set request.jwt.claim.sub='30000000-0000-0000-0000-000000000003'$$);
+select dblink_exec('a',$$set request.jwt.claims='{"iss":"https://test.supabase.co/auth/v1"}'$$);
+select dblink_exec('b',$$set request.jwt.claims='{"iss":"https://test.supabase.co/auth/v1"}'$$);
 begin;
 select id from public.rooms where user_id=auth.uid() for update;
 select dblink_send_query('a',format('select public.remove_room_placement(%L)',:'placement_id'));
@@ -31,12 +34,13 @@ end $$;
 select * from dblink_get_result('a',false) as result(value text);
 select * from dblink_get_result('b',false) as result(value text);
 insert into public.craft_posts(user_id,title,category,image_url)
-select auth.uid(),'Concurrent quota ' || quota.value,'craft','https://example.com/quota'
+select auth.uid(),'Concurrent quota ' || quota.value,'craft',
+  'https://test.supabase.co/storage/v1/object/public/craft-images/' || auth.uid() || '/art.jpg'
 from generate_series(1,9) as quota(value);
 select dblink_send_query('a',$$insert into public.craft_posts(user_id,title,category,image_url)
-  values(auth.uid(),'Concurrent quota A','craft','https://example.com/quota') returning title$$);
+  values(auth.uid(),'Concurrent quota A','craft','https://test.supabase.co/storage/v1/object/public/craft-images/30000000-0000-0000-0000-000000000003/art.jpg') returning title$$);
 select dblink_send_query('b',$$insert into public.craft_posts(user_id,title,category,image_url)
-  values(auth.uid(),'Concurrent quota B','craft','https://example.com/quota') returning title$$);
+  values(auth.uid(),'Concurrent quota B','craft','https://test.supabase.co/storage/v1/object/public/craft-images/30000000-0000-0000-0000-000000000003/art.jpg') returning title$$);
 select * from dblink_get_result('a',false) as result(title text);
 select * from dblink_get_result('b',false) as result(title text);
 do $$ begin

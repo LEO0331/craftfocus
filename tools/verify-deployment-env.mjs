@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
 
-export const EXPECTED_DEPLOYMENT_CONTRACT = '2026-09-14.1';
+export const EXPECTED_DEPLOYMENT_CONTRACT = '2026-11-18.1';
 
 export async function verifyDeploymentEnvironment({
   dataMode = 'supabase',

@@ -1,6 +1,14 @@
 {
   "features": [
     {
+      "id": "feat-019",
+      "name": "Security audit follow-up",
+      "description": "Harden admin RPC privileges, listing and comment writes, Storage quotas and image privacy, account deletion, and CI permissions.",
+      "dependencies": ["feat-018"],
+      "status": "done",
+      "evidence": "2026-11-25: implementation and local verification recorded in progress.md. Hosted migration and authenticated account-deletion Edge Function deployment are required before releasing the Supabase-mode client. Toolchain advisories and account-deletion retention limits are documented."
+    },
+    {
       "id": "feat-018",
       "name": "IndexedDB Local Demo Mode",
       "description": "Run the GitHub Pages demo as a credential-free single-player app with persistent focus rewards, official claims, room decoration, companions, private crafts, a collectible gallery, and local backup controls.",

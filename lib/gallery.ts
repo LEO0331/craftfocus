@@ -4,6 +4,7 @@ import { API_LIMITS } from '@/lib/api';
 import type { TableRow } from '@/types/database';
 import type { CustomGalleryPlacement, GalleryItem } from '@/types/models';
 import { isLocalMode } from '@/lib/data-mode';
+import { getTrustedCraftImageUrl } from '@/lib/craftImages';
 import {
   listLocalCrafts,
   listLocalGalleryPlacements,
@@ -62,14 +63,14 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
 
   const { data: posts, error: postsError } = await supabase
     .from('craft_posts')
-    .select('id,title,image_url,pixel_image_url,pixel_palette,pixel_grid,listing_type')
+    .select('id,user_id,title,image_url,pixel_image_url,pixel_palette,pixel_grid,listing_type')
     .in('id', listingIds);
   if (postsError) throw postsError;
 
   const postMap = new Map(
     (
       posts ?? []
-    ).map((post: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid' | 'listing_type'>) => [
+    ).map((post: Pick<CraftPostRow, 'id' | 'user_id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid' | 'listing_type'>) => [
       post.id,
       post,
     ])
@@ -86,8 +87,10 @@ export async function listCustomCollectibles(userId: string): Promise<GalleryIte
       return {
         listingId,
         title: post.title ?? 'Unknown listing',
-        imageUrl: existing?.image_url ?? post.image_url ?? null,
-        pixelImageUrl: existing?.pixel_image_url ?? post.pixel_image_url ?? null,
+        imageUrl: getTrustedCraftImageUrl(existing?.image_url, post.user_id)
+          ?? getTrustedCraftImageUrl(post.image_url, post.user_id),
+        pixelImageUrl: getTrustedCraftImageUrl(existing?.pixel_image_url, post.user_id)
+          ?? getTrustedCraftImageUrl(post.pixel_image_url, post.user_id),
         pixelPalette: (post.pixel_palette as Record<string, string> | null) ?? null,
         pixelGrid: post.pixel_grid ?? null,
       } satisfies GalleryItem;
@@ -125,15 +128,15 @@ export async function listPublicGalleryItems(userId: string): Promise<GalleryIte
 
   const { data, error } = await supabase
     .from('craft_posts')
-    .select('id,title,image_url,pixel_image_url,pixel_palette,pixel_grid')
+    .select('id,user_id,title,image_url,pixel_image_url,pixel_palette,pixel_grid')
     .in('id', listingIds);
   if (error) throw error;
 
-  return (data ?? []).map((entry: Pick<CraftPostRow, 'id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid'>) => ({
+  return (data ?? []).map((entry: Pick<CraftPostRow, 'id' | 'user_id' | 'title' | 'image_url' | 'pixel_image_url' | 'pixel_palette' | 'pixel_grid'>) => ({
     listingId: entry.id,
     title: entry.title,
-    imageUrl: entry.image_url,
-    pixelImageUrl: entry.pixel_image_url,
+    imageUrl: getTrustedCraftImageUrl(entry.image_url, entry.user_id),
+    pixelImageUrl: getTrustedCraftImageUrl(entry.pixel_image_url, entry.user_id),
     pixelPalette: (entry.pixel_palette as Record<string, string> | null) ?? null,
     pixelGrid: entry.pixel_grid ?? null,
   }));
