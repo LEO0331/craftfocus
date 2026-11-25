@@ -2,10 +2,18 @@
 
 ## Current Objective
 
-- Goal: ship the credential-free browser demo for review as feat-018.
-- Branch: `codex/indexeddb-local-demo`. GitHub Pages and Lighthouse exports use local mode. Native bundles and explicit online web builds use Supabase.
+- Goal: ship the security audit follow-up as feat-019.
+- Branch: `codex/security-audit-fixes`, based on main `261af12`. GitHub Pages and Lighthouse exports use local mode. Native bundles and explicit online web builds use Supabase.
 - Gameplay saves to `craftfocus-local-demo` IndexedDB. Profile provides versioned JSON backup, restore, and reset. See the latest entry in `progress.md` for verification.
 - Deployment and rollback steps are in `README.md` and `docs/SUPABASE_DEPLOYMENT_RECOVERY.md`. The inactive Supabase project is outside this change.
+
+## Security Follow-up (2026-11-25)
+
+- Client-role admin grants, craft hard deletes, comment timestamp/update abuse, public Storage enumeration and untrusted custom image URLs are addressed by additive migrations and client filtering.
+- Storage writes have per-account limits of 512 MiB and 1,000 objects. Account deletion removes owned files through the authenticated `delete-my-account` Edge Function and then uses a guarded database RPC.
+- Before releasing the Supabase-mode client, apply pending migrations and deploy the Edge Function with default JWT verification enabled. Hosted deployment and live Storage integration remain pending. The app schema preflight expects `2026-11-18.1`.
+- Full account deletion still cascades through authored listings and acquisitions under the existing model. Archival ownership and retention need a separate product decision. Toolchain advisories remain documented in `progress.md`.
+- Local verification includes 107 unit tests, TypeScript, all 32 migrations, original SQL regression/concurrency tests, Storage quota checks and account-deletion checks on disposable PostgreSQL 18. Pages browser verification is recorded in the latest progress entry.
 
 ## Latest Recovery Evidence (2026-10-02)
 

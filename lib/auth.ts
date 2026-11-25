@@ -13,7 +13,7 @@ export async function signOut() {
 }
 
 export async function deleteMyAccount() {
-  const { error } = await supabase.rpc('delete_my_account');
+  const { error } = await supabase.functions.invoke('delete-my-account', { method: 'POST' });
   if (error) {
     throw error;
   }

@@ -27,6 +27,15 @@ const SEED_MAX = 100;
 type FieldKey = 'title' | 'description' | 'seedCost' | 'image';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
+function listingWriteRolledBack(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('code' in error) || typeof error.code !== 'string') {
+    return false;
+  }
+  // A database rejection rolls back the listing. A fetch failure or lost
+  // response can follow a successful commit, whose files must be retained.
+  return /^(?:(?:22|23|42)[A-Z0-9]{3}|40001|40P01|P0001)$/.test(error.code);
+}
+
 export default function NewCraftPostScreen() {
   const { player: user } = useAuth();
   const { t } = useI18n();
@@ -123,6 +132,8 @@ export default function NewCraftPostScreen() {
       return;
     }
 
+    const unpublishedImagePaths: string[] = [];
+    let listingWriteStarted = false;
     setIsSaving(true);
     setPublishStatus(t(isLocalMode ? 'common.saving' : 'craft.new.preparing'));
     try {
@@ -162,17 +173,23 @@ export default function NewCraftPostScreen() {
 
       const safeTitle = sanitizeText(title, TITLE_MAX);
       const safeDescription = description ? sanitizeText(description, DESCRIPTION_MAX) : '';
-      const timestamp = Date.now();
-      const imagePath = `${user.id}/${timestamp}-original.jpg`;
+      const uploadName = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const imagePath = `${user.id}/${uploadName}-original.jpg`;
       setPublishStatus(t('craft.new.uploadingOriginal'));
-      const uploadedImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: imagePath, uri: imageUriToUpload });
+      const uploadedImageUrl = await storageAdapter.uploadImage({
+        bucket: STORAGE_BUCKET, path: imagePath, uri: imageUriToUpload, upsert: false,
+      });
+      unpublishedImagePaths.push(imagePath);
 
       let pixelImageUrl: string | null = null;
       if (pixelPreviewUri) {
         try {
-          const pixelPath = `${user.id}/${timestamp}-pixel.png`;
+          const pixelPath = `${user.id}/${uploadName}-pixel.png`;
           setPublishStatus(t('craft.new.uploadingPixel'));
-          pixelImageUrl = await storageAdapter.uploadImage({ bucket: STORAGE_BUCKET, path: pixelPath, uri: pixelPreviewUri });
+          pixelImageUrl = await storageAdapter.uploadImage({
+            bucket: STORAGE_BUCKET, path: pixelPath, uri: pixelPreviewUri, upsert: false,
+          });
+          unpublishedImagePaths.push(pixelPath);
         } catch {
           pixelImageUrl = null;
         }
@@ -181,6 +198,7 @@ export default function NewCraftPostScreen() {
       const spriteData = pixelSpriteData ?? (await convertImageToPixelSprite(pixelPreviewUri ?? imageUriToUpload));
 
       setPublishStatus(t('craft.new.creatingListing'));
+      listingWriteStarted = true;
       const id = await createCraftPost({
         userId: user.id,
         title: safeTitle,
@@ -199,8 +217,13 @@ export default function NewCraftPostScreen() {
       if (!id) {
         throw new Error(t('craft.new.publishFailed'));
       }
+      unpublishedImagePaths.length = 0;
       router.replace(`/crafts/${id}`);
     } catch (error) {
+      if (unpublishedImagePaths.length && (!listingWriteStarted || listingWriteRolledBack(error))) {
+        // Show the publishing error even if cleanup is slow or unreachable.
+        void storageAdapter.removeImages(STORAGE_BUCKET, unpublishedImagePaths).catch(() => undefined);
+      }
       const message = isLocalMode && error instanceof Error && error.name === 'QuotaExceededError'
         ? t('localCraft.storageFull')
         : error instanceof Error ? error.message : t('common.unknownError');

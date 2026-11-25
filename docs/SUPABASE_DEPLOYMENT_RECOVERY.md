@@ -27,6 +27,16 @@ project** and wait for its services to become healthy. Keep the same project
 URL and public key, then rerun the failed deployment. Do not create a new
 project or reapply migrations solely because a paused hostname is unreachable.
 
+Before releasing the current Supabase-mode app, apply pending migrations with
+`supabase db push --linked`, then deploy the authenticated account deletion
+function with `supabase functions deploy delete-my-account --project-ref YOUR_PROJECT_REF`.
+Keep the default JWT verification enabled. The function uses the platform's
+server-only service credential to remove the signed-in user's files through
+the Storage API. Verify with a disposable account that has uploaded an avatar
+or craft image. This step also applies to a replacement project after its
+migrations are applied. The Local Demo Mode deployment has no Edge Function
+dependency.
+
 If the existing project cannot be resumed, use the replacement procedure:
 
 1. Create or recover a Supabase project.

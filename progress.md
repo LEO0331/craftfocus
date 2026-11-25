@@ -2,9 +2,23 @@
 
 ## Current State
 
-**Last Updated:** 2026-11-10 Asia/Taipei
+**Last Updated:** 2026-11-25 Asia/Taipei
 **Active Feature:** none
-**Last Completed Feature:** feat-018 - IndexedDB Local Demo Mode
+**Last Completed Feature:** feat-019 - Security audit follow-up
+
+## 2026-11-25 Security audit follow-up
+
+- Based on main `261af12`, explicitly revoked admin helper execution from client roles, removed direct client craft deletion and comment updates, and stamped new comments on the server.
+- Restricted Storage enumeration to the uploader and new custom image URLs to their project/owner path. Existing untrusted image URLs use the current display fallback. Official and known seeded artwork remain supported.
+- Added a per-account craft-image ceiling of 512 MiB or 1,000 objects, including final Storage writes and replacements. Failed, definitively rolled-back publications attempt file cleanup. Ambiguous network outcomes retain files to protect a possibly committed listing.
+- Added an authenticated account-deletion Edge Function that removes owned files through the Storage API in retryable batches before deleting the account. The database guards against deletion while owned objects remain. Deploy pending migrations and `delete-my-account` before releasing the Supabase-mode client, following docs/SUPABASE_DEPLOYMENT_RECOVERY.md.
+- Removed unused Lighthouse PR write permission and checkout credentials, and bounded CI job durations. Updated the deployment schema contract to `2026-11-18.1`.
+- Verified clean npm install, TypeScript, 107 unit tests, coverage gate, Deno function typecheck, and local Pages browser flows during this change. The November 25 final rerun passed all 32 migrations, SQL regressions, concurrency tests, Storage quota checks and account-deletion checks on disposable PostgreSQL 18, plus TypeScript and 107 unit tests.
+- The final Local Demo Pages export and all five Chromium browser flows passed. Five online/mode-gated specs skipped. Workflow YAML parsed and `git diff --check` passed. Lighthouse and native device runs were skipped because this pass targets authorization and the existing local browser flows cover the shared UI.
+- Hosted Supabase was inactive during the audit. Hosted RLS, Storage service integration, Edge deployment and native device execution remain unverified. Account deletion retains its existing cascading removal of authored listings and dependent acquisitions. Preserving those acquisitions after deleting their author requires a separate ownership/retention decision.
+- npm's three underlying toolchain advisories remain. Picomatch has no published fix at the November 18 review. Glob and minimatch fixes exceed Expo 54's declared major ranges. Dependency versions are retained, with bounded CI runtimes, to preserve the supported toolchain. See docs/DEPENDENCY_SECURITY_REVIEW.md.
+
+Next step after pushing the branch is to apply the migrations and deploy the authenticated Edge Function on the active Supabase project before releasing the online client.
 
 ## 2026-11-10 Pages CI runner compatibility
 

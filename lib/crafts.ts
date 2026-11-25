@@ -5,6 +5,7 @@ import { API_LIMITS, mutationError, normalizeListLimit } from '@/lib/api';
 import { isLocalMode, LOCAL_USER_ID } from '@/lib/data-mode';
 import { deleteLocalCraft, getLocalCraft, listLocalCrafts, type LocalCraft } from '@/lib/local/crafts';
 import { claimLocalOfficialItem } from '@/lib/local/economy';
+import { getTrustedCraftImageUrl } from '@/lib/craftImages';
 
 type ProfileRow = TableRow<'profiles'>;
 type CraftPostRow = TableRow<'craft_posts'>;
@@ -90,6 +91,14 @@ function requireOnlineCrafts() {
   if (isLocalMode) throw new Error('This action requires Online Mode.');
 }
 
+function toDisplayPost(post: CraftPostRow): CraftPostRow {
+  return {
+    ...post,
+    image_url: getTrustedCraftImageUrl(post.image_url, post.user_id, post.official_source),
+    pixel_image_url: getTrustedCraftImageUrl(post.pixel_image_url, post.user_id, post.official_source),
+  };
+}
+
 export async function listCraftPosts(currentUserId?: string, options?: { limit?: number }): Promise<CraftFeedItem[]> {
   const limit = normalizeListLimit(options?.limit, API_LIMITS.craftFeedDefault, API_LIMITS.craftFeedMax);
   if (isLocalMode) return (await listLocalCrafts(currentUserId)).map(toLocalFeedItem);
@@ -130,7 +139,7 @@ export async function listCraftPosts(currentUserId?: string, options?: { limit?:
   const claimSet = new Set((claimsResult.data ?? []).map((row) => row.listing_id));
 
   return posts.map((post) => ({
-    ...post,
+    ...toDisplayPost(post),
     author_name: profileName(profileMap.get(post.user_id)),
     author_animal_id: profileAnimal(profileMap.get(post.user_id)),
     likes_count: Number(engagementMap.get(post.id)?.likes_count ?? 0),
@@ -236,7 +245,7 @@ export async function getCraftPostDetail(postId: string, currentUserId?: string)
   }));
 
   return {
-    ...post,
+    ...toDisplayPost(post),
     author_name: profileName(authorResult.data ?? undefined),
     author_animal_id: profileAnimal(authorResult.data ?? undefined),
     likes_count: likesCountResult.count ?? 0,

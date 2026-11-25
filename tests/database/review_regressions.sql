@@ -7,9 +7,23 @@ do $$ begin
     'Detailed 16x16 pixel grids must be accepted';
   assert not public.v23_is_valid_pixel_grid(array_fill('...............'::text,array[16])),
     'Pixel grids must remain square';
+  assert not exists (
+    select from (values ('anon'), ('authenticated')) as clients(role_name)
+    cross join (values ('public.reseed_v2_user(uuid)'), ('public.seed_demo_data_for_user(uuid)'),
+      ('public.unlock_animals_for_user(uuid)')) as functions(signature)
+    where has_function_privilege(clients.role_name::name, functions.signature, 'EXECUTE')
+  ), 'Client roles must never execute admin helpers';
 end $$;
 insert into public.item_catalog(id,name,category) values ('plant','Plant','decor'),('desk_lamp','Lamp','decor'),('bookshelf','Shelf','decor') on conflict do nothing;
 insert into auth.users(id) values ('10000000-0000-0000-0000-000000000001'),('20000000-0000-0000-0000-000000000002');
+insert into storage.objects(id,bucket_id,name) values
+  (gen_random_uuid(),'craft-images','10000000-0000-0000-0000-000000000001/owned.jpg'),
+  (gen_random_uuid(),'craft-images','20000000-0000-0000-0000-000000000002/unlisted.jpg');
+set local role anon;
+do $$ begin
+  assert not exists(select from storage.objects), 'Anonymous users must not enumerate object metadata';
+end $$;
+reset role;
 insert into public.craft_posts(user_id,title,description,category,image_url)
 values('20000000-0000-0000-0000-000000000002','Exchange','','craft','https://example.com/b');
 insert into public.craft_posts(user_id,title,description,category,image_url,listing_type,reward_item_id,official_source,is_active)
@@ -28,7 +42,12 @@ begin
 end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
-do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange_id uuid; catalog_id uuid; begin
+select set_config('request.jwt.claims','{"iss":"https://test.supabase.co/auth/v1"}',true);
+do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange_id uuid; catalog_id uuid;
+  image_url_fixture text := 'https://test.supabase.co/storage/v1/object/public/craft-images/' || auth.uid() || '/art.jpg';
+begin
+  assert (select array_agg(name) from storage.objects) = array[auth.uid() || '/owned.jpg'],
+    'Authenticated users must only see their own object metadata';
   select id into r from public.rooms where user_id = auth.uid();
   perform public.place_inventory_at_anchor(r,'plant','test-anchor');
   perform public.place_inventory_at_anchor(r,'desk_lamp','test-anchor');
@@ -47,18 +66,25 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange
   perform pg_temp.expect_error($q$update public.friendships set status='accepted' where requester_id=auth.uid()$q$);
   perform pg_temp.expect_error($q$insert into public.craft_posts(user_id,title,description,category,image_url,listing_type,reward_item_id,seed_cost) values(auth.uid(),'Forged','','craft','https://example.com/a','catalog','plant',1)$q$);
   insert into public.craft_posts(user_id,title,description,category,image_url,created_at,seed_cost)
-  values(auth.uid(),'Custom','','craft','https://example.com/a','2000-01-01',25);
+  values(auth.uid(),'Custom','','craft',image_url_fixture,'2000-01-01',25);
   perform pg_temp.expect_error($q$update public.craft_posts set title=repeat('x',21) where user_id=auth.uid() and title='Custom'$q$);
   perform pg_temp.expect_error($q$update public.craft_posts set description=repeat('x',61) where user_id=auth.uid() and title='Custom'$q$);
   assert exists(select 1 from public.craft_posts where user_id=auth.uid() and title='Custom'
     and created_at >= date_trunc('day',clock_timestamp() at time zone 'UTC') at time zone 'UTC'),
     'Authenticated callers cannot backdate uploads';
+  perform pg_temp.expect_error($q$update public.craft_posts set image_url='https://example.com/image.jpg'
+    where user_id=auth.uid() and title='Custom'$q$);
+  perform pg_temp.expect_error($q$update public.craft_posts
+    set image_url='https://test.supabase.co/storage/v1/object/public/craft-images/20000000-0000-0000-0000-000000000002/art.jpg'
+    where user_id=auth.uid() and title='Custom'$q$);
   insert into public.craft_posts(user_id,title,description,category,image_url)
-  select auth.uid(),'Quota ' || quota.value,'','craft','https://example.com/q'
+  select auth.uid(),'Quota ' || quota.value,'','craft',image_url_fixture
   from generate_series(2,10) as quota(value);
-  perform pg_temp.expect_error($q$insert into public.craft_posts(user_id,title,category,image_url) values(auth.uid(),'Quota 11','craft','https://example.com/q')$q$);
-  delete from public.craft_posts where user_id=auth.uid() and title='Quota 2';
-  perform pg_temp.expect_error($q$insert into public.craft_posts(user_id,title,category,image_url) values(auth.uid(),'Quota replacement','craft','https://example.com/q')$q$);
+  perform pg_temp.expect_error(format($q$insert into public.craft_posts(user_id,title,category,image_url) values(auth.uid(),'Quota 11','craft',%L)$q$, image_url_fixture));
+  perform pg_temp.expect_error($q$delete from public.craft_posts where user_id=auth.uid() and title='Quota 2'$q$);
+  update public.craft_posts set is_active=false where user_id=auth.uid() and title='Quota 2';
+  assert found, 'Authors must still be able to deactivate listings';
+  perform pg_temp.expect_error(format($q$insert into public.craft_posts(user_id,title,category,image_url) values(auth.uid(),'Quota replacement','craft',%L)$q$, image_url_fixture));
   perform pg_temp.expect_error($q$update public.craft_posts set listing_type='catalog',reward_item_id='plant' where user_id=auth.uid()$q$);
   update public.user_animals set animal_id='dog' where user_id=auth.uid();
   assert not exists(select 1 from public.user_animals where user_id=auth.uid() and animal_id='dog'),
@@ -71,9 +97,12 @@ do $$ declare r uuid; p uuid; n integer; s uuid; s2 uuid; post_id uuid; exchange
     'insert into public.comments(user_id,craft_post_id,body) values(auth.uid(),%L,%L)',
     post_id, repeat('x',241)));
   for n in 1..100 loop
-    insert into public.comments(user_id,craft_post_id,body)
-    values(auth.uid(),post_id,'bounded comment ' || n);
+    insert into public.comments(user_id,craft_post_id,body,created_at)
+    values(auth.uid(),post_id,'bounded comment ' || n,'2000-01-01');
   end loop;
+  assert not exists(select from public.comments where craft_post_id=post_id and created_at < transaction_timestamp()),
+    'Comment ordering must use server timestamps';
+  perform pg_temp.expect_error($q$update public.comments set created_at='2000-01-01' where user_id=auth.uid()$q$);
   perform pg_temp.expect_error(format(
     'insert into public.comments(user_id,craft_post_id,body) values(auth.uid(),%L,%L)',
     post_id, 'comment 101'));
